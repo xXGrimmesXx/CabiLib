@@ -1,0 +1,46 @@
+trucs à faire :
+
+A RGEARDER :
+	// Créer des sous onglets (ex: Finance -> créer facture, créer devis, retrocéssion)
+BD :
+	//type de rendez-vous contient la durée
+	//type de rendez-vous possibilité d'indiquer si c'est une séance de groupe.
+	créer table ville primary key code postal 
+Model :
+	//Chez disponibilité créneau regarde si les deux rendez-vous sont de même type et groupé alors c'est OK.
+
+UI :
+   Planning :
+	//rendez-vous de groupe -> plusieurs rdv en mm tps
+	onglet rdv section patient -> afficher tous les patients et case présence à coté
+	en dessous (mm section) bouton rajouter un patient
+	tooltip contient nom de tous les patients
+	(le planning peut aussi)
+	
+	//rendez-vous statut du rendez-vous QComboBox : A renseigner, A confirmer, Patient absent, Patient absent excusé, annulé par moi
+
+
+Onglet :
+   -Comptabilité :
+	- devis
+	- facture
+	- retrocéssion
+
+Fonctionnement : 
+   créer facture 2 modes(patient par patient pu tout ensemble):
+	- selectionner patient
+	- selectionner perriode
+	- ne prends pas en compte les rendez-vous avec statut patient absent excusé
+	- si rendez-vous avez patient absent on demande si faut facturer (préciser les dates des rdv du mois et rappeler historique absentéisme (durée de l'historique comme paramètre)) facturation tout ou rien
+	si patient absent non excusé facturer seulement 33€
+	a la sauvegarde de la facture enregistrer un mail dans les brouillons
+
+  Retrocéssion :
+	possiblement sous_onglet
+	20% du total de toutes les factures
+	création document résumé (cf mail Documents CabiLib)
+
+
+
+	
+

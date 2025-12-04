@@ -1,0 +1,75 @@
+{
+  "PRACTITIONER_NAME": "Dr. Jean Dupont",
+  "PRACTITIONER_PHONE": "01 23 45 67 89",
+  "CABINET_ADDRESS": "123 Rue de la Santé, 75000 Paris",
+  "AMENAGEMENTS_OPTIONS": [
+    "Classique",
+    "ULIS TSL(A)",
+    "ULIS TFC",
+    "ULIS TFS",
+    "ULIS TFM",
+    "SEGPA",
+    "Ecole privée",
+    "CAP",
+    "feur"
+  ],
+  "ETAT_SUIVI_OPTIONS": [
+    "En cours",
+    "Terminé",
+    "En attente",
+    "En pause"
+  ],
+  "NIVEAU_SCOLAIRE_OPTIONS": [
+    "CE2",
+    "CM1",
+    "CM2",
+    "6ème",
+    "5ème",
+    "4ème",
+    "3ème",
+    "2nde",
+    "1ère",
+    "Terminale",
+    "Post-bac",
+    "MATERNELLE",
+    "CP",
+    "Polytech"
+  ],
+  "TYPE_TELEPHONE_OPTIONS": [
+    "Père",
+    "Mère",
+    "Grand-Parents",
+    "Enfant",
+    "Domicile",
+    "Autre"
+  ],
+  "PRESENCE_OPTION": [
+    "A renseigner",
+    "A confirmer",
+    "Patient présent",
+    "Patient absent",
+    "Patient absent excusé",
+    "Annulé par moi"
+  ],
+  "DUREES_RDV": [
+    "00:30",
+    "00:45",
+    "01:00",
+    "01:15",
+    "01:30",
+    "02:00",
+    "02:30",
+    "03:00"
+  ],
+  "HEURE_DEBUT": "07:00",
+  "HEURE_FIN": "21:00",
+  "PRECISION_PLANNING": [
+    0,
+    15,
+    30,
+    45
+  ],
+  "FACTURES_DIR": "C:/Users/mloui/Desktop/CabiLib/Factures",
+  "HISTORIQUE_ABSENCE_JOURS": 30,
+  "CREDENTIALS_JWT": ""
+}
