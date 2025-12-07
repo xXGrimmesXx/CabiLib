@@ -18,9 +18,9 @@ from utils import constantes_manager
 
 def main():
     """Point d'entrée de l'application"""
-    initDB()
+    #initDB()
     # Initialiser les données de test
-    initAllTestData()
+    #initAllTestData()
     
     """
     #test de generation de facture pdf avec des vrai données

@@ -318,8 +318,8 @@ def initAllTestData():
     initPatientTestData()
     initTypeRdvTestData()
     initRendezVousTestData()
-    initFactureTestData()
-    initLignesFactureTestData()
+    #initFactureTestData()
+    #initLignesFactureTestData()
     
     print("\n✅ Toutes les données de test ont été insérées avec succès!")
 
