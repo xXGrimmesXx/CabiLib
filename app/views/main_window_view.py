@@ -5,7 +5,7 @@ class MainWindow(QMainWindow):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    current_tab_changed = Signal(int)
+    current_tab_changed = Signal(str)
     menu_action_triggered = Signal(str)
     
     def __init__(self):
@@ -23,11 +23,23 @@ class MainWindow(QMainWindow):
         # Comptabilité (onglet avec menu déroulant)
         self.tabs.addTab(QWidget(), "💰 Comptabilité ▾")
         self.tabs.addTab(QWidget(), "⚙️ Propriétés")
-        self.tabs.currentChanged.connect(self.current_tab_changed.emit)
-
-        # Créer menu pour l'onglet Comptabilité (visuellement identique aux autres onglets)
-        self._init_comptabilite_menu()
+        # Map index to key explicite
+        self.index_to_key = {
+            0: "patients",
+            1: "planning",
+            2: "suivi_factures",
+            3: "types_rdv",
+            4: "comptabilite",
+            5: "proprietes"
+        }
+        self.tabs.currentChanged.connect(self._emit_tab_key)
         self.setCentralWidget(self.tabs)
+        self._init_comptabilite_menu()
+
+    def _emit_tab_key(self, index):
+        key = self.index_to_key.get(index)
+        if key:
+            self.current_tab_changed.emit(key)
 
     def replace_tab(self, index, new_widget, title):
         """Remplacer un onglet existant par une nouvelle vue"""

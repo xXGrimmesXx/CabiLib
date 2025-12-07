@@ -75,19 +75,21 @@ class CreerFactureController:
             self.view.erreur_completion_rdv(patient, rdvs_a_renseigner)
             return -1,""
         
-        print("\nNombre de rendez-vous avec absence :", len(rdvs_patient_absent),"\n")
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
                 lignes = LigneFacture.getAllLignesByFactureId(fac)
-                for l in lignes :
-                    print(rdv)
+                for l in lignes :                    
                     rdv = self.rdvModel.getRendezVousById(l.rdv_id)
                     rdv.facture_id = facture.id
                     self.rdvModel.updateRendezVous(rdv.id, rdv)
                     rdvs_factures.append(rdv)
 
-                    lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
-                    LigneFacture.addLigneFacture(lfac)
+                    lfac_test = LigneFacture.getLigneFacture(facture.id,rdv.id)
+                    #on vérifie que la ligne de facture n'existe pas déjà avant de la recréer
+                    if(lfac_test is None) :
+                        lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
+                        LigneFacture.addLigneFacture(lfac)
+                        
 
 
         # si le patient a des absences, on demande confirmation avant de facturer
@@ -124,6 +126,7 @@ class CreerFactureController:
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
             print("Création de la facture pour le patient :",patient.prenom,patient.nom)
+            print("\n\n\n-----------------------------FIN EMISSION FACTURE----------------------------\n\n\n")
             Facture.addFacture(facture)
             lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
             fp = fg.create_and_save(facture, patient, lfacs, annulation_factures,start_date,end_date)

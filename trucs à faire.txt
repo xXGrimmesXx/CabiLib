@@ -30,9 +30,9 @@ Fonctionnement :
    créer facture 2 modes(patient par patient pu tout ensemble):
 	//- selectionner patient
 	//- selectionner perriode
-	- ne prends pas en compte les rendez-vous avec statut patient absent excusé
-	- si rendez-vous avez patient absent on demande si faut facturer (préciser les dates des rdv du mois et rappeler historique absentéisme (durée de l'historique comme paramètre)) facturation tout ou rien
-	si patient absent non excusé facturer seulement 33€
+	//- ne prends pas en compte les rendez-vous avec statut patient absent excusé
+	//- si rendez-vous avez patient absent on demande si faut facturer (préciser les dates des rdv du mois et rappeler historique absentéisme (durée de l'historique comme paramètre)) facturation tout ou rien
+	//si patient absent non excusé facturer seulement 33€
 	a la sauvegarde de la facture enregistrer un mail dans les brouillons
 
   Retrocéssion :

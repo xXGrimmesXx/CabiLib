@@ -14,7 +14,7 @@ class RendezVous:
         self.facture_id = facture_id
 
     def __repr__(self):
-        return f"RendezVous(Patient ID: {self.patient_id}, Date: {self.date}, Motif: {self.motif}, Type ID: {self.type_id})"
+        return f"RendezVous(ID: {self.id}, Patient ID: {self.patient_id}, Date: {self.date}, Motif: {self.motif}, Type ID: {self.type_id})"
     
     @staticmethod
     def getAllRendezVous() ->List["RendezVous"]:
@@ -35,7 +35,6 @@ class RendezVous:
         cursor.execute("SELECT * FROM rendez_vous WHERE id = ?", (rdv_id,))
         data = cursor.fetchall()
         connexion.close()
-        print("Data fetched for RDV ID", rdv_id, ":", data)
 
         return RendezVous.data_to_rendezvous(data)[0] if data else None
     
@@ -74,7 +73,6 @@ class RendezVous:
 
     @staticmethod
     def updateRendezVous(rdv_id, rdv):
-        print("Updating RDV:", rdv_id, rdv)
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
         cursor.execute(
@@ -111,11 +109,11 @@ class RendezVous:
         cursor.execute("""
                 SELECT * FROM rendez_vous r, type_rdv t
                 WHERE r.type_id = t.id AND (
-                       date <= ? and datetime(date, '+' || duree || ' minutes') > ?
+                       date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
                        OR
-                       date >= ? and datetime(date, '+' || duree || ' minutes') < ?
+                       date >= ? and datetime(date, '+' || duree || ' minutes') <= ?
                        OR
-                       date < ? and datetime(date, '+' || duree || ' minutes') > ?
+                       date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
                        OR
                        date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
                       )
@@ -130,8 +128,6 @@ class RendezVous:
         connexion.close()
         
         # si c'est un type groupé il faut vérifier que tous les rendez vous sont en même temps
-        msg = f"\n\n{rendezvous}\n{[[rdv,"\n"] for rdv in rdv_data]}\n\n"
-        print(msg)
         if (type_rdv[7]) :
 
             rdv = []
@@ -143,7 +139,7 @@ class RendezVous:
             return True
         # si ce n'est pas un rendez-vous groupé siil y à un autre rdv sur le créneau ce n'est pas libre
         else :
-            #print(rdv_data)
+
             if (not rdv_data):
                 return True
             return False
