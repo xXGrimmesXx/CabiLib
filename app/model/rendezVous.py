@@ -24,20 +24,7 @@ class RendezVous:
         rdv_data = cursor.fetchall()
         connexion.close()
 
-        rdvs = []
-        for data in rdv_data:
-            rdv = RendezVous(
-                id=data[0],
-                patient_id=data[1],
-                date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
-                motif=data[3],
-                type_id=int(data[4]),
-                presence = data[5],
-                    facture_id = data[6]
-            )
-            rdvs.append(rdv)
-        
-        return rdvs
+        return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
     def getRendezVousById(rdv_id):
@@ -45,20 +32,11 @@ class RendezVous:
         cursor = connexion.cursor()
 
         cursor.execute("SELECT * FROM rendez_vous WHERE id = ?", (rdv_id,))
-        data = cursor.fetchone()
+        data = cursor.fetchall()
         connexion.close()
+        print("Data fetched for RDV ID", rdv_id, ":", data)
 
-        if data:
-            return RendezVous(
-                id=data[0],
-                patient_id=data[1],
-                date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
-                motif=data[3],
-                type_id=int(data[4]),
-                presence = data[5],
-                    facture_id = data[6]
-            )
-        return None
+        return RendezVous.data_to_rendezvous(data)
     
     @staticmethod
     def getRendezVousByPatientId(patient_id):
@@ -69,22 +47,7 @@ class RendezVous:
         rdv_data = cursor.fetchall()
         connexion.close()
 
-        rdvs = []
-        for data in rdv_data:
-            h,m,s=map(int, data[3].split(':'))
-            rdv = RendezVous(
-                id=data[0],
-                patient_id=data[1],
-                date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
-                duree=timedelta(hours=h, minutes=m, seconds=s),
-                motif=data[3],
-                type_id=int(data[4]),
-                presence= data[5],
-                    facture_id = data[6]
-            )
-            rdvs.append(rdv)
-        
-        return rdvs
+        return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
     def getRendezVousByPlage(date_debut, date_fin):
@@ -93,20 +56,8 @@ class RendezVous:
         cursor.execute("SELECT * FROM rendez_vous WHERE date BETWEEN ? AND ?", (date_debut, date_fin))
         rdv_data = cursor.fetchall()
         connexion.close()
-        rdvs = []
-        for data in rdv_data:
-            rdv = RendezVous(
-                id=data[0],
-                patient_id=data[1],
-                date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
-                motif=data[3],
-                type_id=int(data[4]),
-                presence=data[5],
-                facture_id = data[6]
-            )
-            rdvs.append(rdv)
 
-        return rdvs
+        return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
     def addRendezVous(rdv):
@@ -141,20 +92,7 @@ class RendezVous:
         data = cursor.fetchall()
         connexion.close()
 
-        if data:
-            rdvs = []
-            for rdv in data :
-                rdvs.append( RendezVous(
-                    patient_id=rdv[1],
-                    date=datetime.strptime(rdv[2], '%Y-%m-%d %H:%M:%S'),
-                    motif=rdv[3],
-                    type_id=int(rdv[4]),
-                    id=rdv[0],
-                    presence=rdv[5],
-                    facture_id = rdv[6]
-                ))
-            return rdvs
-        return None
+        return RendezVous.data_to_rendezvous(data)
     
     @staticmethod
     def creneauLibre(rendezvous):
@@ -163,8 +101,8 @@ class RendezVous:
         cursor = connexion.cursor()
 
         
-        type_rdv = cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (rendezvous.type_id,)).fetchone()
-        duree = int(type_rdv[4])
+        type_rdv = cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (rendezvous.type_id,)).fetchall()
+        duree = int(type_rdv[0][4])
         dureetime = timedelta(minutes=duree)
         date_fin = (rendezvous.date + dureetime).strftime('%Y-%m-%d %H:%M:%S')
         date_debut = rendezvous.date.strftime('%Y-%m-%d %H:%M:%S')
@@ -217,17 +155,34 @@ class RendezVous:
         rdv_data = cursor.fetchall()
         connexion.close()
 
+        return RendezVous.data_to_rendezvous(rdv_data)
+    
+    @staticmethod
+    def getRendezVousByFactureId(facture_id):
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+
+        cursor.execute("SELECT * FROM rendez_vous WHERE facture_id = ?", (facture_id,))
+        rdv_data = cursor.fetchall()
+        connexion.close()
+
+        return RendezVous.data_to_rendezvous(rdv_data)
+    
+    @staticmethod
+    def data_to_rendezvous(rdvs_data):
+        """Convertir une liste de tuples de données en une liste d'objets RendezVous"""
         rdvs = []
-        for data in rdv_data:
-            rdv = RendezVous(
-                id=data[0],
-                patient_id=data[1],
-                date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
-                motif=data[3],
-                type_id=int(data[4]),
-                presence=data[5],
-                facture_id=data[6]
-            )
-            rdvs.append(rdv)
+        if rdvs_data:
+            for data in rdvs_data:
+                rdv = RendezVous(
+                    id=data[0],
+                    patient_id=data[1],
+                    date=datetime.strptime(data[2], '%Y-%m-%d %H:%M:%S'),
+                    motif=data[3],
+                    type_id=int(data[4]),
+                    presence=data[5],
+                    facture_id=data[6]
+                )
+                rdvs.append(rdv)
         
         return rdvs
