@@ -49,7 +49,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     VILLE_PAYEUR = f"{patient.ville}" if patient.ville else ""
     
     DATE_EMISSION_STR = format_date_fr(facture.date_emission)
-    DATE_ECHEANCE = format_date_fr(facture.date_emission + timedelta(days=10))
+    DATE_ECHEANCE = format_date_fr(facture.date_emission + constantes_manager.get_constante("DELAI_PAIEMENT_FACTURE_DAYS") * timedelta(days=1))
     
     # Calcul des données du tableau
     lignes_data = []
@@ -58,8 +58,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     for ligne in lignes:
         total_amount += ligne.montant_facture
         # Note: Gestion d'erreur si getRendezVousById retourne une liste vide
-        rdv_list = RendezVous.getRendezVousById(ligne.rdv_id)
-        rendez_vous = rdv_list[0] if rdv_list else None
+        rendez_vous = RendezVous.getRendezVousById(ligne.rdv_id)
         
         if rendez_vous:
             typeRDV = TypeRDV.getTypeRDVById(rendez_vous.type_id)
@@ -68,7 +67,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             lignes_data.append({
                 "description": description,
                 "date": format_date_fr(rendez_vous.date),
-                "prix": f"{typeRDV.prix:.2f} €"
+                "prix": f"{ligne.montant_facture:.2f} €"
             })
 
     # Texte Période
@@ -76,7 +75,8 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
 
     # Annulation
     annulation_block = ""
-    if annulation_factures:
+    if (annulation_factures is not None and annulation_factures != []):
+        print(annulation_factures)
         cancelled_list = ", ".join(annulation_factures)
         label = "Annule et remplace la facture :" if len(annulation_factures) == 1 else "Annule et remplace les factures :"
         annulation_block = f"""
@@ -106,7 +106,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
         <style>
             @page {{
                 size: A4;
-                margin: 40px 50px 60px 50px; 
+                margin: 40px 50px 130px 50px; 
             }}
             
             body {{
@@ -140,9 +140,12 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             }}
 
             .practitioner-info {{
-                font-size: 10pt;
-                line-height: 1.4;
+                font-size: 10pt important!;
+                line-height: 1.4 important!;
             }}
+
+            a{{ color: inherit; text-decoration: none; }}
+
             .practitioner-name {{
                 font-weight: bold;
                 font-size: 11pt;
@@ -250,7 +253,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             .footer-legal {{
                 position: fixed;
                 /* MODIFICATION : Utilisation d'une valeur négative pour descendre dans la marge */
-                bottom: -30px; 
+                bottom: -60px; 
                 left: 0; 
                 right: 0;
                 text-align: center;
@@ -274,7 +277,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
                     <div>Cabinet d'ergothérapie NALAM</div>
                     <div>{CABINET_ADDRESS}</div>
                     <div>{PRACTITIONER_PHONE}</div>
-                    <div>{PRACTITIONER_EMAIL}</div>
+                    <div><a href="mailto:{PRACTITIONER_EMAIL}">{PRACTITIONER_EMAIL}</a></div>
                 </div>
             </div>
 

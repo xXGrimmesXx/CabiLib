@@ -1,6 +1,7 @@
 from database.setup_db import DB_PATH
 import sqlite3
 from datetime import datetime,timedelta,time
+from typing import Optional,List
 
 class RendezVous:
     def __init__(self, patient_id, date, motif, type_id, presence, facture_id=-1, id=None):
@@ -16,7 +17,7 @@ class RendezVous:
         return f"RendezVous(Patient ID: {self.patient_id}, Date: {self.date}, Motif: {self.motif}, Type ID: {self.type_id})"
     
     @staticmethod
-    def getAllRendezVous():
+    def getAllRendezVous() ->List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -27,7 +28,7 @@ class RendezVous:
         return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
-    def getRendezVousById(rdv_id):
+    def getRendezVousById(rdv_id)->Optional["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -36,10 +37,10 @@ class RendezVous:
         connexion.close()
         print("Data fetched for RDV ID", rdv_id, ":", data)
 
-        return RendezVous.data_to_rendezvous(data)
+        return RendezVous.data_to_rendezvous(data)[0] if data else None
     
     @staticmethod
-    def getRendezVousByPatientId(patient_id):
+    def getRendezVousByPatientId(patient_id) -> List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -50,7 +51,7 @@ class RendezVous:
         return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
-    def getRendezVousByPlage(date_debut, date_fin):
+    def getRendezVousByPlage(date_debut, date_fin) -> List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
         cursor.execute("SELECT * FROM rendez_vous WHERE date BETWEEN ? AND ?", (date_debut, date_fin))
@@ -84,7 +85,7 @@ class RendezVous:
         connexion.close()
 
     @staticmethod
-    def getRendezVousByDateTime(date_time):
+    def getRendezVousByDateTime(date_time)->List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -95,14 +96,14 @@ class RendezVous:
         return RendezVous.data_to_rendezvous(data)
     
     @staticmethod
-    def creneauLibre(rendezvous):
+    def creneauLibre(rendezvous)->bool:
         """Vérifie si un créneau est libre pour un rendez-vous"""
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
         
-        type_rdv = cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (rendezvous.type_id,)).fetchall()
-        duree = int(type_rdv[0][4])
+        type_rdv = cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (rendezvous.type_id,)).fetchall()[0]
+        duree = int(type_rdv[4])
         dureetime = timedelta(minutes=duree)
         date_fin = (rendezvous.date + dureetime).strftime('%Y-%m-%d %H:%M:%S')
         date_debut = rendezvous.date.strftime('%Y-%m-%d %H:%M:%S')
@@ -147,7 +148,7 @@ class RendezVous:
                 return True
             return False
     
-    def getRendezVousByPatientAndDateRange(patient_id, start_date, end_date):
+    def getRendezVousByPatientAndDateRange(patient_id, start_date, end_date) -> List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -158,7 +159,7 @@ class RendezVous:
         return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
-    def getRendezVousByFactureId(facture_id):
+    def getRendezVousByFactureId(facture_id) -> List["RendezVous"]:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -169,7 +170,7 @@ class RendezVous:
         return RendezVous.data_to_rendezvous(rdv_data)
     
     @staticmethod
-    def data_to_rendezvous(rdvs_data):
+    def data_to_rendezvous(rdvs_data) -> List["RendezVous"]:
         """Convertir une liste de tuples de données en une liste d'objets RendezVous"""
         rdvs = []
         if rdvs_data:

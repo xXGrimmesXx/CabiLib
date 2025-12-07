@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
                                QRadioButton, QButtonGroup, QLabel, QComboBox,
                                QCompleter, QPushButton, QMessageBox, QErrorMessage)
-from PySide6.QtCore import Qt, Signal, QStringListModel
-from app.model.patient import Patient
+from PySide6.QtCore import Qt, Signal
+from app.model.facture import Facture
 from app.widgetPersonalise.separator import Separator
 import datetime
 
@@ -162,3 +162,16 @@ class creerFactureView(QWidget):
         reply = QMessageBox.question(self, "Absences détectées", msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         
         return reply == QMessageBox.Yes
+    
+    def confirmation_facture_generee(self,facture: list[Facture]):
+        """Afficher une confirmation de génération de facture"""
+        msg = "Facture(s) générée(s) avec succès :\n"
+        for fac in facture:
+            msg += f"- Facture N° {fac.id} pour le patient ID {fac.patient_id}\n"
+        
+        QMessageBox.information(self, "Facture générée", msg)
+
+    def erreur_generation_facture(self):
+        """Afficher une erreur de génération de facture"""
+        msg = "Aucune facture n'a pu être générée pour le patient sélectionné."
+        QMessageBox.warning(self, "Erreur de génération de facture", msg)

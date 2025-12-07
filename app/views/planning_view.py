@@ -355,6 +355,7 @@ class PlanningView(QWidget):
     def afficher_details_rdv(self):
         """Afficher les détails du rendez-vous dans le panneau"""
         rdv = self.rdvs_selectionne[0]
+        print(rdv)
         if rdv is None:
             return
         # Sélectionner le patient

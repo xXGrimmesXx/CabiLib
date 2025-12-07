@@ -1,6 +1,7 @@
 {
   "PRACTITIONER_NAME": "Dr. Jean Dupont",
   "PRACTITIONER_PHONE": "01 23 45 67 89",
+  "PRACTITIONER_EMAIL": "jean.dupont@example.com",
   "CABINET_ADDRESS": "123 Rue de la Santé, 75000 Paris",
   "AMENAGEMENTS_OPTIONS": [
     "Classique",
@@ -71,5 +72,9 @@
   ],
   "FACTURES_DIR": "C:/Users/mloui/Desktop/CabiLib/Factures",
   "HISTORIQUE_ABSENCE_JOURS": 30,
-  "CREDENTIALS_JWT": ""
+  "CREDENTIALS_JWT": "",
+  "DELAI_PAIEMENT_FACTURE_DAYS": 30,
+  "SIRET": "123 456 789 00012",
+  "APE": "8622Z",
+  "ADELI": "0123456789"
 }

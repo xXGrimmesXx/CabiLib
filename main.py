@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QPalette, QColor
@@ -9,7 +10,7 @@ from app.model.facture import Facture
 from app.model.patient import Patient
 from app.model.ligneFacture import LigneFacture
 
-from database.setup_db import initDB
+from database.setup_db import DB_PATH, initDB
 from database.testData import initAllTestData
 
 from utils.facture_generator import generate_facture_pdf,save_facture_pdf
@@ -21,15 +22,14 @@ def main():
     #initDB()
     # Initialiser les données de test
     #initAllTestData()
-    
-    """
-    #test de generation de facture pdf avec des vrai données
-    facture = Facture.getAllFactures()[0]
-    patient = Patient.getPatientById(facture.patient_id)
-    lignes = LigneFacture.getAllLignesByFactureId(facture.id)
-    pdf_bytes = generate_facture_pdf(facture, patient, lignes)
-    save_facture_pdf(pdf_bytes, constantes_manager.get_constante("FACTURES_DIR"), f"{facture.id}.pdf")
-    """
+
+    connexion = sqlite3.connect(DB_PATH)
+    cursor = connexion.cursor()
+    cursor.execute("DELETE from ligne_facture")
+    cursor.execute("DELETE from facture")
+    cursor.execute("UPDATE rendez_vous SET facture_id = NULL")
+    connexion.commit()
+    connexion.close()
     
     
     app = QApplication(sys.argv)

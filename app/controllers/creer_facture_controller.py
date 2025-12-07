@@ -41,7 +41,7 @@ class CreerFactureController:
         for rdv in liste_rdvs:
             # si le rendez-vous est déjà facturé on ne le compte pas dans les rendez-vous à facturer
             # on demande si on veut quand meme editer la facture sans ces rdvs
-            if(rdv.facture_id!="-1"):
+            if(rdv.facture_id is not None and rdv.facture_id!="-1"):
                 print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
                 annulation_factures.append(rdv.facture_id)
                 #on passe au rendez-vous d'après
@@ -75,21 +75,23 @@ class CreerFactureController:
             self.view.erreur_completion_rdv(patient, rdvs_a_renseigner)
             return -1,""
         
+        print("\nNombre de rendez-vous avec absence :", len(rdvs_patient_absent),"\n")
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
-                nvx_rdvs = RendezVous.getRendezVousByFactureId(fac)
-                print("Rendez-vous à re-facturer suite à l'annulation de la facture ID :", fac)
-                for rdv in nvx_rdvs :
+                lignes = LigneFacture.getAllLignesByFactureId(fac)
+                for l in lignes :
                     print(rdv)
-                    rdv.facture_id = fac
+                    rdv = self.rdvModel.getRendezVousById(l.rdv_id)
+                    rdv.facture_id = facture.id
                     self.rdvModel.updateRendezVous(rdv.id, rdv)
                     rdvs_factures.append(rdv)
 
-                    lfac = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
+                    lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
                     LigneFacture.addLigneFacture(lfac)
 
 
         # si le patient a des absences, on demande confirmation avant de facturer
+        
         elif (len(rdvs_patient_absent) > 0):
             #date a partir de la quelle on voit si le patient à déjà été absent
             historique_date = start_date - cm.get_constante("HISTORIQUE_ABSENCE_JOURS")*timedelta(days=1)
@@ -138,13 +140,13 @@ class CreerFactureController:
         factures_creees = []
         for patient in patients:
             factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
+        self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])
 
     def on_single_facture_generer(self, start_date, end_date, patient_id):
         print("Génération d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
         patient = self.patientModel.getPatientById(patient_id)
         facture_id,fp = self.facturer_patient(patient, start_date, end_date)
-        if (facture_id != -1) :
-            print("Facture générée avec l'ID :", facture_id)
-            print("Chemin du fichier de la facture générée :", fp)
+        if(facture_id!=-1) :
+            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
         else :
-            print("Aucune facture générée pour le patient ID :", patient_id)
+            self.view.erreur_generation_facture()
