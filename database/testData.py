@@ -102,13 +102,13 @@ def initTypeRdvTestData():
     cursor = connexion.cursor()
     durees = constantes_manager.get_constante("DUREES_RDV")
     test_type_rdv = [
-        ("Consultation générale", "Consultation médicale standard", 50.0, random.choice(durees), "A domicile", "#512B2B", random.randint(0,1)==1),
-        ("Consultation spécialisée", "Consultation avec un spécialiste", 80.0, random.choice(durees),"Cabinet", "#5FE1AD", random.randint(0,1)==1),
-        ("Suivi de traitement", "Rendez-vous de suivi", 45.0, random.choice(durees),"Cabinet", "#0084FF", random.randint(0,1)==1),
-        ("Vaccination", "Administration de vaccins", 30.0, random.choice(durees),"Cabinet", "#00FF1E", random.randint(0,1)==1),
-        ("Examen médical", "Examen complet de santé", 100.0, random.choice(durees),"Cabinet", "#FFE600", random.randint(0,1)==1),
-        ("Urgence", "Consultation d'urgence", 120.0, random.choice(durees),"Cabinet", "#FF0000", random.randint(0,1)==1),
-        ("Téléconsultation", "Consultation à distance", 40.0, random.choice(durees),"Cabinet", "#8000FF", random.randint(0,1)==1)
+        ("Consultation générale", "Consultation médicale standard", 50.0, random.choice(durees), "A domicile", "#512B2B", 0),
+        ("Consultation spécialisée", "Consultation avec un spécialiste", 80.0, random.choice(durees),"Cabinet", "#5FE1AD", 0),
+        ("Suivi de traitement", "Rendez-vous de suivi", 45.0, random.choice(durees),"Cabinet", "#0084FF", 0),
+        ("Vaccination", "Administration de vaccins", 30.0, random.choice(durees),"Cabinet", "#00FF1E", 0),
+        ("Examen médical", "Examen complet de santé", 100.0, random.choice(durees),"Cabinet", "#FFE600", 0),
+        ("Urgence", "Consultation d'urgence", 120.0, random.choice(durees),"Cabinet", "#FF0000", 0),
+        ("Téléconsultation", "Consultation à distance", 40.0, random.choice(durees),"Cabinet", "#8000FF", 1)
     ]
     
     cursor.executemany("""
@@ -132,8 +132,8 @@ def initRendezVousTestData():
     
     # Générer 120 rendez-vous
     test_rendez_vous = []
-    start_date = datetime.now()
-    start_date = start_date.replace(hour=8, minute=0, second=0, microsecond=0)
+    start_date = datetime(2025,12,1,7,0,0,0)
+    
     
     motifs = [
         "Consultation générale", "Suivi de traitement", "Consultation spécialisée",
@@ -142,9 +142,9 @@ def initRendezVousTestData():
     ]
     
     
-    for i in range(300):
+    for i in range(200):
         patient_id = random.randint(1, nb_patients)
-        rdv_date = start_date + timedelta(days=random.randint(0, 30), hours=random.randint(0, 9), minutes=random.randint(0,4)*15)
+        rdv_date = start_date + timedelta(days=random.randint(0, 10), hours=random.randint(0, 9), minutes=random.randint(0,4)*15)
         date_heure = rdv_date
         motif = random.choice(motifs)
         type_rdv = random.randint(1, 7)

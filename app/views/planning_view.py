@@ -357,9 +357,7 @@ class PlanningView(QWidget):
         rdv = self.rdvs_selectionne[0]
         if rdv is None:
             return
-        print("affuichage à venir")
         # Sélectionner le patient
-        print(rdv)
         if(rdv.patient_id is not None):
             index = self.find_index_by_data(self.patient_input, rdv.patient_id)
             if index != -1:

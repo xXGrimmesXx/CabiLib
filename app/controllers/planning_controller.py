@@ -51,11 +51,8 @@ class PlanningController(QObject):
         minutes = int(time_slot.split(":")[1])
         
         date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
-        print("Creneau cliqué :", date)
         rendez_vous = self.rendez_vous_model.getRendezVousByDateTime(date)
-        print("Rendez-vous cliqué :", rendez_vous)
         if (rendez_vous is not None):
-            print("affichage du rendezvous",rendez_vous)
             self.view.rdvs_selectionne = rendez_vous
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
@@ -63,7 +60,7 @@ class PlanningController(QObject):
             
         else:
             self.view.on_clear_clicked()
-            self.view.rdv_selectionne.date = date
+            self.view.rdvs_selectionne[0]= RendezVous(None, date, None, None, None, None, None)
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
     
@@ -103,13 +100,11 @@ class PlanningController(QObject):
         
         if(rdv.id is None):
             if (rdv.date and rdv.patient_id and rdv.type_id):
-                print("Rendez-vous créé",rdv)
                 self.rendez_vous_model.addRendezVous(rdv)
             else :
                 self.view.afficher_champs_obligatoires()
                 return
         else :
-            print("Rendez-vous modifié",rdv)
             self.rendez_vous_model.updateRendezVous(rdv.id, rdv)
         
         # Recharger la semaine actuelle

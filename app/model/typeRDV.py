@@ -27,13 +27,13 @@ class TypeRDV:
 
         types = []
         for data in types_data:
-            h,m=map(int, data[4].split(':'))
+            
             type_rdv = TypeRDV(
                 id=data[0],
                 nom=data[1],
                 description=data[2],
                 prix=data[3],
-                duree=timedelta(hours=h, minutes=m, seconds=0),
+                duree=timedelta(minutes=int(data[4])),
                 localisation=data[5],
                 couleur=data[6],
                 estgroupe=data[7]
@@ -52,13 +52,13 @@ class TypeRDV:
         connexion.close()
 
         if data:
-            h,m=map(int, data[4].split(':'))
+            
             return TypeRDV(
                 id=data[0],
                 nom=data[1],
                 description=data[2],
                 prix=data[3],
-                duree=timedelta(hours=h, minutes=m, seconds=0),
+                duree=timedelta(minutes=int(data[4])),
                 localisation=data[5],
                 couleur=data[6],
                 estgroupe=data[7]
@@ -71,9 +71,9 @@ class TypeRDV:
         cursor = connexion.cursor()
 
         cursor.execute(
-            "INSERT INTO type_rdv (nom, description, prix, duree, localisation, couleur,estgroupe) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (typeRDV.nom, typeRDV.description, typeRDV.prix, str(typeRDV.duree), typeRDV.localisation, typeRDV.couleur,typeRDV.estgroupe)
-        )
+            "INSERT INTO type_rdv (nom, description, prix, duree, localisation, couleur,estgroupe) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (typeRDV.nom, typeRDV.description, typeRDV.prix, typeRDV.duree.total_seconds() // 60, typeRDV.localisation, typeRDV.couleur,typeRDV.estgroupe)
+                )
         connexion.commit()
         connexion.close()
     
@@ -86,7 +86,7 @@ class TypeRDV:
             UPDATE type_rdv 
             SET nom = ?, description = ?, prix = ?, duree = ?, localisation = ?, couleur = ?, estgroupe = ?
             WHERE id = ?
-        """, (type_rdv.nom, type_rdv.description, type_rdv.prix, str(type_rdv.duree), type_rdv.localisation, type_rdv.couleur, type_rdv.estgroupe, type_rdv.id))
+        """, (type_rdv.nom, type_rdv.description, type_rdv.prix, type_rdv.duree.total_seconds() // 60, type_rdv.localisation, type_rdv.couleur, type_rdv.estgroupe, type_rdv.id))
         connexion.commit()
         connexion.close()
     

@@ -95,7 +95,6 @@ class RendezVous:
         connexion.close()
         rdvs = []
         for data in rdv_data:
-            print("RDV trouvé dans la plage :", data)
             rdv = RendezVous(
                 id=data[0],
                 patient_id=data[1],
@@ -111,7 +110,6 @@ class RendezVous:
     
     @staticmethod
     def addRendezVous(rdv):
-        print("Adding RDV:", rdv)
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
@@ -164,33 +162,49 @@ class RendezVous:
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
 
-        print(rendezvous)
+        
         type_rdv = cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (rendezvous.type_id,)).fetchone()
-        print(type_rdv)
-        duree = type_rdv[4]
-        h,m=map(int, duree.split(':'))
-        dureetime = timedelta(hours=h, minutes=m, seconds=0)
+        duree = int(type_rdv[4])
+        dureetime = timedelta(minutes=duree)
         date_fin = (rendezvous.date + dureetime).strftime('%Y-%m-%d %H:%M:%S')
         date_debut = rendezvous.date.strftime('%Y-%m-%d %H:%M:%S')
-
+        
         cursor.execute("""
-                SELECT * FROM rendez_vous 
-                WHERE ((date < ? AND datetime(date, '+' || substr(?,1,2) || ' hours', '+' || substr(?,4,2) || ' minutes', '+' || substr(?,7,2) || ' seconds') > ?)
-                OR (date >= ? AND date < ?)) AND id != ?
-        """, (date_fin, duree, duree, duree, date_debut, date_debut, date_fin, rendezvous.id if rendezvous.id is not None else -1))
+                SELECT * FROM rendez_vous r, type_rdv t
+                WHERE r.type_id = t.id AND (
+                       date <= ? and datetime(date, '+' || duree || ' minutes') > ?
+                       OR
+                       date >= ? and datetime(date, '+' || duree || ' minutes') < ?
+                       OR
+                       date < ? and datetime(date, '+' || duree || ' minutes') > ?
+                       OR
+                       date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
+                      )
+                       AND r.id != ?
+        """, (date_debut, date_debut,
+              date_debut,date_fin,
+              date_fin,date_fin,
+              date_debut,date_fin,
+              rendezvous.id if rendezvous.id is not None else -1))
         # l'id du rendez-vous est exclu de la vérification pour les modifications -1 signifie qu'on ajoute un nouveau rdv
         rdv_data = cursor.fetchall()
         connexion.close()
         
         # si c'est un type groupé il faut vérifier que tous les rendez vous sont en même temps
+        msg = f"\n\n{rendezvous}\n{[[rdv,"\n"] for rdv in rdv_data]}\n\n"
+        print(msg)
         if (type_rdv[7]) :
 
             rdv = []
             for data in rdv_data :
-                if (data[0]!=rendezvous.id) :
+                # on vérifie que tous les rdv sont du même type
+                if (int(data[4])!=rendezvous.type_id):
                     return False
+            # si tous les rdv sont du même type et que c'est une séance groupée
             return True
+        # si ce n'est pas un rendez-vous groupé siil y à un autre rdv sur le créneau ce n'est pas libre
         else :
+            #print(rdv_data)
             if (not rdv_data):
                 return True
             return False

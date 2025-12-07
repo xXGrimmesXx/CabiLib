@@ -46,7 +46,7 @@ def setup_database():
         " nom TEXT," \
         " description TEXT," \
         "prix REAL," \
-        "duree TIME," \
+        "duree INTEGER," \
         "localisation TEXT," \
         "couleur TEXT,"\
         "estgroupe BOOL)")
