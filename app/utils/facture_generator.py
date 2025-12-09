@@ -253,7 +253,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             .footer-legal {{
                 position: fixed;
                 /* MODIFICATION : Utilisation d'une valeur négative pour descendre dans la marge */
-                bottom: -60px; 
+                bottom: -80px; 
                 left: 0; 
                 right: 0;
                 text-align: center;

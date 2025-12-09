@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'CabiLib.db')
+DB_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
 def setup_database():
     connexion = sqlite3.connect(DB_PATH)

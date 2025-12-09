@@ -1,7 +1,7 @@
 import json
 import os
 
-CONST_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Constantes.json')
+CONST_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'Constantes.json').replace('\\', '/')
 
 def load_constantes():
     """Charge toutes les constantes depuis le fichier JSON."""
