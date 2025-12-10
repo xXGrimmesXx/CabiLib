@@ -71,7 +71,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             })
 
     # Texte Période
-    texte_periode = f"DU {format_date_fr(date_debut)} AU {format_date_fr(date_fin)}"
+    texte_periode = f"Du {format_date_fr(date_debut)} au {format_date_fr(date_fin)}"
 
     # Annulation
     annulation_block = ""
