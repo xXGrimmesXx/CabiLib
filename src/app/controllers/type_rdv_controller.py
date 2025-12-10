@@ -11,7 +11,10 @@ class TypeRDVController:
         self.view.type_rdv_selected.connect(self.on_type_rdv_selected)
         self.view.type_rdv_updated.connect(self.on_type_rdv_updated)
         self.view.type_rdv_created.connect(self.on_type_rdv_created)
-        self.view.type_rdv_deleted.connect(self.on_type_rdv_deleted)
+        self.view.refresh.connect(self.on_refresh)
+
+    def on_refresh(self):
+        self.load_types_rdv()
     
     def load_types_rdv(self):
         """Charger tous les types de RDV"""
@@ -34,9 +37,4 @@ class TypeRDVController:
     def on_type_rdv_created(self, type_rdv):
         """Créer un nouveau type de RDV"""
         TypeRDV.addTypeRDV(type_rdv)
-        self.load_types_rdv()
-    
-    def on_type_rdv_deleted(self, type_rdv_id):
-        """Supprimer un type de RDV"""
-        TypeRDV.deleteTypeRDV(type_rdv_id)
         self.load_types_rdv()

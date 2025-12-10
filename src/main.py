@@ -10,7 +10,7 @@ from app.model.facture import Facture
 from app.model.patient import Patient
 from app.model.ligneFacture import LigneFacture
 
-from app.database.setup_db import initDB
+from app.database.setup_db import initDB,DB_PATH
 from app.database.testData import initAllTestData
 
 from app.utils.facture_generator import generate_facture_pdf,save_facture_pdf
@@ -18,9 +18,6 @@ from app.utils import constantes_manager
 
 import os
 
-DB_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
-print(f"Database path: {DB_PATH}")
-CONSTANTES_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'Constantes.json').replace('\\', '/')
 def main():
     """Point d'entrée de l'application"""
     #nitDB()
@@ -28,7 +25,6 @@ def main():
     #initAllTestData()
     with open(os.path.join(os.environ['APPDATA'], 'CabiLib', "error_log.txt"), "a") as log_file:
             log_file.write(f"[DEBUG] Chemin de la BDD : {DB_PATH}\n")
-            log_file.write(f"[DEBUG] Chemin des constantes : {CONSTANTES_PATH}\n")
             log_file.close()
     try :
 
@@ -72,7 +68,7 @@ def main():
 
         # Lancer l'application
         sys.exit(app.exec())
-    
+
     except Exception as e:
         print(f"Erreur lors du lancement de l'application : {e}")
         with open(os.path.join(os.environ['APPDATA'], 'CabiLib', "error_log.txt"), "a") as log_file:

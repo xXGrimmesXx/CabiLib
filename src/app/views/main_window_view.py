@@ -1,14 +1,21 @@
 from PySide6.QtWidgets import (QMainWindow, QTabWidget, QWidget, QMenu)
-from PySide6.QtCore import Qt, Signal, QEvent
+from PySide6.QtCore import Qt, Signal, QEvent,QObject
 
 class MainWindow(QMainWindow):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    current_tab_changed = Signal(str)
-    menu_action_triggered = Signal(str)
+    current_tab_changed: Signal = Signal(str)
+    """Signal émis lors du changement d'onglet (clé explicite)."""
+    menu_action_triggered: Signal = Signal(str)
+    """Signal émis lors d'une action de menu comptabilité."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue principale."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la fenêtre principale de l'application.
+        """
         super().__init__()
         self.setWindowTitle("CabiLib - Gestion Cabinet")
         self.setWindowState(Qt.WindowMaximized)
@@ -36,21 +43,36 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
         self._init_comptabilite_menu()
 
-    def _emit_tab_key(self, index):
+    def _emit_tab_key(self, index: int) -> None:
+        """
+        Émet le signal de changement d'onglet avec la clé correspondante.
+        Args:
+            index (int): Index de l'onglet sélectionné.
+        """
         key = self.index_to_key.get(index)
         if key:
             self.current_tab_changed.emit(key)
 
-    def replace_tab(self, index, new_widget, title):
+    def replace_tab(self, index: int, new_widget: QWidget) -> None:
+        """
+        Remplace un onglet existant par un nouveau widget.
+        Args:
+            index (int): Index de l'onglet à remplacer.
+            new_widget (QWidget): Nouveau widget à insérer.
+        """
         """Remplacer un onglet existant par une nouvelle vue"""
         # Bloquer les signaux pendant le remplacement pour éviter la boucle infinie
         self.tabs.blockSignals(True)
+        text = self.tabs.tabText(index)
         self.tabs.removeTab(index)
-        self.tabs.insertTab(index, new_widget, title)
+        self.tabs.insertTab(index, new_widget, text)
         self.tabs.setCurrentIndex(index)
         self.tabs.blockSignals(False)
 
-    def _init_comptabilite_menu(self):
+    def _init_comptabilite_menu(self) -> None:
+        """
+        Initialise le menu déroulant pour l'onglet Comptabilité.
+        """
         try:
             tab_index = None
             # find the index of the tab titled 'Comptabilité'
@@ -84,7 +106,15 @@ class MainWindow(QMainWindow):
             # If anything fails, don't break the app; menu is optional
             pass
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        """
+        Filtre d'événements pour afficher le menu Comptabilité au survol de l'onglet.
+        Args:
+            obj (QObject): Objet sur lequel l'événement est capté.
+            event (QEvent): Événement à traiter.
+        Returns:
+            bool: True si l'événement est traité, False sinon.
+        """
         """Event filter on the tab bar to show the comptabilité menu on hover while keeping normal tab visuals."""
         try:
             if obj is getattr(self, '_tab_bar', None):

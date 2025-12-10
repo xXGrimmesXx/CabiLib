@@ -1,14 +1,49 @@
-import sys
-import os
 import datetime
-# Ajouter le répertoire racine au path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-from database.setup_db import DB_PATH
+from app.database.setup_db import DB_PATH
 import sqlite3
 
 class Patient:
-    def __init__(self,nom, prenom, sexe, date_naissance, adresse, ville, telephone1, typeTelephone1, telephone2, typeTelephone2, email, niveau=None, ecole=None, amenagement=None, etat_suivi=None, description=None,id=0):
+    id: int
+    nom: str
+    prenom: str
+    sexe: str
+    date_naissance: 'datetime.datetime'
+    adresse: str
+    ville: str
+    telephone1: str
+    typeTelephone1: str
+    telephone2: str
+    typeTelephone2: str
+    email: str
+    niveau: str | None
+    ecole: str | None
+    amenagement: str | None
+    etat_suivi: str | None
+    description: str | None
+
+    def __init__(self, nom: str, prenom: str, sexe: str, date_naissance: 'datetime.datetime', adresse: str, ville: str, telephone1: str, typeTelephone1: str, telephone2: str, typeTelephone2: str, email: str, niveau: str = None, ecole: str = None, amenagement: str = None, etat_suivi: str = None, description: str = None, id: int = 0) -> None:
+        """
+        Initialise une instance de Patient.
+
+        Args:
+            nom (str): Nom du patient.
+            prenom (str): Prénom du patient.
+            sexe (str): Sexe du patient.
+            date_naissance (datetime.datetime): Date de naissance du patient.
+            adresse (str): Adresse du patient.
+            ville (str): Ville du patient.
+            telephone1 (str): Premier numéro de téléphone.
+            typeTelephone1 (str): Type du premier téléphone.
+            telephone2 (str): Deuxième numéro de téléphone.
+            typeTelephone2 (str): Type du deuxième téléphone.
+            email (str): Adresse email du patient.
+            niveau (str | None, optionnel): Niveau scolaire.
+            ecole (str | None, optionnel): École.
+            amenagement (str | None, optionnel): Aménagements particuliers.
+            etat_suivi (str | None, optionnel): État du suivi.
+            description (str | None, optionnel): Description complémentaire.
+            id (int, optionnel): Identifiant unique du patient.
+        """
         self.id = id
         self.nom = nom
         self.prenom = prenom
@@ -27,18 +62,28 @@ class Patient:
         self.etat_suivi = etat_suivi
         self.description = description
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Retourne une représentation textuelle du patient.
+
+        Returns:
+            str: Représentation lisible du patient.
+        """
         return f"Patient({self.nom} {self.prenom}, {self.sexe})"
     
     @staticmethod
-    def getAllPatients():
+    def getAllPatients() -> list['Patient']:
+        """
+        Récupère tous les patients de la base de données.
+
+        Returns:
+            list[Patient]: Liste de tous les patients.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-
         cursor.execute("SELECT * FROM patient")
         patients_data = cursor.fetchall()
         connexion.close()
-
         patients = []
         for data in patients_data:
             patient = Patient(
@@ -61,18 +106,24 @@ class Patient:
                 description=data[16]
             )
             patients.append(patient)
-        
         return patients
     
     @staticmethod
-    def getPatientById(patient_id):
+    def getPatientById(patient_id: int) -> 'Patient | None':
+        """
+        Récupère un patient par son identifiant.
+
+        Args:
+            patient_id (int): Identifiant du patient.
+
+        Returns:
+            Patient | None: Instance de Patient si trouvée, sinon None.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-
         cursor.execute("SELECT * FROM patient WHERE id = ?", (patient_id,))
         data = cursor.fetchone()
         connexion.close()
-
         if data:
             return Patient(
                 id=data[0],
@@ -93,8 +144,7 @@ class Patient:
                 etat_suivi=data[15],
                 description=data[16]
             )
-        else:
-            return None
+        return None
         
     @staticmethod
     def addPatient(patient):

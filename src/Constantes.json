@@ -52,6 +52,11 @@
     "Patient absent excusé",
     "Annulé par moi"
   ],
+  "LOCALISATIONS_RDV": [
+    "Cabinet",
+    "A domicile",
+    "Téléconsultation"
+  ],
   "DUREES_RDV": [
     "30",
     "45",

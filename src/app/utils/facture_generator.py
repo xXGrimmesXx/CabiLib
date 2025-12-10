@@ -10,7 +10,7 @@ from app.model.ligneFacture import LigneFacture
 from app.model.typeRDV import TypeRDV
 from app.model.rendezVous import RendezVous
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) or '.')
-from utils import constantes_manager
+from app.utils import constantes_manager
 
 def format_date_fr(date_obj):
     """Transforme une date datetime en chaîne française (ex: 13 janvier 2024)"""

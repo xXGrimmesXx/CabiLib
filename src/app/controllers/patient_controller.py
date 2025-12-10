@@ -16,18 +16,18 @@ class PatientController:
         self.view.search_changed.connect(self.on_search_changed)
         self.view.patient_deleted.connect(self.on_patient_deleted)
         self.view.patient_created.connect(self.on_patient_created)
-        
+        self.view.refresh.connect(self.on_refresh)
         # Charger les données initiales
         self.load_patients()
+
+    def on_refresh(self):
+        self.load_patients()
+        self
     
     def load_patients(self):
         """Charger tous les patients depuis le modèle vers la vue"""
-        # Récupérer les patients depuis le modèle
-        patients_objects = self.model.getAllPatients()
-        
-        # Charger dans la vue
-        self.view.load_patients(patients_objects)
-    
+        self.view.load_patients(self.model.getAllPatients())
+
     def on_patient_selected(self, row):
         """Gérer la sélection d'un patient dans la table"""
         # Récupérer les données de la ligne sélectionnée

@@ -3,17 +3,18 @@ from datetime import datetime, timedelta
 from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
 from app.model.rendezVous import RendezVous
+from app.views.planning_view import PlanningView
 
 class PlanningController(QObject):
     """Contrôleur pour gérer le planning des rendez-vous"""
     rendez_vous_clicked = Signal(object)  # Signal avec objet RendezVous
     crenneau_clicked = Signal(object)  # Signal avec objet datetime
 
-    def __init__(self, model, view):
+    def __init__(self, model: RendezVous, view:PlanningView):
         super().__init__()  # Initialiser QObject
         self.rendez_vous_model = model  # RendezVous
-        self.patient_model = Patient
-        self.type_rendez_vous = TypeRDV
+        self.patient_model: Patient= Patient
+        self.type_rendez_vous: TypeRDV = TypeRDV
         self.view = view
         self.current_week_start = self.view.get_current_week_start()
         self.view.set_liste_patients(self.patient_model.getAllPatients())
@@ -22,13 +23,18 @@ class PlanningController(QObject):
         # Connecter les signaux
         self.view.creer_clicked.connect(self.on_creer_clicked)
         self.view.supprimer_clicked.connect(self.on_supprimer_clicked)
-
         self.view.previous_week_clicked.connect(self.on_previous_week)
         self.view.next_week_clicked.connect(self.on_next_week)
         self.view.cell_clicked.connect(self.on_cell_clicked)
-        
+        self.view.refresh.connect(self.on_refresh)
         # Charger les données initiales
         self.load_week_rdvs()
+
+    def on_refresh(self):
+        """Met à jour la liste des patients ainsi que les types de RDV et recharge les RDV de la semaine"""
+        self.load_week_rdvs()
+        self.view.set_liste_patients(self.patient_model.getAllPatients())
+        self.view.set_liste_type_rdv(self.type_rendez_vous.getAllTypesRDV())
     
     def on_previous_week(self):
         """Naviguer vers la semaine précédente"""
@@ -40,19 +46,25 @@ class PlanningController(QObject):
         self.current_week_start += timedelta(days=7)
         self.load_week_rdvs()
     
-    def on_cell_clicked(self, day_index, time_slot):
-        """Gérer le clic sur une cellule du planning"""
-        day_index = int(day_index)
+    def on_cell_clicked(self, day_index: int, time_slot: str) -> None:
+        """Gérer le clic sur une cellule du planning
+        Args:
+            day_index (int): Index du jour (0=Lundi, 6=Dimanche)
+            time_slot (str): Heure au format "HH:MM"
+        """
         
         # Calculer la date exacte
        
-        days = int(day_index)
+        days = day_index
         hours = int(time_slot.split(":")[0])
         minutes = int(time_slot.split(":")[1])
+        print(f"Clic sur cellule : Jour index {day_index}, Heure {time_slot}")
         
         date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
+        print(f"Date calculée : {date}")
         rendez_vous = self.rendez_vous_model.getRendezVousByDateTime(date)
-        if (rendez_vous is not None):
+        print(f"Rendez-vous trouvé : {rendez_vous}")
+        if (rendez_vous is not None and rendez_vous!=[]):
             self.view.rdvs_selectionne = rendez_vous
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
@@ -60,7 +72,7 @@ class PlanningController(QObject):
             
         else:
             self.view.on_clear_clicked()
-            self.view.rdvs_selectionne[0]= RendezVous(None, date, None, None, None, None, None)
+            self.view.rdvs_selectionne = [RendezVous(None, date, None, None, None, None, None)]
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
     
@@ -77,10 +89,8 @@ class PlanningController(QObject):
         self.view.clear_planning()
         
         # Récupérer les RDV de la semaine depuis la base de données
-        date_debut_str = week_start.strftime('%Y-%m-%d 00:00:00')
-        date_fin_str = (week_end + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')
         
-        rdvs = self.rendez_vous_model.getRendezVousByPlage(date_debut_str, date_fin_str)
+        rdvs = self.rendez_vous_model.getRendezVousByPlage(week_start, week_end)
         for rdv in rdvs:
             patient = self.patient_model.getPatientById(rdv.patient_id)
             rdv_type = self.type_rendez_vous.getTypeRDVById(rdv.type_id)

@@ -6,30 +6,44 @@ from PySide6.QtCore import Qt, Signal, QStringListModel, QTime
 from PySide6.QtGui import QColor, QFont, QCursor
 from datetime import datetime, timedelta
 from app.model.rendezVous import RendezVous
+from app.model.typeRDV import TypeRDV
 from app.model.patient import Patient
 
 from app.widgetPersonalise.separator import Separator
-from utils import constantes_manager
+from app.utils import constantes_manager
 
 class PlanningView(QWidget):
     """Vue pour afficher le planning hebdomadaire des rendez-vous"""
     
     # Signaux
-    previous_week_clicked = Signal()
-    next_week_clicked = Signal()
-    cell_clicked = Signal(str, str)  # date, heure
-    supprimer_clicked = Signal(object)
-    creer_clicked = Signal(object)
+    previous_week_clicked: Signal = Signal()
+    """Signal émis lors du clic sur la semaine précédente."""
+    next_week_clicked: Signal = Signal()
+    """Signal émis lors du clic sur la semaine suivante."""
+    cell_clicked: Signal = Signal(int, str)
+    """Signal émis lors du clic sur une cellule du planning (date, heure)."""
+    supprimer_clicked: Signal = Signal(object)
+    """Signal émis lors de la demande de suppression d'un rendez-vous."""
+    creer_clicked: Signal = Signal(object)
+    """Signal émis lors de la création d'un rendez-vous."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue du planning."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la vue du planning hebdomadaire des rendez-vous.
+        """
         super().__init__()
-        self.liste_patients = []
-        self.types_rdv = []
-        self.rdvs_selectionne = [RendezVous(None,None,None,None,None)]
+        self.liste_patients: list[Patient] = []
+        self.types_rdv : list[TypeRDV] = []
+        self.rdvs_selectionne : list[RendezVous] = [RendezVous(None,None,None,None,None)]
         # Les constantes sont chargées dynamiquement depuis le JSON
         self.init_ui()
     
-    def init_ui(self):
+    def init_ui(self) -> None:
+        """
+        Crée et configure l'interface utilisateur du planning.
+        """
         main_layout = QHBoxLayout()
         self.setLayout(main_layout)
         # ajout du panel des rdv (creation modification suppression)
@@ -135,9 +149,6 @@ class PlanningView(QWidget):
         actions_layout.addWidget(self.supprimer_btn)
 
 
-
-        
-
         # ajout du planning
         planning_layout = QVBoxLayout()
         main_layout.addLayout(planning_layout)
@@ -166,7 +177,7 @@ class PlanningView(QWidget):
         self.table.setHorizontalHeaderLabels(["Heure", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
         
         # Créneaux horaires de 8h à 20h par tranches de 15 min
-        self.time_slots = []
+        self.time_slots : list[str] = []
         heure_debut = constantes_manager.get_constante("HEURE_DEBUT")
         heure_fin = constantes_manager.get_constante("HEURE_FIN")
         precision = constantes_manager.get_constante("PRECISION_PLANNING")
@@ -181,7 +192,7 @@ class PlanningView(QWidget):
         # Remplir la colonne des heures
         for i, time_slot in enumerate(self.time_slots):
             item = QTableWidgetItem(time_slot)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsDragEnabled)
             
             item.setTextAlignment(Qt.AlignCenter)
             font = QFont()
@@ -196,6 +207,7 @@ class PlanningView(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionMode(QTableWidget.NoSelection)  # Empêche la sélection multiple
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)  # Empêche l'édition
         self.table.cellClicked.connect(self.on_cell_clicked)
 
         # Activer le tracking de la souris pour les tooltips instantanés
@@ -217,17 +229,17 @@ class PlanningView(QWidget):
 
         planning_layout.addWidget(self.table)
         
-    def refresh(self):
+    def on_refresh(self):
         """Rafraîchir la vue du planning"""
-        self.load_week_rdvs()
 
         presence_option = constantes_manager.get_constante("PRESENCE_OPTION")
         self.presence_input.clear()
         self.presence_input.addItems(presence_option)
         self.presence_completer.setModel(QStringListModel(presence_option))
 
+        self.refresh.emit()
     
-    def on_cell_clicked(self, row, col):
+    def on_cell_clicked(self, row: int, col: int):
         """Gérer le clic sur une cellule"""
         if col == 0:  # Colonne des heures, ne rien faire
             return
@@ -237,7 +249,7 @@ class PlanningView(QWidget):
         day_index = col - 1  # 0=Lundi, 1=Mardi, etc.
         
         # Emettre le signal avec les infos
-        self.cell_clicked.emit(str(day_index), time_slot)
+        self.cell_clicked.emit(day_index, time_slot)
     
     def show_instant_tooltip(self, row, col):
         """Afficher le tooltip instantanément"""
@@ -265,14 +277,13 @@ class PlanningView(QWidget):
                 if (self.table.rowSpan(row, col) > 1 or self.table.columnSpan(row, col) > 1):
                     self.table.setSpan(row, col, 1, 1)  # Reset span
     
-    def add_rdv_to_planning(self,Rdv:RendezVous,patient:Patient,type_rendez_vous):
+    def add_rdv_to_planning(self,Rdv:RendezVous,patient:Patient,type_rendez_vous:TypeRDV) -> None:
         """
         Ajouter un rendez-vous au planning
-        day_index: 0=Lundi, 1=Mardi, ..., 4=Vendredi
-        time_str: "HH:MM"
-        patient_name: Nom du patient
-        motif: Motif du RDV
-        duree: Durée en minutes
+        Args:
+            Rdv (RendezVous): Objet RendezVous à ajouter au planning.
+            patient (Patient): Objet Patient associé au rendez-vous.
+            type_rendez_vous (TypeRDV): Objet TypeRDV associé au rendez-vous.
         """
         date = Rdv.date
         jour_index = date.weekday()  # 0=Lundi, 6=Dimanche
@@ -354,6 +365,9 @@ class PlanningView(QWidget):
 
     def afficher_details_rdv(self):
         """Afficher les détails du rendez-vous dans le panneau"""
+        if (len(self.rdvs_selectionne) == 0):
+            print("Aucun RDV sélectionné")
+            return
         rdv = self.rdvs_selectionne[0]
         print(rdv)
         if rdv is None:

@@ -4,32 +4,46 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 
-import utils.constantes_manager as constantes_manager
+from datetime import datetime,timedelta
+
+import app.utils.constantes_manager as constantes_manager
 
 class TypeRDVView(QWidget):
     """Vue pour gérer les types de rendez-vous"""
     
     # Signaux
-    type_rdv_selected = Signal(int)  # row index
-    type_rdv_updated = Signal(object)
-    type_rdv_deleted = Signal(int)  # type_rdv id
-    type_rdv_created = Signal(object)
+    type_rdv_selected: Signal = Signal(int)
+    """Signal émis lors de la sélection d'un type de RDV (index de ligne)."""
+    type_rdv_updated: Signal = Signal(object)
+    """Signal émis lors de la mise à jour d'un type de RDV."""
+    type_rdv_deleted: Signal = Signal(int)
+    """Signal émis lors de la suppression d'un type de RDV (id)."""
+    type_rdv_created: Signal = Signal(object)
+    """Signal émis lors de la création d'un type de RDV."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue des types de RDV."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la vue de gestion des types de rendez-vous.
+        """
         super().__init__()
         self.setup_ui()
         self.types_rdv = []
         self.selected_type_rdv_id = None
     
-    def setup_ui(self):
+    def setup_ui(self) -> None:
+        """
+        Crée et configure l'interface utilisateur pour la gestion des types de RDV.
+        """
         """Création de l'interface utilisateur"""
         
         main_layout = QVBoxLayout(self)
         
         # Table des types de RDV
         self.type_rdv_table = QTableWidget()
-        self.type_rdv_table.setColumnCount(6)
-        self.type_rdv_table.setHorizontalHeaderLabels(["ID", "Nom", "Description", "Prix", "Localisation", "Couleur"])
+        self.type_rdv_table.setColumnCount(8)
+        self.type_rdv_table.setHorizontalHeaderLabels(["ID", "Nom", "Description", "Prix","Durée", "Localisation", "Couleur", "Groupe"])
         self.type_rdv_table.setColumnHidden(0, True)  # Cacher la colonne ID
         self.type_rdv_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.type_rdv_table.setSelectionBehavior(QTableWidget.SelectRows)
@@ -57,7 +71,7 @@ class TypeRDVView(QWidget):
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Localisation :"))
         self.localisation_input = QComboBox()
-        self.localisation_input.addItems(["Cabinet", "A domicile", "Téléconsultation"])
+        self.localisation_input.addItems(constantes_manager.get_constante("LOCALISATIONS_RDV"))
         self.localisation_input.setEditable(True)
         row2.addWidget(self.localisation_input)
         row2.addWidget(QLabel("Couleur :"))
@@ -80,6 +94,8 @@ class TypeRDVView(QWidget):
         row3.addWidget(QLabel("Rendez-vous de groupe"))
         self.groupe_input = QCheckBox()
         row3.addWidget(self.groupe_input)
+
+        form_layout.addLayout(row3)
         
         # Description
         form_layout.addWidget(QLabel("Description :"))
@@ -98,13 +114,21 @@ class TypeRDVView(QWidget):
         self.creer_button.clicked.connect(self._on_creer_clicked)
         buttons_layout.addWidget(self.creer_button)
         
-        self.supprimer_button = QPushButton("Supprimer le type")
-        self.supprimer_button.clicked.connect(self._on_supprimer_clicked)
-        buttons_layout.addWidget(self.supprimer_button)
-        
         self.clear_button = QPushButton("Effacer les champs")
         self.clear_button.clicked.connect(self._on_clear_clicked)
         buttons_layout.addWidget(self.clear_button)
+
+    def on_refresh(self):
+        """Rafraîchir la vue (ex: recharger les listes déroulantes si besoin)"""
+        self.localisation_input.clear()
+        localisation_options = constantes_manager.get_constante("LOCALISATIONS_RDV")
+        self.localisation_input.addItems(localisation_options)
+
+        self.duree_input.clear()
+        duree_options = constantes_manager.get_constante("DUREES_RDV")
+        self.duree_input.addItems(duree_options)
+
+        self.refresh.emit()
     
     def choose_color(self):
         """Ouvrir le sélecteur de couleur"""
@@ -125,12 +149,15 @@ class TypeRDVView(QWidget):
             self.type_rdv_table.setItem(row_position, 1, QTableWidgetItem(type_rdv.nom))
             self.type_rdv_table.setItem(row_position, 2, QTableWidgetItem(type_rdv.description))
             self.type_rdv_table.setItem(row_position, 3, QTableWidgetItem(f"{type_rdv.prix:.2f} €"))
-            self.type_rdv_table.setItem(row_position, 4, QTableWidgetItem(type_rdv.localisation))
+            self.type_rdv_table.setItem(row_position, 4, QTableWidgetItem((datetime(2000,1,1,0,0) + timedelta(minutes=type_rdv.duree)).strftime("%H:%M")))
+            self.type_rdv_table.setItem(row_position, 5, QTableWidgetItem(type_rdv.localisation))
+        
+            self.type_rdv_table.setItem(row_position, 7, QTableWidgetItem(type_rdv.groupe and "Oui" or "Non"))
             
             # Couleur
             color_item = QTableWidgetItem()
             color_item.setBackground(QColor(type_rdv.couleur))
-            self.type_rdv_table.setItem(row_position, 5, color_item)
+            self.type_rdv_table.setItem(row_position, 6, color_item)
         
         self.type_rdv_table.setSortingEnabled(True)
         self.type_rdv_table.resizeColumnsToContents()
@@ -144,6 +171,8 @@ class TypeRDVView(QWidget):
         self.description_input.setText(type_rdv.description)
         self.couleur_preview.setStyleSheet(f"background-color: {type_rdv.couleur}; border: 1px solid black;")
         self.selected_color = type_rdv.couleur
+        self.duree_input.setCurrentText((datetime(2000,1,1,0,0) + timedelta(minutes=type_rdv.duree)).strftime("%H:%M"))
+        self.groupe_input.setChecked(type_rdv.groupe)
     
     def get_type_rdv_details(self):
         """Récupérer les valeurs du formulaire"""
@@ -154,7 +183,9 @@ class TypeRDVView(QWidget):
             description=self.description_input.toPlainText(),
             prix=float(self.prix_input.text()) if self.prix_input.text() else 0.0,
             localisation=self.localisation_input.currentText(),
-            couleur=getattr(self, 'selected_color', '#FFFFFF')
+            couleur=getattr(self, 'selected_color', '#FFFFFF'),
+            duree=timedelta(hours=int(self.duree_input.currentText().split(":")[0]), minutes=int(self.duree_input.currentText().split(":")[1])).seconds // 60,
+            groupe=self.groupe_input.isChecked()
         )
     
     def get_selected_row(self):
@@ -170,10 +201,12 @@ class TypeRDVView(QWidget):
         self.type_rdv_table.setItem(row, 2, QTableWidgetItem(type_rdv.description))
         self.type_rdv_table.setItem(row, 3, QTableWidgetItem(f"{type_rdv.prix:.2f} €"))
         self.type_rdv_table.setItem(row, 4, QTableWidgetItem(type_rdv.localisation))
+        self.type_rdv_table.setItem(row, 5, QTableWidgetItem(type_rdv.duree))
+        self.type_rdv_table.setItem(row, 7, QTableWidgetItem(type_rdv.groupe and "Oui" or "Non"))
         
         color_item = QTableWidgetItem()
         color_item.setBackground(QColor(type_rdv.couleur))
-        self.type_rdv_table.setItem(row, 5, color_item)
+        self.type_rdv_table.setItem(row, 6, color_item)
     
     def _on_validate_clicked(self):
         """Gérer le clic sur le bouton Valider"""
@@ -187,15 +220,6 @@ class TypeRDVView(QWidget):
         self.type_rdv_table.clearSelection()
         self._on_clear_clicked()
     
-    def _on_supprimer_clicked(self):
-        """Gérer le clic sur le bouton Supprimer le type"""
-        selected_row = self.get_selected_row()
-        if selected_row is not None:
-            type_rdv_id = int(self.type_rdv_table.item(selected_row, 0).text())
-            self.type_rdv_deleted.emit(type_rdv_id)
-            self.type_rdv_table.clearSelection()
-            self._on_clear_clicked()
-    
     def _on_clear_clicked(self):
         """Gérer le clic sur le bouton Effacer les champs"""
         self.nom_input.clear()
@@ -204,4 +228,7 @@ class TypeRDVView(QWidget):
         self.description_input.clear()
         self.couleur_preview.setStyleSheet("border: 1px solid black;")
         self.type_rdv_table.clearSelection()
+        self.selected_color = "#FFFFFF"
+        self.duree_input.setCurrentIndex(0)
+        self.groupe_input.setChecked(False)
         self.selected_type_rdv_id = None

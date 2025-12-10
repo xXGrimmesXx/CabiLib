@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QTableWidget,
 from PySide6.QtCore import Qt, Signal, QStringListModel
 
 from app.model.patient import Patient
-from utils import constantes_manager
+from app.utils import constantes_manager
 import datetime
 
 
@@ -11,21 +11,32 @@ class PatientView(QWidget):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    patient_selected = Signal(int)  # row index
-
-    patient_updated = Signal(Patient)
-    patient_deleted = Signal(int)  # patient id
-    patient_created = Signal(Patient)
-
-    search_changed = Signal(str)
+    patient_selected: Signal = Signal(int)
+    """Signal émis lors de la sélection d'un patient (index de ligne)."""
+    patient_updated: Signal = Signal(Patient)
+    """Signal émis lors de la mise à jour d'un patient."""
+    patient_deleted: Signal = Signal(int)
+    """Signal émis lors de la suppression d'un patient (id)."""
+    patient_created: Signal = Signal(Patient)
+    """Signal émis lors de la création d'un patient."""
+    search_changed: Signal = Signal(str)
+    """Signal émis lors d'une recherche dans la barre de recherche."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue des patients."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la vue de gestion des patients.
+        """
         super().__init__()
         self.setup_ui()
-        self.patients = []
-        self.selected_patient_id = None
+        self.patients: list[Patient] = []
+        self.selected_patient_id : int = None
     
-    def setup_ui(self):
+    def setup_ui(self) -> None:
+        """
+        Crée et configure l'interface utilisateur pour la gestion des patients.
+        """
         """Création de l'interface utilisateur"""
         
         # Layout principal
@@ -185,7 +196,7 @@ class PatientView(QWidget):
         button_hbox.addWidget(self.clear_button, alignment=Qt.AlignCenter)
         self.clear_button.clicked.connect(self._on_clear_clicked)
     
-    def refresh(self):
+    def on_refresh(self):
         """Rafraîchir la vue (ex: recharger les listes déroulantes si besoin)"""
         self.niveau_input.clear()
         niveau_options = constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS")
@@ -210,6 +221,8 @@ class PatientView(QWidget):
         etat_suivi_options = constantes_manager.get_constante("ETAT_SUIVI_OPTIONS")
         self.etat_suivi_input.addItems(etat_suivi_options)
         self.completer_etat_suivi.setModel(QStringListModel(etat_suivi_options))
+
+        self.refresh.emit()
 
 
     def load_patients(self, patients_data):

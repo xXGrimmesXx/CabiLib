@@ -11,15 +11,26 @@ class creerFactureView(QWidget):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    generate_facture_clicked = Signal(object)  # Signal avec options de facturation
-    mass_facture_generer = Signal(object,object) #date de début date de fin
-    single_facture_generer = Signal(object,object,int) # date de début date de fin et id du patient
+    generate_facture_clicked: Signal = Signal(object)
+    """Signal émis lors du clic pour générer une facture (options de facturation)."""
+    mass_facture_generer: Signal = Signal(object, object)
+    """Signal émis pour générer des factures en masse (date de début, date de fin)."""
+    single_facture_generer: Signal = Signal(object, object, int)
+    """Signal émis pour générer une facture individuelle (date de début, date de fin, id patient)."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue de facturation."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la vue de création de factures.
+        """
         super().__init__()
         self.setup_ui()
     
-    def setup_ui(self):
+    def setup_ui(self) -> None:
+        """
+        Crée et configure l'interface utilisateur pour la création de factures.
+        """
         """Création de l'interface utilisateur"""
 
         self.main_layout = QVBoxLayout(self)
@@ -101,6 +112,9 @@ class creerFactureView(QWidget):
         self.creer_button = QPushButton("Générer les factures")
         self.creer_button.clicked.connect(self.on_creer_clicked)
         self.main_layout.addWidget(self.creer_button)
+
+    def on_refresh(self):
+        self.refresh.emit()
 
     def set_patient_list(self, patients):
         """Remplir la liste des patients"""

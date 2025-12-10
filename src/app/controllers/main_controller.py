@@ -22,10 +22,12 @@ from app.model.typeRDV import TypeRDV
 
 from app.views.comptabilite_view import ComptabiliteView
 
+from app.views.main_window_view import MainWindow
+
 
 
 class MainController:
-    def __init__(self, main_window):
+    def __init__(self, main_window: MainWindow):
         self.main_window = main_window
         self.views = {}
         self.controllers = {}
@@ -42,57 +44,50 @@ class MainController:
         # Charger le premier onglet
         self.load_tab("patients")
     
-    def load_tab(self, key):
+    def load_tab(self, key: str):
         """Charger un onglet à la demande"""
 
-        if key in self.views:
+        if key in self.views and key in self.controllers:
             ctrl = self.controllers.get(key)
-            if ctrl and hasattr(ctrl, 'refresh'):
-                try:
-                    ctrl.refresh()
-                except Exception:
-                    pass
-            else:
-                view = self.views.get(key)
-                if view and hasattr(view, 'refresh'):
-                    try:
-                        view.refresh()
-                    except Exception:
-                        pass
+            ctrl.view.on_refresh()
+            self.main_window.replace_tab(
+                list(self.views.keys()).index(key),
+                self.views[key])
             return
+
 
         if key == "patients":
             self.current_view = PatientView()
             self.current_controller = PatientController(Patient, self.current_view)
-            self.main_window.replace_tab(0, self.current_view, "👤 Patients")
+            self.main_window.replace_tab(0, self.current_view)
             self.views["patients"] = self.current_view
             self.controllers["patients"] = self.current_controller
 
         elif key == "planning":
             self.current_view = PlanningView()
             self.current_controller = PlanningController(RendezVous, self.current_view)
-            self.main_window.replace_tab(1, self.current_view, "📅 Planning")
+            self.main_window.replace_tab(1, self.current_view)
             self.views["planning"] = self.current_view
             self.controllers["planning"] = self.current_controller
 
         elif key == "suivi_factures":
             self.current_view = SuivreFactureView()
             self.current_controller = SuivreFactureController(Facture, self.current_view)
-            self.main_window.replace_tab(2, self.current_view, "💼 Suivre Factures")
+            self.main_window.replace_tab(2, self.current_view)
             self.views["suivi_factures"] = self.current_view
             self.controllers["suivi_factures"] = self.current_controller
 
         elif key == "types_rdv":
             self.current_view = TypeRDVView()
             self.current_controller = TypeRDVController(TypeRDV, self.current_view)
-            self.main_window.replace_tab(3, self.current_view, "🏥 Types de RDV")
+            self.main_window.replace_tab(3, self.current_view)
             self.views["types_rdv"] = self.current_view
             self.controllers["types_rdv"] = self.current_controller
 
         elif key == "comptabilite":
             self.current_view = ComptabiliteView()
             self.current_controller = None
-            self.main_window.replace_tab(4, self.current_view, "💰 Comptabilité ▾")
+            self.main_window.replace_tab(4, self.current_view)
             self.views["comptabilite"] = self.current_view
             self.controllers["comptabilite"] = self.current_controller
 
@@ -100,15 +95,15 @@ class MainController:
             from app.controllers.propriete_controller import ProprieteController
             self.current_controller = ProprieteController()
             self.current_view = self.current_controller.view
-            self.main_window.replace_tab(5, self.current_view, "⚙️ Propriétés")
+            self.main_window.replace_tab(5, self.current_view)
             self.views["proprietes"] = self.current_view
             self.controllers["proprietes"] = self.current_controller
     
-    def on_tab_changed(self, key):
+    def on_tab_changed(self, key:str):
         """Changement d'onglet par clé explicite"""
         self.load_tab(key)
 
-    def on_menu_action(self, action_name):
+    def on_menu_action(self, action_name: str):
         """Handle menu actions from the Comptabilité dropdown."""
         if action_name == 'creer_facture':
             self.load_tab("comptabilite")
@@ -124,7 +119,7 @@ class MainController:
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
-                self.main_window.replace_tab(4, view, 'Comptabilité')
+                self.main_window.replace_tab(4, view)
                 self.views["comptabilite"] = view
             self.main_window.tabs.setCurrentIndex(4)
         elif action_name == 'creer_devis':
@@ -135,7 +130,7 @@ class MainController:
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
-                self.main_window.replace_tab(4, view, 'Comptabilité')
+                self.main_window.replace_tab(4, view)
                 self.views["comptabilite"] = view
                 self.controllers["comptabilite"] = None
             self.main_window.tabs.setCurrentIndex(4)
@@ -147,7 +142,7 @@ class MainController:
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
-                self.main_window.replace_tab(4, view, 'Comptabilité')
+                self.main_window.replace_tab(4, view)
                 self.views["comptabilite"] = view
                 self.controllers["comptabilite"] = None
             self.main_window.tabs.setCurrentIndex(4)

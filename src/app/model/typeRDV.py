@@ -1,9 +1,31 @@
-from database.setup_db import DB_PATH
+from app.database.setup_db import DB_PATH
 import sqlite3
 from datetime import timedelta
 
 class TypeRDV:
-    def __init__(self, id, nom, description, prix, duree, localisation, couleur, estgroupe):
+    id: int
+    nom: str
+    description: str
+    prix: float
+    duree: timedelta
+    localisation: str
+    couleur: str
+    estgroupe: bool
+
+    def __init__(self, id: int, nom: str, description: str, prix: float, duree: 'timedelta', localisation: str, couleur: str, estgroupe: bool) -> None:
+        """
+        Initialise une instance de TypeRDV.
+
+        Args:
+            id (int): Identifiant du type de rendez-vous.
+            nom (str): Nom du type de rendez-vous.
+            description (str): Description du type de rendez-vous.
+            prix (float): Prix du rendez-vous.
+            duree (timedelta): Durée du rendez-vous.
+            localisation (str): Lieu du rendez-vous.
+            couleur (str): Couleur associée.
+            estgroupe (bool): Indique si le rendez-vous est groupé.
+        """
         self.id = id
         self.nom = nom
         self.description = description
@@ -13,21 +35,30 @@ class TypeRDV:
         self.couleur = couleur
         self.estgroupe = estgroupe
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Retourne une représentation textuelle du type de rendez-vous.
+
+        Returns:
+            str: Représentation lisible du type de rendez-vous.
+        """
         return f"TypeRDV(ID: {self.id}, Nom: {self.nom}, Description: {self.description}, Prix: {self.prix})"
     
     @staticmethod
-    def getAllTypesRDV():
+    def getAllTypesRDV() -> list['TypeRDV']:
+        """
+        Récupère tous les types de rendez-vous depuis la base de données.
+
+        Returns:
+            list[TypeRDV]: Liste de tous les types de rendez-vous.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-
         cursor.execute("SELECT * FROM type_rdv")
         types_data = cursor.fetchall()
         connexion.close()
-
         types = []
         for data in types_data:
-            
             type_rdv = TypeRDV(
                 id=data[0],
                 nom=data[1],
@@ -39,20 +70,25 @@ class TypeRDV:
                 estgroupe=data[7]
             )
             types.append(type_rdv)
-        
         return types
     
     @staticmethod
-    def getTypeRDVById(type_id):
+    def getTypeRDVById(type_id: int) -> 'TypeRDV | None':
+        """
+        Récupère un type de rendez-vous par son identifiant.
+
+        Args:
+            type_id (int): Identifiant du type de rendez-vous.
+
+        Returns:
+            TypeRDV | None: Instance de TypeRDV si trouvée, sinon None.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-
         cursor.execute("SELECT * FROM type_rdv WHERE id = ?", (type_id,))
         data = cursor.fetchone()
         connexion.close()
-
         if data:
-            
             return TypeRDV(
                 id=data[0],
                 nom=data[1],
@@ -66,20 +102,28 @@ class TypeRDV:
         return None
     
     @staticmethod
-    def addTypeRDV(typeRDV):
+    def addTypeRDV(typeRDV: 'TypeRDV') -> None:
+        """
+        Ajoute un type de rendez-vous à la base de données.
+
+        Args:
+            typeRDV (TypeRDV): Instance du type de rendez-vous à ajouter.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-
         cursor.execute(
             "INSERT INTO type_rdv (nom, description, prix, duree, localisation, couleur,estgroupe) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (typeRDV.nom, typeRDV.description, typeRDV.prix, typeRDV.duree.total_seconds() // 60, typeRDV.localisation, typeRDV.couleur,typeRDV.estgroupe)
-                )
+            (typeRDV.nom, typeRDV.description, typeRDV.prix, typeRDV.duree.total_seconds() // 60, typeRDV.localisation, typeRDV.couleur, typeRDV.estgroupe)
+        )
         connexion.commit()
         connexion.close()
     
     @staticmethod
-    def updateTypeRDV(type_rdv):
-        """Mettre à jour un type de RDV"""
+    def updateTypeRDV(type_rdv: 'TypeRDV') -> None:
+        """Mettre à jour un type de RDV
+        Args:
+            type_rdv (TypeRDV): Instance du type de rendez-vous à mettre à jour.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
         cursor.execute("""
@@ -91,8 +135,11 @@ class TypeRDV:
         connexion.close()
     
     @staticmethod
-    def deleteTypeRDV(type_rdv_id):
-        """Supprimer un type de RDV"""
+    def deleteTypeRDV(type_rdv_id: int) -> None:
+        """Supprimer un type de RDV
+        Args:
+            type_rdv_id (int): Identifiant du type de rendez-vous à supprimer.
+        """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
         cursor.execute("DELETE FROM type_rdv WHERE id = ?", (type_rdv_id,))

@@ -12,6 +12,10 @@ class ProprieteController:
 		self.view = ProprieteView()
 		self.load_properties()
 		self.view.enregistrer_clicked.connect(self.save_properties)
+		self.view.refresh.connect(self.on_refresh)
+
+	def on_refresh(self):
+		self.load_properties()
 
 	def load_properties(self):
 		try:

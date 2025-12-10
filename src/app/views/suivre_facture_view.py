@@ -8,16 +8,28 @@ class SuivreFactureView(QWidget):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    facture_selected = Signal(int)  # row index
-    facture_updated = Signal(Facture)
-    ligne_facture_selected = Signal(int)  # row index
-    search_changed = Signal(str)
+    facture_selected: Signal = Signal(int)
+    """Signal émis lors de la sélection d'une facture (index de ligne)."""
+    facture_updated: Signal = Signal(Facture)
+    """Signal émis lors de la mise à jour d'une facture."""
+    ligne_facture_selected: Signal = Signal(int)
+    """Signal émis lors de la sélection d'une ligne de facture (index de ligne)."""
+    search_changed: Signal = Signal(str)
+    """Signal émis lors d'une recherche dans la barre de recherche."""
+    refresh: Signal = Signal()
+    """Signal pour rafraîchir la vue des factures."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise la vue de suivi des factures.
+        """
         super().__init__()
         self.setup_ui()
     
-    def setup_ui(self):
+    def setup_ui(self) -> None:
+        """
+        Crée et configure l'interface utilisateur pour le suivi des factures.
+        """
         """Création de l'interface utilisateur"""
 
         main_grid = QGridLayout(self)
@@ -61,12 +73,28 @@ class SuivreFactureView(QWidget):
         
 
 
+    def on_refresh(self) -> None:
+        """
+        Rafraîchit la vue (recharge les factures).
+        """
+        """Rafraîchir la vue (recharger les factures)"""
+        self.refresh.emit()
     
-    def on_search_text_changed(self, text):
+    def on_search_text_changed(self, text: str) -> None:
+        """
+        Émet le signal de changement de recherche.
+        Args:
+            text (str): Texte de recherche saisi.
+        """
         """Émettre le signal de changement de recherche"""
         self.search_changed.emit(text)
 
-    def filter_rows(self, search_text):
+    def filter_rows(self, search_text: str) -> None:
+        """
+        Filtre les lignes selon le texte de recherche.
+        Args:
+            search_text (str): Texte de recherche à filtrer.
+        """
         """Filtrer les lignes selon le texte de recherche"""
         for row in range(self.facture_table.rowCount()):
             match = False
@@ -77,7 +105,12 @@ class SuivreFactureView(QWidget):
                     break
             self.facture_table.setRowHidden(row, not match)
 
-    def load_factures(self, factures):
+    def load_factures(self, factures: list) -> None:
+        """
+        Charge les factures dans la table.
+        Args:
+            factures (list): Liste des factures à afficher.
+        """
         """Charger les factures dans la table"""
         self.facture_table.setRowCount(0)  # Vider la table avant de charger
 
@@ -97,7 +130,13 @@ class SuivreFactureView(QWidget):
             self.facture_table.setItem(row_position, 4, QTableWidgetItem(date_paiement_str))
             self.facture_table.setItem(row_position, 5, QTableWidgetItem(facture.description))
 
-    def display_facture_details(self, facture, lignes_facture):
+    def display_facture_details(self, facture, lignes_facture) -> None:
+        """
+        Affiche les détails d'une facture sélectionnée.
+        Args:
+            facture: Facture sélectionnée.
+            lignes_facture: Lignes associées à la facture.
+        """
         """Afficher les détails d'une facture sélectionnée"""
         # Mettre à jour les champs de la facture
         # (À implémenter si nécessaire)

@@ -4,26 +4,44 @@ from app.model.rendezVous import RendezVous
 from app.model.typeRDV import TypeRDV
 from app.model.ligneFacture import LigneFacture
 from datetime import timedelta, datetime
-import utils.constantes_manager as cm
-import utils.facture_generator as fg
-# import utils.mail_sender as ms
+import app.utils.constantes_manager as cm
+import app.utils.facture_generator as fg
+# import app.utils.mail_sender as ms
+
+from app.views.creer_facture_view import creerFactureView
 
 
 class CreerFactureController:
-    def __init__(self, model, view):
-        self.patientModel = Patient
-        self.factureModel = Facture
-        self.rdvModel = RendezVous
-        self.typeRDVModel = TypeRDV
-        self.ligneFactureModel = LigneFacture
-        self.view = view
-        self.type_rdv_liste = self.typeRDVModel.getAllTypesRDV()
+    def __init__(self, model, view: creerFactureView):
+        self.patientModel: Patient = Patient
+        self.factureModel: Facture = Facture
+        self.rdvModel: RendezVous =Patient
+        self.factureModel: Facture = Facture
+        self.rdvModel: RendezVous = RendezVous
+        self.typeRDVModel: TypeRDV = TypeRDV
+        self.ligneFactureModel: LigneFacture = LigneFacture
+        self.view: creerFactureView = view
+        self.type_rdv_liste: list[TypeRDV] = self.typeRDVModel.getAllTypesRDV()
         # Connecter les signaux de la vue aux méthodes du contrôleur
         self.view.mass_facture_generer.connect(self.on_mass_facture_generer)
         self.view.single_facture_generer.connect(self.on_single_facture_generer)
+        self.view.refresh.connect(self.on_refresh)
         self.view.set_patient_list(self.patientModel.getAllPatients())
 
-    def facturer_patient(self, patient, start_date, end_date) :
+    def on_refresh(self):
+        self.view.set_patient_list(self.patientModel.getAllPatients())
+
+    def facturer_patient(self, patient: Patient, start_date: datetime, end_date: datetime) -> tuple[int,str]:
+        """Facturer un patient pour les rendez-vous entre start_date et end_date.
+
+        args:
+            patient (Patient): Le patient à facturer.
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+
+        returns:
+            tuple[int,str]: L'ID de la facture créée et le chemin du PDF généré. Si aucun rendez-vous n'est facturé, retourne -1 et une chaîne vide.
+        """
         liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
         rdvs_factures = []
         rdvs_patient_absent = []
@@ -137,7 +155,13 @@ class CreerFactureController:
         
 
 
-    def on_mass_facture_generer(self, start_date, end_date):
+    def on_mass_facture_generer(self, start_date: datetime, end_date: datetime)-> None:
+        """Générer des factures de masse pour tous les patients entre start_date et end_date.
+        args:
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+        """
+
         print("Génération de factures de masse du", start_date, "au", end_date)
         patients = self.patientModel.getAllPatients()
         factures_creees = []
@@ -145,7 +169,14 @@ class CreerFactureController:
             factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
         self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])
 
-    def on_single_facture_generer(self, start_date, end_date, patient_id):
+    def on_single_facture_generer(self, start_date: datetime, end_date: datetime, patient_id: int)-> None:
+        """Générer une facture pour un patient spécifique entre start_date et end_date.
+        args:
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+            patient_id (int): L'ID du patient pour lequel la facture est générée.
+        """
+        
         print("Génération d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
         patient = self.patientModel.getPatientById(patient_id)
         facture_id,fp = self.facturer_patient(patient, start_date, end_date)
