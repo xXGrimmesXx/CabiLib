@@ -1,5 +1,3 @@
-from PySide6.QtWidgets import QWidget
-
 from app.views.patient_view import PatientView
 from app.controllers.patient_controller import PatientController
 from app.model.patient import Patient
@@ -46,13 +44,25 @@ class MainController:
     
     def load_tab(self, key: str):
         """Charger un onglet à la demande"""
+        
+        # Map des clés vers les index fixes des onglets
+        key_to_index = {
+            "patients": 0,
+            "planning": 1,
+            "suivi_factures": 2,
+            "types_rdv": 3,
+            "comptabilite": 4,
+            "proprietes": 5
+        }
 
         if key in self.views and key in self.controllers:
             ctrl = self.controllers.get(key)
-            ctrl.view.on_refresh()
-            self.main_window.replace_tab(
-                list(self.views.keys()).index(key),
-                self.views[key])
+            # Ne pas appeler on_refresh si le contrôleur est None (ex : comptabilité)
+            if ctrl is not None and hasattr(ctrl, 'view') and hasattr(ctrl.view, 'on_refresh'):
+                ctrl.view.on_refresh()
+            # Utiliser l'index fixe au lieu de calculer depuis le dictionnaire
+            tab_index = key_to_index.get(key, 0)
+            self.main_window.replace_tab(tab_index, self.views[key])
             return
 
 

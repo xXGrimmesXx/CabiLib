@@ -1,41 +1,18 @@
 {
-  "PRACTITIONER_NAME": "Dr. Jean Dupont",
-  "PRACTITIONER_PHONE": "01 23 45 67 89",
-  "PRACTITIONER_EMAIL": "jean.dupont@example.com",
-  "CABINET_ADDRESS": "123 Rue de la Santé, 75000 Paris",
-  "AMENAGEMENTS_OPTIONS": [
-    "Classique",
-    "ULIS TSL(A)",
-    "ULIS TFC",
-    "ULIS TFS",
-    "ULIS TFM",
-    "SEGPA",
-    "Ecole privée",
-    "CAP",
-    "feur"
-  ],
-  "ETAT_SUIVI_OPTIONS": [
-    "En cours",
-    "Terminé",
-    "En attente",
-    "En pause"
-  ],
-  "NIVEAU_SCOLAIRE_OPTIONS": [
-    "CE2",
-    "CM1",
-    "CM2",
-    "6ème",
-    "5ème",
-    "4ème",
-    "3ème",
-    "2nde",
-    "1ère",
-    "Terminale",
-    "Post-bac",
-    "MATERNELLE",
-    "CP",
-    "Polytech"
-  ],
+  "HEURE_DEBUT": "7:00",
+  "HEURE_FIN": "21:00",
+  "PRACTITIONER_NAME": "",
+  "PRACTITIONER_PHONE": "",
+  "PRACTITIONER_EMAIL": "",
+  "CABINET_ADDRESS": "",
+  "FACTURES_DIR": "",
+  "HISTORIQUE_ABSENCE_JOURS": 10,
+  "DELAI_PAIEMENT_FACTURE_DAYS": 10,
+  "SIRET": "",
+  "APE": "",
+  "ADELI": "",
+  "AMENAGEMENTS_OPTIONS": [],
+  "NIVEAU_SCOLAIRE_OPTIONS": [],
   "TYPE_TELEPHONE_OPTIONS": [
     "Père",
     "Mère",
@@ -44,42 +21,22 @@
     "Domicile",
     "Autre"
   ],
-  "PRESENCE_OPTION": [
-    "A renseigner",
-    "A confirmer",
-    "Patient présent",
-    "Patient absent",
-    "Patient absent excusé",
-    "Annulé par moi"
-  ],
   "LOCALISATIONS_RDV": [
     "Cabinet",
     "A domicile",
     "Téléconsultation"
   ],
-  "DUREES_RDV": [
-    "30",
-    "45",
-    "60",
-    "75",
-    "90",
-    "120",
-    "150",
-    "180"
+  "ETAT_SUIVI_OPTIONS": [
+    "En cours",
+    "Terminé",
+    "Suspendu",
+    "En attente"
   ],
-  "HEURE_DEBUT": "07:00",
-  "HEURE_FIN": "21:00",
-  "PRECISION_PLANNING": [
-    0,
-    15,
-    30,
-    45
-  ],
-  "FACTURES_DIR": "C:/Users/mloui/Desktop/CabiLib/Factures",
-  "HISTORIQUE_ABSENCE_JOURS": 30,
-  "CREDENTIALS_JWT": "",
-  "DELAI_PAIEMENT_FACTURE_DAYS": 30,
-  "SIRET": "123 456 789 00012",
-  "APE": "8622Z",
-  "ADELI": "0123456789"
+  "PRESENCE_OPTIONS": [
+    "A définir",
+    "Présent",
+    "Absent",
+    "Absent excusé",
+    "Annulé"
+  ]
 }

@@ -1,4 +1,3 @@
-from app.views.type_rdv_view import TypeRDVView
 from app.model.typeRDV import TypeRDV
 
 class TypeRDVController:

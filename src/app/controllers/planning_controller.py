@@ -1,5 +1,5 @@
-from PySide6.QtCore import Signal, QObject
-from datetime import datetime, timedelta
+from PySide6.QtCore import QObject
+from datetime import timedelta
 from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
 from app.model.rendezVous import RendezVous
@@ -7,8 +7,6 @@ from app.views.planning_view import PlanningView
 
 class PlanningController(QObject):
     """Contrôleur pour gérer le planning des rendez-vous"""
-    rendez_vous_clicked = Signal(object)  # Signal avec objet RendezVous
-    crenneau_clicked = Signal(object)  # Signal avec objet datetime
 
     def __init__(self, model: RendezVous, view:PlanningView):
         super().__init__()  # Initialiser QObject
@@ -39,12 +37,18 @@ class PlanningController(QObject):
     def on_previous_week(self):
         """Naviguer vers la semaine précédente"""
         self.current_week_start -= timedelta(days=7)
+        print(self.current_week_start)
         self.load_week_rdvs()
+        print("fin de on previous week")
     
     def on_next_week(self):
         """Naviguer vers la semaine suivante"""
-        self.current_week_start += timedelta(days=7)
-        self.load_week_rdvs()
+        try :
+            self.current_week_start += timedelta(days=7)
+            self.load_week_rdvs()
+            print("fin de on next week")
+        except Exception as e:
+            print(f"Error in on_next_week: {e}")
     
     def on_cell_clicked(self, day_index: int, time_slot: str) -> None:
         """Gérer le clic sur une cellule du planning
@@ -58,12 +62,9 @@ class PlanningController(QObject):
         days = day_index
         hours = int(time_slot.split(":")[0])
         minutes = int(time_slot.split(":")[1])
-        print(f"Clic sur cellule : Jour index {day_index}, Heure {time_slot}")
         
         date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
-        print(f"Date calculée : {date}")
         rendez_vous = self.rendez_vous_model.getRendezVousByDateTime(date)
-        print(f"Rendez-vous trouvé : {rendez_vous}")
         if (rendez_vous is not None and rendez_vous!=[]):
             self.view.rdvs_selectionne = rendez_vous
             self.view.afficher_details_rdv()
@@ -76,25 +77,30 @@ class PlanningController(QObject):
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
     
-    def load_week_rdvs(self):
+    def load_week_rdvs(self) -> None:
         """Charger les rendez-vous de la semaine"""
         # Calculer le début et la fin de la semaine (Lundi à Dimanche)
         week_start = self.current_week_start
         week_end = week_start + timedelta(days=6)  # Dimanche
-        
+
         # Mettre à jour le label
         self.view.set_week_label(week_start, week_end)
-        
         # Effacer le planning
         self.view.clear_planning()
-        
         # Récupérer les RDV de la semaine depuis la base de données
-        
         rdvs = self.rendez_vous_model.getRendezVousByPlage(week_start, week_end)
-        for rdv in rdvs:
-            patient = self.patient_model.getPatientById(rdv.patient_id)
-            rdv_type = self.type_rendez_vous.getTypeRDVById(rdv.type_id)
-            self.view.add_rdv_to_planning(rdv, patient, rdv_type)
+        if (rdvs is not None and rdvs!=[]):
+            # Ajouter les RDV au planning
+            for rdv in rdvs:
+                if (rdv is None):
+                    continue
+                patient = self.patient_model.getPatientById(rdv.patient_id)
+                rdv_type = self.type_rendez_vous.getTypeRDVById(rdv.type_id)
+                if patient is None:
+                    continue
+                if rdv_type is None:
+                    continue
+                self.view.add_rdv_to_planning(rdv, patient, rdv_type)
 
     def on_creer_clicked(self, rdv):
         """Gérer la création ou la modification d'un rendez-vous"""

@@ -1,63 +1,43 @@
 # -*- coding: utf-8 -*-
+"""
+Contrôleur pour la gestion des propriétés du cabinet.
+Gère la communication entre la vue et le modèle via les signaux Qt.
+"""
 
-from app.views.propritete_view import ProprieteView
-from utils import constantes_manager
+from app.views.propriete_view import ProprieteView
 
-# Nouvelle version : tous les champs éditables
 
 class ProprieteController:
-	def refresh(self):
-		self.load_properties()
+	"""Contrôleur pour la gestion des propriétés du cabinet/praticien."""
+	
 	def __init__(self):
+		"""Initialise le contrôleur et connecte les signaux de la vue."""
 		self.view = ProprieteView()
-		self.load_properties()
-		self.view.enregistrer_clicked.connect(self.save_properties)
-		self.view.refresh.connect(self.on_refresh)
-
-	def on_refresh(self):
-		self.load_properties()
-
-	def load_properties(self):
-		try:
-			nom = constantes_manager.get_constante('PRACTITIONER_NAME')
-			tel = constantes_manager.get_constante('PRACTITIONER_PHONE')
-			adresse = constantes_manager.get_constante('CABINET_ADDRESS')
-			factures_dir = constantes_manager.get_constante('FACTURES_DIR')
-			amenagements = ','.join(constantes_manager.get_constante('AMENAGEMENTS_OPTIONS'))
-			etat_suivi = ','.join(constantes_manager.get_constante('ETAT_SUIVI_OPTIONS'))
-			niveau_scolaire = ','.join(constantes_manager.get_constante('NIVEAU_SCOLAIRE_OPTIONS'))
-			type_telephone = ','.join(constantes_manager.get_constante('TYPE_TELEPHONE_OPTIONS'))
-			durees_rdv = ','.join(constantes_manager.get_constante('DUREES_RDV'))
-			heure_debut = constantes_manager.get_constante('HEURE_DEBUT')
-			heure_fin = constantes_manager.get_constante('HEURE_FIN')
-			precision_planning = ','.join([str(x) for x in constantes_manager.get_constante('PRECISION_PLANNING')])
-		except Exception as e:
-			print("Erreur lecture Constantes.json:", e)
-			nom = tel = adresse = factures_dir = ''
-			amenagements = etat_suivi = niveau_scolaire = type_telephone = durees_rdv = heure_debut = heure_fin = precision_planning = ''
-		self.view.set_values(
-			nom, tel, adresse, factures_dir,
-			amenagements, etat_suivi, niveau_scolaire, type_telephone,
-			durees_rdv, heure_debut, heure_fin, precision_planning
-		)
-
-	def save_properties(self):
-		vals = self.view.get_values()
-		try:
-			constantes_manager.set_constante('PRACTITIONER_NAME', vals['nom'])
-			constantes_manager.set_constante('PRACTITIONER_PHONE', vals['tel'])
-			constantes_manager.set_constante('CABINET_ADDRESS', vals['adresse'])
-			constantes_manager.set_constante('FACTURES_DIR', vals['factures_dir'])
-			constantes_manager.set_constante('AMENAGEMENTS_OPTIONS', [x.strip() for x in vals['amenagements'].split(',') if x.strip()])
-			constantes_manager.set_constante('ETAT_SUIVI_OPTIONS', [x.strip() for x in vals['etat_suivi'].split(',') if x.strip()])
-			constantes_manager.set_constante('NIVEAU_SCOLAIRE_OPTIONS', [x.strip() for x in vals['niveau_scolaire'].split(',') if x.strip()])
-			constantes_manager.set_constante('TYPE_TELEPHONE_OPTIONS', [x.strip() for x in vals['type_telephone'].split(',') if x.strip()])
-			constantes_manager.set_constante('DUREES_RDV', [x.strip() for x in vals['durees_rdv'].split(',') if x.strip()])
-			constantes_manager.set_constante('HEURE_DEBUT', vals['heure_debut'])
-			constantes_manager.set_constante('HEURE_FIN', vals['heure_fin'])
-			# precision_planning: convert to int if possible
-			precision = [int(x.strip()) if x.strip().isdigit() else x.strip() for x in vals['precision_planning'].split(',') if x.strip()]
-			constantes_manager.set_constante('PRECISION_PLANNING', precision)
-		except Exception as e:
-			print("Erreur écriture Constantes.json:", e)
-		self.load_properties()
+		self._connect_signals()
+		
+	def _connect_signals(self):
+		"""Connecte les signaux de la vue aux slots du contrôleur."""
+		self.view.constante_modified.connect(self._on_constante_modified)
+		self.view.list_item_added.connect(self._on_list_item_added)
+		
+	def _on_constante_modified(self, key: str, value):
+		"""
+		Callback appelé quand une constante est modifiée.
+		La sauvegarde est déjà effectuée par la vue via constantes_manager.
+		
+		Args:
+			key: Clé de la constante modifiée
+			value: Nouvelle valeur
+		"""
+		print(f"Constante modifiée: {key} = {value}")
+		
+	def _on_list_item_added(self, key: str, value: str):
+		"""
+		Callback appelé quand un élément est ajouté à une liste.
+		La sauvegarde est déjà effectuée par la vue via constantes_manager.
+		
+		Args:
+			key: Clé de la liste
+			value: Valeur ajoutée
+		"""
+		print(f"Valeur ajoutée à {key}: {value}")

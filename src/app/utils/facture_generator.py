@@ -32,8 +32,9 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     ADELI = constantes_manager.get_constante("ADELI")
 
     # --- 2. Gestion du Logo ---
-    logo_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logo.png')
+    logo_file = os.path.join(os.environ.get("APPDATA"),"CabiLib", 'logo.png').replace('\\', '/')
     logo_base64 = ''
+    print("Logo file path:", logo_file)
     try:
         with open(logo_file, 'rb') as img_f:
             logo_bytes = img_f.read()

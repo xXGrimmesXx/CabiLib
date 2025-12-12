@@ -102,13 +102,13 @@ def initTypeRdvTestData():
     cursor = connexion.cursor()
     durees = constantes_manager.get_constante("DUREES_RDV")
     test_type_rdv = [
-        ("Consultation générale", "Consultation médicale standard", 50.0, random.choice(durees), "A domicile", "#512B2B", 0),
-        ("Consultation spécialisée", "Consultation avec un spécialiste", 80.0, random.choice(durees),"Cabinet", "#5FE1AD", 0),
-        ("Suivi de traitement", "Rendez-vous de suivi", 45.0, random.choice(durees),"Cabinet", "#0084FF", 0),
-        ("Vaccination", "Administration de vaccins", 30.0, random.choice(durees),"Cabinet", "#00FF1E", 0),
-        ("Examen médical", "Examen complet de santé", 100.0, random.choice(durees),"Cabinet", "#FFE600", 0),
-        ("Urgence", "Consultation d'urgence", 120.0, random.choice(durees),"Cabinet", "#FF0000", 0),
-        ("Téléconsultation", "Consultation à distance", 40.0, random.choice(durees),"Cabinet", "#8000FF", 1)
+        ("Consultation générale", "Consultation médicale standard", 50.0, random.randint(1,10)*15, "A domicile", "#512B2B", 0),
+        ("Consultation spécialisée", "Consultation avec un spécialiste", 80.0, random.randint(1,10)*15,"Cabinet", "#5FE1AD", 0),
+        ("Suivi de traitement", "Rendez-vous de suivi", 45.0, random.randint(1,10)*15,"Cabinet", "#0084FF", 0),
+        ("Vaccination", "Administration de vaccins", 30.0, random.randint(1,10)*15,"Cabinet", "#00FF1E", 0),
+        ("Examen médical", "Examen complet de santé", 100.0, random.randint(1,10)*15,"Cabinet", "#FFE600", 0),
+        ("Urgence", "Consultation d'urgence", 120.0, random.randint(1,10)*15,"Cabinet", "#FF0000", 0),
+        ("Téléconsultation", "Consultation à distance", 40.0, random.randint(1,10)*15,"Cabinet", "#8000FF", 1)
     ]
     
     cursor.executemany("""

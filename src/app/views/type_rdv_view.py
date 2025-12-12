@@ -71,7 +71,8 @@ class TypeRDVView(QWidget):
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Localisation :"))
         self.localisation_input = QComboBox()
-        self.localisation_input.addItems(constantes_manager.get_constante("LOCALISATIONS_RDV"))
+        locs = constantes_manager.get_constante("LOCALISATIONS_RDV") or []
+        self.localisation_input.addItems(locs)
         self.localisation_input.setEditable(True)
         row2.addWidget(self.localisation_input)
         row2.addWidget(QLabel("Couleur :"))
@@ -85,14 +86,27 @@ class TypeRDVView(QWidget):
 
         row3 = QHBoxLayout()
         row3.addWidget(QLabel("Durée"))
-        self.duree_input = QComboBox()
-        # DUREES_RDV est une liste de chaînes "HH:MM"
-        durees = constantes_manager.get_constante("DUREES_RDV")
-        self.duree_input.addItems(durees)
+        self.duree_input = QLineEdit()
+        self.duree_input.setPlaceholderText("Durée en minutes")
         row3.addWidget(self.duree_input)
 
         row3.addWidget(QLabel("Rendez-vous de groupe"))
         self.groupe_input = QCheckBox()
+        self.groupe_input.setToolTip("Cochez si ce type de rendez-vous est un rendez-vous de groupe")
+        self.groupe_input.setStyleSheet("""
+    QCheckBox::indicator {
+        width: 20px;
+        height: 20px;
+    }
+    QCheckBox::indicator:unchecked {
+        border: 2px solid #333;
+        background: #ffffff;  /* blanc */
+    }
+    QCheckBox::indicator:checked {
+        border: 2px solid #333;
+        background: #4CAF50;  /* vert vif */
+    }
+""")
         row3.addWidget(self.groupe_input)
 
         form_layout.addLayout(row3)
@@ -121,13 +135,8 @@ class TypeRDVView(QWidget):
     def on_refresh(self):
         """Rafraîchir la vue (ex: recharger les listes déroulantes si besoin)"""
         self.localisation_input.clear()
-        localisation_options = constantes_manager.get_constante("LOCALISATIONS_RDV")
+        localisation_options = constantes_manager.get_constante("LOCALISATIONS_RDV") or []
         self.localisation_input.addItems(localisation_options)
-
-        self.duree_input.clear()
-        duree_options = constantes_manager.get_constante("DUREES_RDV")
-        self.duree_input.addItems(duree_options)
-
         self.refresh.emit()
     
     def choose_color(self):
@@ -149,10 +158,10 @@ class TypeRDVView(QWidget):
             self.type_rdv_table.setItem(row_position, 1, QTableWidgetItem(type_rdv.nom))
             self.type_rdv_table.setItem(row_position, 2, QTableWidgetItem(type_rdv.description))
             self.type_rdv_table.setItem(row_position, 3, QTableWidgetItem(f"{type_rdv.prix:.2f} €"))
-            self.type_rdv_table.setItem(row_position, 4, QTableWidgetItem((datetime(2000,1,1,0,0) + timedelta(minutes=type_rdv.duree)).strftime("%H:%M")))
+            self.type_rdv_table.setItem(row_position, 4, QTableWidgetItem((datetime(2000,1,1,0,0) + type_rdv.duree).strftime("%H:%M")))
             self.type_rdv_table.setItem(row_position, 5, QTableWidgetItem(type_rdv.localisation))
         
-            self.type_rdv_table.setItem(row_position, 7, QTableWidgetItem(type_rdv.groupe and "Oui" or "Non"))
+            self.type_rdv_table.setItem(row_position, 7, QTableWidgetItem(type_rdv.estgroupe and "Oui" or "Non"))
             
             # Couleur
             color_item = QTableWidgetItem()
@@ -171,12 +180,14 @@ class TypeRDVView(QWidget):
         self.description_input.setText(type_rdv.description)
         self.couleur_preview.setStyleSheet(f"background-color: {type_rdv.couleur}; border: 1px solid black;")
         self.selected_color = type_rdv.couleur
-        self.duree_input.setCurrentText((datetime(2000,1,1,0,0) + timedelta(minutes=type_rdv.duree)).strftime("%H:%M"))
-        self.groupe_input.setChecked(type_rdv.groupe)
+        self.duree_input.setText(str(type_rdv.duree.seconds // 60))
+        self.groupe_input.setChecked(type_rdv.estgroupe)
     
     def get_type_rdv_details(self):
         """Récupérer les valeurs du formulaire"""
         from app.model.typeRDV import TypeRDV
+        duree_minutes = int(self.duree_input.text()) if self.duree_input.text().isdigit() else self.error_duree()
+        prix = float(self.prix_input.text()) if self.prix_input.text().replace('.','',1).isdigit() else self.error_prix()
         return TypeRDV(
             id=self.selected_type_rdv_id,
             nom=self.nom_input.text(),
@@ -184,8 +195,8 @@ class TypeRDVView(QWidget):
             prix=float(self.prix_input.text()) if self.prix_input.text() else 0.0,
             localisation=self.localisation_input.currentText(),
             couleur=getattr(self, 'selected_color', '#FFFFFF'),
-            duree=timedelta(hours=int(self.duree_input.currentText().split(":")[0]), minutes=int(self.duree_input.currentText().split(":")[1])).seconds // 60,
-            groupe=self.groupe_input.isChecked()
+            duree=timedelta(minutes=int(self.duree_input.text())),
+            estgroupe=self.groupe_input.isChecked()
         )
     
     def get_selected_row(self):
@@ -229,6 +240,28 @@ class TypeRDVView(QWidget):
         self.couleur_preview.setStyleSheet("border: 1px solid black;")
         self.type_rdv_table.clearSelection()
         self.selected_color = "#FFFFFF"
-        self.duree_input.setCurrentIndex(0)
+        self.duree_input.setText("")
         self.groupe_input.setChecked(False)
         self.selected_type_rdv_id = None
+
+    def error_duree(self):
+        """Afficher une erreur si la durée n'est pas valide"""
+        from PySide6.QtWidgets import QMessageBox
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Erreur de saisie")
+        msg.setInformativeText('La durée doit être un nombre entier représentant les minutes.')
+        msg.setWindowTitle("Erreur")
+        msg.exec()
+        return None
+    
+    def error_prix(self):
+        """Afficher une erreur si le prix n'est pas valide"""
+        from PySide6.QtWidgets import QMessageBox
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Erreur de saisie")
+        msg.setInformativeText('Le prix doit être un nombre valide (ex: 50.0).')
+        msg.setWindowTitle("Erreur")
+        msg.exec()
+        return None

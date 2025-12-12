@@ -111,8 +111,8 @@ class RendezVous:
         Récupère tous les rendez-vous dans une plage de dates.
 
         Args:
-            date_debut (str): Date de début (format SQL ou ISO).
-            date_fin (str): Date de fin (format SQL ou ISO).
+            date_debut (datetime): Date de début (format SQL ou ISO).
+            date_fin (datetime): Date de fin (format SQL ou ISO).
 
         Returns:
             list[RendezVous]: Liste des rendez-vous dans la plage.
@@ -198,11 +198,11 @@ class RendezVous:
         cursor.execute("""
                 SELECT * FROM rendez_vous r, type_rdv t
                 WHERE r.type_id = t.id AND (
-                       date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
+                       date <= ? and datetime(date, '+' || duree || ' minutes') > ?
                        OR
                        date >= ? and datetime(date, '+' || duree || ' minutes') <= ?
                        OR
-                       date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
+                       date < ? and datetime(date, '+' || duree || ' minutes') > ?
                        OR
                        date <= ? and datetime(date, '+' || duree || ' minutes') >= ?
                       )
@@ -234,7 +234,7 @@ class RendezVous:
             return False
         
     @staticmethod
-    def getRendezVousByPatientAndDateRange(self, patient_id: int, start_date: datetime, end_date: datetime) -> list['RendezVous']:
+    def getRendezVousByPatientAndDateRange(patient_id: int, start_date: datetime, end_date: datetime) -> list['RendezVous']:
         """
         Récupère tous les rendez-vous d'un patient dans une plage de dates.
 
@@ -284,7 +284,10 @@ class RendezVous:
         Returns:
             list[RendezVous]: Liste d'instances RendezVous.
         """
-        rdvs = []
+        rdvs: list[RendezVous] = []
+        if (data is None or data==[]):
+            return rdvs
+        
         for row in data:
             rdv = RendezVous(
                 id=row[0],
@@ -296,4 +299,7 @@ class RendezVous:
                 facture_id=row[6]
             )
             rdvs.append(rdv)
+
+        print(f"Converted {len(rdvs)} rows to RendezVous instances.")
+
         return rdvs

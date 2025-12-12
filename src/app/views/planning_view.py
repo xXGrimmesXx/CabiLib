@@ -82,7 +82,8 @@ class PlanningView(QWidget):
         self.patient_input.setCompleter(self.patient_completer)
         idpatient_layout.addWidget(self.patient_input)
 
-        presence_option = constantes_manager.get_constante("PRESENCE_OPTION")
+        presence_option = constantes_manager.get_constante("PRESENCE_OPTIONS") or []
+        print("Presence options loaded:", presence_option)
         self.presence_input = QComboBox()
         self.presence_input.addItems(presence_option)
         self.presence_input.setEditable(True)
@@ -105,8 +106,8 @@ class PlanningView(QWidget):
         dateheure_layout.addWidget(self.date_input)
 
         self.time_input = QTimeEdit()
-        heure_fin = constantes_manager.get_constante("HEURE_FIN")
-        heure_debut = constantes_manager.get_constante("HEURE_DEBUT")
+        heure_fin = constantes_manager.get_constante("HEURE_FIN") or "20:00"
+        heure_debut = constantes_manager.get_constante("HEURE_DEBUT") or "08:00"
         # Les heures sont au format "HH:MM"
         h_fin, m_fin = map(int, heure_fin.split(":"))
         h_debut, m_debut = map(int, heure_debut.split(":"))
@@ -178,13 +179,13 @@ class PlanningView(QWidget):
         
         # Créneaux horaires de 8h à 20h par tranches de 15 min
         self.time_slots : list[str] = []
-        heure_debut = constantes_manager.get_constante("HEURE_DEBUT")
-        heure_fin = constantes_manager.get_constante("HEURE_FIN")
-        precision = constantes_manager.get_constante("PRECISION_PLANNING")
+        heure_debut = constantes_manager.get_constante("HEURE_DEBUT")or "08:00"
+        heure_fin = constantes_manager.get_constante("HEURE_FIN")or "20:00"
+        precision = constantes_manager.get_constante("DUREE_CRENNEAU") or 15
         h_debut, m_debut = map(int, heure_debut.split(":"))
         h_fin, m_fin = map(int, heure_fin.split(":"))
         for hour in range(h_debut, h_fin):
-            for minute in precision:
+            for minute in range(0, 60, precision):
                 self.time_slots.append(f"{hour:02d}:{minute:02d}")
         
         self.table.setRowCount(len(self.time_slots))
@@ -231,12 +232,10 @@ class PlanningView(QWidget):
         
     def on_refresh(self):
         """Rafraîchir la vue du planning"""
-
-        presence_option = constantes_manager.get_constante("PRESENCE_OPTION")
+        presence_options = constantes_manager.get_constante("PRESENCE_OPTIONS") or []
         self.presence_input.clear()
-        self.presence_input.addItems(presence_option)
-        self.presence_completer.setModel(QStringListModel(presence_option))
-
+        self.presence_input.addItems(presence_options)
+        self.presence_completer.setModel(QStringListModel(presence_options))
         self.refresh.emit()
     
     def on_cell_clicked(self, row: int, col: int):
@@ -245,8 +244,16 @@ class PlanningView(QWidget):
             return
         
         # Récupérer l'heure et le jour
-        time_slot = self.time_slots[row]
         day_index = col - 1  # 0=Lundi, 1=Mardi, etc.
+        print(self.table.item(row, col).text().split('\n'))
+        text = self.table.item(row, col).text()
+        time_slot = ""
+        if text == "":
+            print("Cellule vide cliquée")
+            time_slot = self.time_slots[row]  # Utiliser le créneau horaire de la ligne
+            
+        else :
+            time_slot = self.table.item(row, col).text().split('\n')[0].split('-')[0]  # Extraire l'heure de début via le texte du rdv
         
         # Emettre le signal avec les infos
         self.cell_clicked.emit(day_index, time_slot)
@@ -259,23 +266,42 @@ class PlanningView(QWidget):
     
     def set_week_label(self, start_date, end_date):
         """Définir le label de la semaine"""
-        text = f"Semaine du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}"
-        self.label_week.setText(text)
-        self.table.setHorizontalHeaderLabels(["Heure", 
-                                              "Lundi " + (start_date + timedelta(days=0)).strftime('%d/%m'),
-                                              "Mardi " + (start_date + timedelta(days=1)).strftime('%d/%m'),
-                                              "Mercredi " + (start_date + timedelta(days=2)).strftime('%d/%m'),
-                                              "Jeudi " + (start_date + timedelta(days=3)).strftime('%d/%m'),
-                                              "Vendredi " + (start_date + timedelta(days=4)).strftime('%d/%m'),
-                                              "Samedi " + (start_date + timedelta(days=5)).strftime('%d/%m')])
+        try:
+            text = f"Semaine du {start_date.strftime('%d/%m/%Y')} au {end_date.strftime('%d/%m/%Y')}"
+            self.label_week.setText(text)
+            headers = [
+                "Heure",
+                "Lundi " + (start_date + timedelta(days=0)).strftime('%d/%m'),
+                "Mardi " + (start_date + timedelta(days=1)).strftime('%d/%m'),
+                "Mercredi " + (start_date + timedelta(days=2)).strftime('%d/%m'),
+                "Jeudi " + (start_date + timedelta(days=3)).strftime('%d/%m'),
+                "Vendredi " + (start_date + timedelta(days=4)).strftime('%d/%m'),
+                "Samedi " + (start_date + timedelta(days=5)).strftime('%d/%m')
+            ]
+            if not hasattr(self, 'table') or self.table is None:
+                print("[PlanningView] ERREUR: self.table n'existe pas ou est None !")
+                return
+            if self.table.columnCount() != len(headers):
+                print(f"[PlanningView] Correction du nombre de colonnes: table attend {self.table.columnCount()} colonnes, headers={len(headers)}")
+                self.table.setColumnCount(len(headers))
+            self.table.setHorizontalHeaderLabels(headers)
+        except Exception as e:
+            import traceback
+            print("Erreur dans set_week_label:", e)
+            traceback.print_exc()
     
     def clear_planning(self):
         """Effacer tous les rendez-vous du planning"""
+        if not hasattr(self, 'table') or self.table is None:
+            return
         for row in range(self.table.rowCount()):
             for col in range(1, self.table.columnCount()):
-                self.table.setItem(row, col, QTableWidgetItem(""))
-                if (self.table.rowSpan(row, col) > 1 or self.table.columnSpan(row, col) > 1):
-                    self.table.setSpan(row, col, 1, 1)  # Reset span
+                try:
+                    self.table.setItem(row, col, QTableWidgetItem(""))
+                    if (self.table.rowSpan(row, col) > 1 or self.table.columnSpan(row, col) > 1):
+                        self.table.setSpan(row, col, 1, 1)  # Reset span
+                except Exception as e:
+                    print(f"[PlanningView] ERREUR clear_planning: row={row}, col={col}, {e}")
     
     def add_rdv_to_planning(self,Rdv:RendezVous,patient:Patient,type_rendez_vous:TypeRDV) -> None:
         """
@@ -365,27 +391,35 @@ class PlanningView(QWidget):
 
     def afficher_details_rdv(self):
         """Afficher les détails du rendez-vous dans le panneau"""
-        if (len(self.rdvs_selectionne) == 0):
+        if not self.rdvs_selectionne or len(self.rdvs_selectionne) == 0:
             print("Aucun RDV sélectionné")
             return
         rdv = self.rdvs_selectionne[0]
         print(rdv)
         if rdv is None:
+            print("RDV est None")
             return
         # Sélectionner le patient
         if(rdv.patient_id is not None):
             index = self.find_index_by_data(self.patient_input, rdv.patient_id)
+            print("[DEBUG] index patient recherché :",index)
             if index != -1:
-                self.patient_input.setCurrentIndex(index)
-                print("patient_mis a jour")
+                try :
+                    self.patient_input.setCurrentIndex(index)
+                    print("patient_mis a jour")
+                except Exception as e:
+                    print(f"Error setting patient index: {e}")
         else:
             self.patient_input.setCurrentIndex(0)  # Aucun
 
         # Définir la date et l'heure
         if (rdv.date is not None):
-            self.date_input.setDate(rdv.date.date())
-            self.time_input.setTime(rdv.date.time())
-            print("date mis a jour")
+            try : 
+                self.date_input.setDate(rdv.date.date())
+                self.time_input.setTime(rdv.date.time())
+                print("date mis a jour")
+            except Exception as e:
+                print(f"Error setting date/time: {e}")
         else :
             self.date_input.setDate(datetime(2000,1,1,0,1,1))
 
@@ -394,14 +428,20 @@ class PlanningView(QWidget):
             type_rdv_index = self.find_index_by_data(self.type_rdv_input, rdv.type_id)
 
             if type_rdv_index != -1:
-                self.type_rdv_input.setCurrentIndex(type_rdv_index)
-                print("type mis a jour")
+                try :
+                    self.type_rdv_input.setCurrentIndex(type_rdv_index)
+                    print("type mis a jour")
+                except Exception as e:
+                    print(f"Error setting type RDV index: {e}")
         else:
             self.type_rdv_input.setCurrentIndex(0)  # Aucun
 
         if (rdv.presence is not None):
-            self.presence_input.setCurrentText(rdv.presence)
-            print("presence mis a jour")
+            try :
+                self.presence_input.setCurrentText(rdv.presence)
+                print("presence mis a jour")
+            except Exception as e:
+                print(f"Error setting presence: {e}")
         else:
             self.presence_input.setCurrentIndex(0)  # Aucun
 

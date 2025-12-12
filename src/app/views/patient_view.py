@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QTableWidget, 
                                QTableWidgetItem, QLabel, QPushButton, QLineEdit,QComboBox,QDateEdit, QTextEdit, QCompleter)
-from PySide6.QtCore import Qt, Signal, QStringListModel
+from PySide6.QtCore import Qt, Signal, QStringListModel,QMargins
 
 from app.model.patient import Patient
 from app.utils import constantes_manager
@@ -125,7 +125,7 @@ class PatientView(QWidget):
         row5 = QHBoxLayout()
         self.telephone1_label = QLabel("Téléphone 1 :")
         row5.addWidget(self.telephone1_label)
-        type_tel_options = constantes_manager.get_constante("TYPE_TELEPHONE_OPTIONS")
+        type_tel_options = constantes_manager.get_constante("TYPE_TELEPHONE_OPTIONS") or []
         self.type_telephone1_input = QComboBox(); self.type_telephone1_input.setEditable(True); self.type_telephone1_input.addItems(type_tel_options); self.type_telephone1_input.setMaximumWidth(100)
         self.completer_type_telephone1 = QCompleter(type_tel_options); self.completer_type_telephone1.setCaseSensitivity(Qt.CaseInsensitive)
         self.type_telephone1_input.setCompleter(self.completer_type_telephone1)
@@ -145,7 +145,7 @@ class PatientView(QWidget):
         # Ligne 6 : Niveau scolaire, Ecole
         row6 = QHBoxLayout()
         row6.addWidget(QLabel("Niveau scolaire :"))
-        niveau_options = constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS")
+        niveau_options = constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS") or []
         self.niveau_input = QComboBox(); self.niveau_input.setEditable(True); self.niveau_input.addItems(niveau_options)
         self.completer_niveau = QCompleter(niveau_options); self.completer_niveau.setCaseSensitivity(Qt.CaseInsensitive); self.completer_niveau.setFilterMode(Qt.MatchContains)
         self.niveau_input.setCompleter(self.completer_niveau)
@@ -158,14 +158,14 @@ class PatientView(QWidget):
         # Ligne 7 : Aménagement, Etat du suivi
         row7 = QHBoxLayout()
         row7.addWidget(QLabel("Aménagement :"))
-        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS")
+        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or []
         self.amenagement_input = QComboBox(); self.amenagement_input.addItems(amenagement_options); self.amenagement_input.setEditable(True)
         self.completer_amenagement = QCompleter(amenagement_options); self.completer_amenagement.setCaseSensitivity(Qt.CaseInsensitive); self.completer_amenagement.setFilterMode(Qt.MatchContains)
         self.amenagement_input.setCompleter(self.completer_amenagement)
         row7.addWidget(self.amenagement_input)
 
         row7.addWidget(QLabel("État du suivi :"))
-        etat_suivi_options = constantes_manager.get_constante("ETAT_SUIVI_OPTIONS")
+        etat_suivi_options = constantes_manager.get_constante("ETAT_SUIVI_OPTIONS") or []
         self.etat_suivi_input = QComboBox(); self.etat_suivi_input.addItems(etat_suivi_options); self.etat_suivi_input.setEditable(True)
         self.completer_etat_suivi = QCompleter(etat_suivi_options); self.completer_etat_suivi.setCaseSensitivity(Qt.CaseInsensitive); self.completer_etat_suivi.setFilterMode(Qt.MatchContains)
         self.etat_suivi_input.setCompleter(self.completer_etat_suivi)
@@ -175,6 +175,7 @@ class PatientView(QWidget):
         # Description (droite)
         desc_vbox.addWidget(QLabel("Description :"))
         self.description_input = QTextEdit()
+        self.description_input.setStyleSheet("margin: 10px;padding: 5px;")
         desc_vbox.addWidget(self.description_input)
 
         button_hbox = QHBoxLayout()
@@ -204,7 +205,7 @@ class PatientView(QWidget):
         self.completer_niveau.setModel(QStringListModel(niveau_options))
 
         self.type_telephone1_input.clear()
-        type_tel_options = constantes_manager.get_constante("TYPE_TELEPHONE_OPTIONS")
+        type_tel_options = constantes_manager.get_constante("TYPE_TELEPHONE_OPTIONS") or []
         self.type_telephone1_input.addItems(type_tel_options)
         self.completer_type_telephone1.setModel(QStringListModel(type_tel_options))
 
@@ -213,12 +214,12 @@ class PatientView(QWidget):
         self.completer_type_telephone2.setModel(QStringListModel(type_tel_options))
 
         self.amenagement_input.clear()
-        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS")
+        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or []
         self.amenagement_input.addItems(amenagement_options)
         self.completer_amenagement.setModel(QStringListModel(amenagement_options))
 
         self.etat_suivi_input.clear()
-        etat_suivi_options = constantes_manager.get_constante("ETAT_SUIVI_OPTIONS")
+        etat_suivi_options = constantes_manager.get_constante("ETAT_SUIVI_OPTIONS") or []
         self.etat_suivi_input.addItems(etat_suivi_options)
         self.completer_etat_suivi.setModel(QStringListModel(etat_suivi_options))
 

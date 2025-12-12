@@ -3,6 +3,7 @@ import os
 
 DB_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
+
 def setup_database():
     connexion = sqlite3.connect(DB_PATH)
     cursor = connexion.cursor()

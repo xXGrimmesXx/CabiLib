@@ -42,6 +42,9 @@ class CreerFactureController:
         returns:
             tuple[int,str]: L'ID de la facture créée et le chemin du PDF généré. Si aucun rendez-vous n'est facturé, retourne -1 et une chaîne vide.
         """
+        print("\n\n\n-----------------------------DEBUT EMISSION FACTURE----------------------------\n\n\n")
+        print("Facturation du patient :",patient.prenom,patient.nom)
+        print("Entre le", start_date, "et le", end_date)
         liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
         rdvs_factures = []
         rdvs_patient_absent = []
@@ -54,22 +57,24 @@ class CreerFactureController:
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
         {"\n".join([f"- RDV ID {rdv.id} le {rdv.date} avec statut de présence : {rdv.presence}" for rdv in liste_rdvs])}"""
-        print(msg)
+        #print(msg)
         
         for rdv in liste_rdvs:
             # si le rendez-vous est déjà facturé on ne le compte pas dans les rendez-vous à facturer
             # on demande si on veut quand meme editer la facture sans ces rdvs
+            print("\nTraitement du rendez-vous ID : ", rdv.id, " le ", rdv.date," présence : ",rdv.presence)
+            
             if(rdv.facture_id is not None and rdv.facture_id!="-1"):
                 print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
                 annulation_factures.append(rdv.facture_id)
                 #on passe au rendez-vous d'après
                 continue
-
-            if (rdv.presence == "Patient absent"):
+            
+            if (rdv.presence == "Absent"):
                 print("Le patient était absent au rendez-vous ID :", rdv.id)
                 #si le patient est absent on ajoute le rdv à la liste des rdv ou il etait absent
                 rdvs_patient_absent.append(rdv)
-            elif (rdv.presence == "Patient présent"):
+            elif (rdv.presence == "Présent"):
                 print("Le patient était présent au rendez-vous ID :", rdv.id)
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
                 new_ligne = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
@@ -78,10 +83,10 @@ class CreerFactureController:
                 self.rdvModel.updateRendezVous(rdv.id, rdv)
                 #a enlever peut-etre
                 rdvs_factures.append(rdv)
-            elif (rdv.presence == "A confirmer" or rdv.presence == "A renseigner"):
+            elif (rdv.presence == "A définir"):
                 print("Le statut de présence n'est pas défini pour le rendez-vous ID :", rdv.id)
                 rdvs_a_renseigner.append(rdv)
-            elif (rdv.presence == "Patient absent excusé" or rdv.presence == "Annulé par moi"):
+            elif (rdv.presence == "Absent excusé" or rdv.presence == "Annulé"):
                 print("Le rendez-vous ID :", rdv.id, "ne sera pas facturé (présence :", rdv.presence,")")
                 rdv.facture_id = -1  # on marque que ce rdv ne sera pas facturé
                 self.rdvModel.updateRendezVous(rdv.id, rdv)
@@ -115,7 +120,7 @@ class CreerFactureController:
         elif (len(rdvs_patient_absent) > 0):
             #date a partir de la quelle on voit si le patient à déjà été absent
             historique_date = start_date - cm.get_constante("HISTORIQUE_ABSENCE_JOURS")*timedelta(days=1)
-            absence_precedentes = [rdv if(rdv.presence=="Patient absent") else None for rdv in self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, historique_date, start_date)]
+            absence_precedentes = [rdv if(rdv.presence=="Absent") else None for rdv in self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, historique_date, start_date)]
             facture_ensemble = self.view.erreur_patient_absent(patient, rdvs_patient_absent,absence_precedentes)
 
             # si on confirme la facturation malgré les absences, on ne facture que 33€ par rendez-vous

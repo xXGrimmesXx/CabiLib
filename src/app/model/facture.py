@@ -74,10 +74,10 @@ class Facture:
             return Facture(
                 id=data[0],
                 patient_id=data[1],
-                date_emission=datetime.datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
+                date_emission=datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
                 description=data[3],
                 statut=data[4],
-                date_paiement=datetime.datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
+                date_paiement=datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
             )
         return None
     
@@ -99,10 +99,10 @@ class Facture:
             facture = Facture(
                 id=data[0],
                 patient_id=data[1],
-                date_emission=datetime.datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
+                date_emission=datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
                 description=data[3],
                 statut=data[4],
-                date_paiement=datetime.datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
+                date_paiement=datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
             )
             factures.append(facture)
         return factures
@@ -161,10 +161,10 @@ class Facture:
             facture = Facture(
                 id=data[0],
                 patient_id=data[1],
-                date_emission=datetime.datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
+                date_emission=datetime.strptime(data[2], "%Y-%m-%d").date() if data[2] else None,
                 description=data[3],
                 statut=data[4],
-                date_paiement=datetime.datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
+                date_paiement=datetime.strptime(data[5], "%Y-%m-%d").date() if data[5] else None
             )
             factures.append(facture)
         return factures

@@ -1,4 +1,3 @@
-from app.model.facture import Facture
 from app.model.ligneFacture import LigneFacture
 
 class SuivreFactureController:
