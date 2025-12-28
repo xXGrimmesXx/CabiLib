@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QTableWidget,
 from PySide6.QtCore import Qt, Signal, QStringListModel,QMargins
 
 from app.model.patient import Patient
-from app.utils import constantes_manager
+from app.services import constantes_manager
 import datetime
 
 

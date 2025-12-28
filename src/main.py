@@ -6,12 +6,17 @@ from PySide6.QtGui import QPalette, QColor, QIcon
 from app.views.main_window_view import MainWindow
 from app.controllers.main_controller import MainController
 
+import app.services.calendar_api as calendar_api
 
 def main():
     """Point d'entrée de l'application"""
-    initDB()
+    #initDB()
     # Initialiser les données de test
-    #initAllTestData()    
+    #initAllTestData()
+    try : 
+        calendar_api.create_calendar_if_not_exist()
+    except Exception as e:
+        print(f"[ERREUR] {e}")
     
     app = QApplication(sys.argv)
     app.setApplicationName("CabiLib - Gestion Cabinet")

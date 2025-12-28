@@ -6,7 +6,7 @@ from database.setup_db import DB_PATH
 import sqlite3
 import random
 from datetime import datetime, timedelta
-from utils import constantes_manager
+from app.services import constantes_manager
 from app.model.rendezVous import RendezVous
 
 def generate_patients(count=100):

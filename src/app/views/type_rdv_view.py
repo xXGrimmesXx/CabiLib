@@ -6,7 +6,7 @@ from PySide6.QtGui import QColor
 
 from datetime import datetime,timedelta
 
-import app.utils.constantes_manager as constantes_manager
+import app.services.constantes_manager as constantes_manager
 
 class TypeRDVView(QWidget):
     """Vue pour gérer les types de rendez-vous"""

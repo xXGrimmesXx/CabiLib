@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QGroupBox, QScrollArea, QSpinBox
 )
 from PySide6.QtCore import Signal, Qt
-from app.utils import constantes_manager
+from app.services import constantes_manager
 
 
 class ProprieteView(QWidget):

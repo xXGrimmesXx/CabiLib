@@ -4,9 +4,9 @@ from app.model.rendezVous import RendezVous
 from app.model.typeRDV import TypeRDV
 from app.model.ligneFacture import LigneFacture
 from datetime import timedelta, datetime
-import app.utils.constantes_manager as cm
-import app.utils.facture_generator as fg
-# import app.utils.mail_sender as ms
+import app.services.constantes_manager as cm
+import app.services.facture_generator as fg
+import app.services.mail_sender as ms
 
 from app.views.creer_facture_view import creerFactureView
 
@@ -172,6 +172,13 @@ class CreerFactureController:
         factures_creees = []
         for patient in patients:
             factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
+            ms.save_draft(None, 'me', {
+                'to': patient.email,
+                'subject': f'Votre facture du {start_date.date()} au {end_date.date()}',
+                'body': f'Bonjour {patient.prenom},\n\nVeuillez trouver ci-joint votre facture pour la période du {start_date.date()} au {end_date.date()}.\n\nCordialement,\nVotre Cabinet Médical',
+                'attachments': [factures_creees[-1][1]] if factures_creees [-1][0]!=-1 else []
+            })
+
         self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])
 
     def on_single_facture_generer(self, start_date: datetime, end_date: datetime, patient_id: int)-> None:

@@ -1,7 +1,6 @@
 from app.database.setup_db import DB_PATH
 import sqlite3
-from datetime import datetime,timedelta,time
-from typing import Optional,List
+from datetime import datetime,timedelta
 
 from datetime import datetime
 from app.model.typeRDV import TypeRDV
@@ -132,14 +131,30 @@ class RendezVous:
         Args:
             rdv (RendezVous): Instance du rendez-vous à ajouter.
         """
-        connexion = sqlite3.connect(DB_PATH)
-        cursor = connexion.cursor()
-        cursor.execute(
-            "INSERT INTO rendez_vous (patient_id, date, motif, type_id, presence, facture_id) VALUES (?, ?, ?, ?, ?, ?)",
-            (rdv.patient_id, rdv.date, rdv.motif, rdv.type_id, rdv.presence, rdv.facture_id)
-        )
-        connexion.commit()
-        connexion.close()
+        from app.services.calendar_api import insert_rdv
+        try :
+
+            connexion = sqlite3.connect(DB_PATH)
+            cursor = connexion.cursor()
+
+            # store date as standardized string to match data_to_rendezvous parsing
+            date_str = rdv.date.strftime('%Y-%m-%d %H:%M:%S') if isinstance(rdv.date, datetime) else str(rdv.date)
+
+            cursor.execute(
+                "INSERT INTO rendez_vous (patient_id, date, motif, type_id, presence, facture_id) VALUES (?, ?, ?, ?, ?, ?)",
+                (rdv.patient_id, date_str, rdv.motif, rdv.type_id, rdv.presence, rdv.facture_id)
+            )
+            rdv.id = cursor.lastrowid
+            connexion.commit()
+            connexion.close()
+        except Exception as e :
+            print(f"[ERREUR] {e}")
+            return
+        try :
+            insert_rdv(rdv)
+        except Exception as e :
+            print(f"[ERREUR CALENDAR] {e}")
+            return
 
     @staticmethod
     def updateRendezVous(rdv_id: int, rdv: 'RendezVous') -> None:
@@ -150,14 +165,27 @@ class RendezVous:
             rdv_id (int): Identifiant du rendez-vous à mettre à jour.
             rdv (RendezVous): Nouvelle instance du rendez-vous.
         """
-        connexion = sqlite3.connect(DB_PATH)
-        cursor = connexion.cursor()
-        cursor.execute(
-            "UPDATE rendez_vous SET patient_id = ?, date = ?, motif = ?, type_id = ?, presence= ?, facture_id=? WHERE id = ?",
-            (rdv.patient_id, rdv.date, rdv.motif, rdv.type_id, rdv.presence, rdv.facture_id, rdv_id)
-        )
-        connexion.commit()
-        connexion.close()
+        from app.services.calendar_api import modify_rdv
+        old_rdv = RendezVous.getRendezVousById(rdv_id)
+
+        try : 
+            connexion = sqlite3.connect(DB_PATH)
+            cursor = connexion.cursor()
+            cursor.execute(
+                "UPDATE rendez_vous SET patient_id = ?, date = ?, motif = ?, type_id = ?, presence= ?, facture_id=? WHERE id = ?",
+                (rdv.patient_id, rdv.date, rdv.motif, rdv.type_id, rdv.presence, rdv.facture_id, rdv_id)
+            )
+            connexion.commit()
+            connexion.close()
+        except Exception as e :
+            print(f"[ERREUR] {e}")
+            return
+        try :
+            
+            modify_rdv(old_rdv, rdv)
+        except Exception as e :
+            print(f"[ERREUR CALENDAR] {e}")
+            return
 
     @staticmethod
     def getRendezVousByDateTime(date_time: datetime) -> list['RendezVous']:

@@ -10,7 +10,7 @@ from app.model.typeRDV import TypeRDV
 from app.model.patient import Patient
 
 from app.widgetPersonalise.separator import Separator
-from app.utils import constantes_manager
+from app.services import constantes_manager
 
 class PlanningView(QWidget):
     """Vue pour afficher le planning hebdomadaire des rendez-vous"""
