@@ -24,8 +24,8 @@ def validate_token():
         return _CREDS
 
     creds = None
-    token_path = 'src/token.json'
-    creds_path = 'src/credentials.json'
+    token_path = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'token.json').replace('\\', '/')    
+    creds_path = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'credentials.json').replace('\\', '/')
 
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
