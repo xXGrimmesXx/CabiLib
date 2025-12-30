@@ -37,16 +37,13 @@ class PlanningController(QObject):
     def on_previous_week(self):
         """Naviguer vers la semaine précédente"""
         self.current_week_start -= timedelta(days=7)
-        print(self.current_week_start)
         self.load_week_rdvs()
-        print("fin de on previous week")
     
     def on_next_week(self):
         """Naviguer vers la semaine suivante"""
         try :
             self.current_week_start += timedelta(days=7)
             self.load_week_rdvs()
-            print("fin de on next week")
         except Exception as e:
             print(f"Error in on_next_week: {e}")
     
@@ -73,7 +70,7 @@ class PlanningController(QObject):
             
         else:
             self.view.on_clear_clicked()
-            self.view.rdvs_selectionne = [RendezVous(None, date, None, None, None, None, None)]
+            self.view.rdvs_selectionne = [RendezVous(None, date, None, None, None, None, None,None)]
             self.view.afficher_details_rdv()
             self.view.show_rdv_onglet()
     

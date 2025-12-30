@@ -119,20 +119,30 @@ class TypeRDV:
         connexion.close()
     
     @staticmethod
-    def updateTypeRDV(type_rdv: 'TypeRDV') -> None:
+    def updateTypeRDV(new_type_rdv: 'TypeRDV') -> None:
         """Mettre à jour un type de RDV
         Args:
             type_rdv (TypeRDV): Instance du type de rendez-vous à mettre à jour.
         """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
+        old_type = TypeRDV.getTypeRDVById(new_type_rdv.id)
         cursor.execute("""
             UPDATE type_rdv 
             SET nom = ?, description = ?, prix = ?, duree = ?, localisation = ?, couleur = ?, estgroupe = ?
             WHERE id = ?
-        """, (type_rdv.nom, type_rdv.description, type_rdv.prix, type_rdv.duree, type_rdv.localisation, type_rdv.couleur, type_rdv.estgroupe, type_rdv.id))
+        """, (new_type_rdv.nom, new_type_rdv.description, new_type_rdv.prix, new_type_rdv.duree, new_type_rdv.localisation, new_type_rdv.couleur, new_type_rdv.estgroupe, new_type_rdv.id))
         connexion.commit()
         connexion.close()
+        if (old_type.duree != new_type_rdv.duree) or (old_type.nom != new_type_rdv.nom):
+            from app.model.rendezVous import RendezVous
+            from app.services.internet_API_thread_worker import APIRequestQueue
+            rendezvous_list = RendezVous.getRendezVousByTypeId(new_type_rdv.id)
+            for rdv in rendezvous_list:
+                try : 
+                    APIRequestQueue.enqueue_api_request('calendar_modify_rdv', rdv.serialize())
+                except Exception as e:
+                    print(f"[ERREUR CALENDAR] {e}")
     
     @staticmethod
     def deleteTypeRDV(type_rdv_id: int) -> None:

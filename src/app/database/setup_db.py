@@ -1,5 +1,9 @@
 import sqlite3
 import os
+import importlib.util
+import shutil
+import datetime
+import traceback
 
 DB_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
@@ -74,8 +78,10 @@ def setup_database():
     connexion.commit()
     connexion.close()
 
-def initDB():
-    """Initialise la base de données en créant les tables si elles n'existent pas."""
+
+
+def resetDB():
+    """Réinitialise la base de données en supprimant les tables existantes et en les recréant."""
     connexion = sqlite3.connect(DB_PATH)
     cursor = connexion.cursor()
     cursor.execute("DROP TABLE IF EXISTS ligne_facture")
@@ -86,6 +92,14 @@ def initDB():
     connexion.commit()
     connexion.close()
     setup_database()
+
+def backup_db(db_path, backup_dir):
+    if not os.path.exists(db_path):
+        return None
+    ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    bak = os.path.join(backup_dir, f"CabiLib.db-{ts}.bak")
+    shutil.copy2(db_path, bak)
+    return bak
 
 if __name__ == "__main__":
     setup_database()

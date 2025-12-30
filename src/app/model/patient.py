@@ -70,6 +70,23 @@ class Patient:
             str: Représentation lisible du patient.
         """
         return f"Patient({self.nom} {self.prenom}, {self.sexe})"
+    def adresse_complete(self) -> str:
+        """
+        Retourne l'adresse complète du patient.
+
+        Returns:
+            str: Adresse complète.
+        """
+        if self.adresse is None and self.ville is None :
+            return ""
+        
+        elif self.adresse is None :
+            return self.ville
+        
+        elif self.ville is None :
+            return self.adresse
+        
+        return f"{self.adresse}, {self.ville}"
     
     @staticmethod
     def getAllPatients() -> list['Patient']:

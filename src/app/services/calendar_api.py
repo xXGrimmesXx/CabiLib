@@ -4,6 +4,8 @@ import app.services.constantes_manager as cm
 from app.model.rendezVous import RendezVous
 from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
+from zoneinfo import ZoneInfo
+from typing import Dict, Any as JSON
 
 try:
   from googleapiclient.errors import HttpError
@@ -119,21 +121,14 @@ def create_event(rdv:RendezVous):
   end_date = end_date.isoformat()
 
   summary = f"RDV avec {patient.nom} {patient.prenom} - {typerdv.nom}"
-  if (patient.adresse is None) :
-    patient.adresse = "Adresse non renseignée"
-  elif (patient.ville is None) :
-    patient.ville = "Ville non renseignée"
-  elif (patient.adresse == "") :
-    patient.adresse = "Adresse non renseignée"
-  elif (patient.ville == "") :
-    patient.ville = "Ville non renseignée"
-  elif (typerdv.localisation is not None and typerdv.localisation != "Domicile") :
-    localisation = f"{patient.adresse}, {patient.ville}"
-  elif (typerdv.localisation == "Cabinet") :
-    localisation = cm.get_constante("CABINET_ADDRESS")
-
-  
-  description = f"id : {rdv.id}"
+  type_localisation = typerdv.localisation.upper() if typerdv.localisation else ""
+  if ("DOMICILE" in type_localisation):
+      localisation = patient.adresse_complete()
+  elif ("CABINET" in type_localisation):
+      localisation = cm.get_constante("CABINET_ADDRESS")
+  else:
+      localisation = typerdv.localisation if typerdv.localisation else ""
+  description = f"{rdv.motif}\nid : {rdv.id}"
 
   event = {
       'summary': summary,
@@ -153,57 +148,22 @@ def create_event(rdv:RendezVous):
   }
   return event
 
-def modify_rdv (oldRDV:RendezVous,newRDV:RendezVous) : 
+def modify_rdv (rdv:RendezVous) : 
   """
   Modification d'un rendez-vous déjà dans l'agenda
 
   Args:
       rdv (RendezVous): L'objet RendezVous à modifier dans le calendrier.
   """
-  # Ensure datetimes are timezone-aware (RFC3339). If naive, assume Europe/Paris.
-  start_dt = oldRDV.date - timedelta(minutes=1)
-  end_dt = oldRDV.date + TypeRDV.getTypeRDVById(oldRDV.type_id).duree + timedelta(minutes=1)
-  if start_dt.tzinfo is None:
-    # assume Europe/Paris as used elsewhere in create_event
-    try:
-      from zoneinfo import ZoneInfo
-      tz = ZoneInfo("Europe/Paris")
-    except Exception:
-      tz = timezone.utc
-    start_dt = start_dt.replace(tzinfo=tz)
-  if end_dt.tzinfo is None:
-    try:
-      from zoneinfo import ZoneInfo
-      tz = ZoneInfo("Europe/Paris")
-    except Exception:
-      tz = timezone.utc
-    end_dt = end_dt.replace(tzinfo=tz)
-
-  old_start_date = start_dt.isoformat()
-  old_end_date = end_dt.isoformat()
   service = get_calendarV3_service()
-  event = create_event(newRDV)
+  event = create_event(rdv)
   global CALENDAR_ID
   if CALENDAR_ID is None :
     create_calendar_if_not_exist()
   try : 
-    print("--------------------[DEBUG]--------------------")
-    print(CALENDAR_ID)
-    print("old_start_date:", old_start_date)
-    print("old_end_date:", old_end_date)
-    print("-----------------------------------------------")
-    eventlist = service.events().list(calendarId=str(CALENDAR_ID), timeMin=old_start_date, timeMax=old_end_date).execute()
-    print("NOMBRE d'éléments : ",len(eventlist.get('items', [])))
-    for e in eventlist.get('items', []):
-      print("EVENT : ",e)
-      print("DESCRIPTION RDV calendar :",e.get('description', ''))
-      print("DESCRIPTION RDV local   :",event["description"])
-      if event["description"] in e.get('description', ''):
-        event["description"] = e.get('description', '')
-        print("too good avant update")
-        event = service.events().update(calendarId=CALENDAR_ID, eventId=e['id'], body=event).execute()
-        print('après update')
-        return event
+    if (rdv.google_calendar_id is not None) and (rdv.google_calendar_id != "") :
+      event = service.events().update(calendarId=CALENDAR_ID, eventId=rdv.google_calendar_id, body=event).execute()
+    return event
     
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")
@@ -222,8 +182,14 @@ def insert_rdv (rdv:RendezVous) :
   service = get_calendarV3_service()
   event = create_event(rdv)
   global CALENDAR_ID
+  if CALENDAR_ID is None :
+    create_calendar_if_not_exist()
   try : 
+    print("Inserting event into calendar...")
     event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+    rdv.google_calendar_id = event.get('id')
+    print(f"Rendez-vous inséré avec l'ID : {rdv.google_calendar_id}")
+    RendezVous.updateRendezVous(rdv.id,rdv)
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")
     return None

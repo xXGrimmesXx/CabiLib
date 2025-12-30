@@ -1,22 +1,19 @@
 import sqlite3
-from app.database.setup_db import initDB
+from app.database.update_schema import ensure_db
+from app.database.setup_db import DB_PATH
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QPalette, QColor, QIcon
 from app.views.main_window_view import MainWindow
 from app.controllers.main_controller import MainController
-
-import app.services.calendar_api as calendar_api
+from app.services.calendar_api import create_calendar_if_not_exist
+import app.services.internet_API_thread_worker as api_worker
 
 def main():
     """Point d'entrée de l'application"""
-    #initDB()
-    # Initialiser les données de test
-    #initAllTestData()
-    try : 
-        calendar_api.create_calendar_if_not_exist()
-    except Exception as e:
-        print(f"[ERREUR] {e}")
+    
+    api_worker.start_api_worker(0,60)
+    ensure_db(DB_PATH)
     
     app = QApplication(sys.argv)
     app.setApplicationName("CabiLib - Gestion Cabinet")

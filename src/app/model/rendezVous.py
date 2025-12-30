@@ -4,6 +4,10 @@ from datetime import datetime,timedelta
 
 from datetime import datetime
 from app.model.typeRDV import TypeRDV
+import json
+
+from app.services.internet_API_thread_worker import APIRequestQueue
+
 
 class RendezVous:
     id: int | None
@@ -13,6 +17,7 @@ class RendezVous:
     type_id: int
     presence: str
     facture_id: str
+    google_calendar_id: str
 
     def __init__(
         self,
@@ -22,7 +27,8 @@ class RendezVous:
         type_id: int,
         presence: str,
         facture_id: str = "-1",
-        id: int | None = None
+        id: int | None = None,
+        google_calendar_id: str = ""
     ) -> None:
         """
         Initialise une instance de RendezVous.
@@ -43,6 +49,8 @@ class RendezVous:
         self.type_id = type_id
         self.presence = presence
         self.facture_id = facture_id
+        self.google_calendar_id = google_calendar_id
+
 
     def __repr__(self) -> str:
         """
@@ -52,7 +60,47 @@ class RendezVous:
             str: Représentation lisible du rendez-vous.
         """
         return f"RendezVous(ID: {self.id}, Patient ID: {self.patient_id}, Date: {self.date}, Motif: {self.motif}, Type ID: {self.type_id})"
+    def serialize(self) -> dict:
+        """
+        Sérialise l'objet RendezVous en dictionnaire.
+
+        Returns:
+            dict: Dictionnaire représentant le rendez-vous.
+        """
+        return json.dumps({
+            "id": self.id,
+            "patient_id": self.patient_id,
+            "date": self.date.isoformat() if isinstance(self.date, datetime) else str(self.date),
+            "motif": self.motif,
+            "type_id": self.type_id,
+            "presence": self.presence,
+            "facture_id": self.facture_id,
+            "google_calendar_id": self.google_calendar_id
+        })
     
+    @staticmethod
+    def parse(serialized_str: str) -> 'RendezVous':
+        """
+        Désérialise une chaîne JSON en objet RendezVous.
+
+        Args:
+            serialized_str (str): Chaîne JSON représentant le rendez-vous.
+
+        Returns:
+            RendezVous: Instance de RendezVous.
+        """
+        data = json.loads(serialized_str)
+        date_parsed = datetime.fromisoformat(data["date"]) if "T" in data["date"] else datetime.strptime(data["date"], '%Y-%m-%d %H:%M:%S')
+        return RendezVous(
+            id=data.get("id"),
+            patient_id=data["patient_id"],
+            date=date_parsed,
+            motif=data["motif"],
+            type_id=data["type_id"],
+            presence=data["presence"],
+            facture_id=data.get("facture_id", "-1"),
+            google_calendar_id=data.get("google_calendar_id", "")
+        )
     @staticmethod
     def getAllRendezVous() -> list['RendezVous']:
         """
@@ -131,7 +179,6 @@ class RendezVous:
         Args:
             rdv (RendezVous): Instance du rendez-vous à ajouter.
         """
-        from app.services.calendar_api import insert_rdv
         try :
 
             connexion = sqlite3.connect(DB_PATH)
@@ -151,13 +198,13 @@ class RendezVous:
             print(f"[ERREUR] {e}")
             return
         try :
-            insert_rdv(rdv)
+            APIRequestQueue.enqueue_api_request('calendar_create_event', rdv.serialize())
         except Exception as e :
             print(f"[ERREUR CALENDAR] {e}")
             return
 
     @staticmethod
-    def updateRendezVous(rdv_id: int, rdv: 'RendezVous') -> None:
+    def updateRendezVous(rdv_id: int, new_rdv: 'RendezVous') -> None:
         """
         Met à jour un rendez-vous existant dans la base de données.
 
@@ -166,14 +213,13 @@ class RendezVous:
             rdv (RendezVous): Nouvelle instance du rendez-vous.
         """
         from app.services.calendar_api import modify_rdv
-        old_rdv = RendezVous.getRendezVousById(rdv_id)
-
         try : 
             connexion = sqlite3.connect(DB_PATH)
             cursor = connexion.cursor()
+            old_rdv = RendezVous.getRendezVousById(rdv_id)
             cursor.execute(
-                "UPDATE rendez_vous SET patient_id = ?, date = ?, motif = ?, type_id = ?, presence= ?, facture_id=? WHERE id = ?",
-                (rdv.patient_id, rdv.date, rdv.motif, rdv.type_id, rdv.presence, rdv.facture_id, rdv_id)
+                "UPDATE rendez_vous SET patient_id = ?, date = ?, motif = ?, type_id = ?, presence= ?, facture_id=?, google_calendar_id=? WHERE id = ?",
+                (new_rdv.patient_id, new_rdv.date, new_rdv.motif, new_rdv.type_id, new_rdv.presence, new_rdv.facture_id, new_rdv.google_calendar_id, rdv_id)
             )
             connexion.commit()
             connexion.close()
@@ -181,8 +227,9 @@ class RendezVous:
             print(f"[ERREUR] {e}")
             return
         try :
-            
-            modify_rdv(old_rdv, rdv)
+            if (old_rdv.patient_id != new_rdv.patient_id) or (old_rdv.date != new_rdv.date) or (old_rdv.motif != new_rdv.motif) or (old_rdv.type_id != new_rdv.type_id) :
+                APIRequestQueue.enqueue_api_request('calendar_modify_rdv', new_rdv.serialize())
+
         except Exception as e :
             print(f"[ERREUR CALENDAR] {e}")
             return
@@ -325,6 +372,7 @@ class RendezVous:
                 type_id=row[4],
                 presence=row[5],
                 facture_id=row[6]
+                ,google_calendar_id=row[7]
             )
             rdvs.append(rdv)
 

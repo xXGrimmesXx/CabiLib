@@ -36,7 +36,7 @@ class PlanningView(QWidget):
         super().__init__()
         self.liste_patients: list[Patient] = []
         self.types_rdv : list[TypeRDV] = []
-        self.rdvs_selectionne : list[RendezVous] = [RendezVous(None,None,None,None,None)]
+        self.rdvs_selectionne : list[RendezVous] = [RendezVous(None,None,None,None,None,None,None,None)]
         # Les constantes sont chargées dynamiquement depuis le JSON
         self.init_ui()
     
@@ -83,7 +83,6 @@ class PlanningView(QWidget):
         idpatient_layout.addWidget(self.patient_input)
 
         presence_option = constantes_manager.get_constante("PRESENCE_OPTIONS") or []
-        print("Presence options loaded:", presence_option)
         self.presence_input = QComboBox()
         self.presence_input.addItems(presence_option)
         self.presence_input.setEditable(True)
@@ -245,11 +244,9 @@ class PlanningView(QWidget):
         
         # Récupérer l'heure et le jour
         day_index = col - 1  # 0=Lundi, 1=Mardi, etc.
-        print(self.table.item(row, col).text().split('\n'))
         text = self.table.item(row, col).text()
         time_slot = ""
         if text == "":
-            print("Cellule vide cliquée")
             time_slot = self.time_slots[row]  # Utiliser le créneau horaire de la ligne
             
         else :
@@ -395,18 +392,15 @@ class PlanningView(QWidget):
             print("Aucun RDV sélectionné")
             return
         rdv = self.rdvs_selectionne[0]
-        print(rdv)
         if rdv is None:
             print("RDV est None")
             return
         # Sélectionner le patient
         if(rdv.patient_id is not None):
             index = self.find_index_by_data(self.patient_input, rdv.patient_id)
-            print("[DEBUG] index patient recherché :",index)
             if index != -1:
                 try :
                     self.patient_input.setCurrentIndex(index)
-                    print("patient_mis a jour")
                 except Exception as e:
                     print(f"Error setting patient index: {e}")
         else:
@@ -417,7 +411,6 @@ class PlanningView(QWidget):
             try : 
                 self.date_input.setDate(rdv.date.date())
                 self.time_input.setTime(rdv.date.time())
-                print("date mis a jour")
             except Exception as e:
                 print(f"Error setting date/time: {e}")
         else :
@@ -430,7 +423,6 @@ class PlanningView(QWidget):
             if type_rdv_index != -1:
                 try :
                     self.type_rdv_input.setCurrentIndex(type_rdv_index)
-                    print("type mis a jour")
                 except Exception as e:
                     print(f"Error setting type RDV index: {e}")
         else:
@@ -439,7 +431,6 @@ class PlanningView(QWidget):
         if (rdv.presence is not None):
             try :
                 self.presence_input.setCurrentText(rdv.presence)
-                print("presence mis a jour")
             except Exception as e:
                 print(f"Error setting presence: {e}")
         else:
@@ -453,12 +444,11 @@ class PlanningView(QWidget):
     
     def on_clear_clicked(self):
         """Effacer le formulaire de RDV"""
-        print("Clearing RDV form")
         self.patient_input.setCurrentIndex(0)
         self.date_input.setDate(datetime.now().date())
         self.time_input.setTime(datetime.now().time())
         self.type_rdv_input.setCurrentIndex(0)
-        self.rdvs_selectionne = [RendezVous(None,None,None,None,None,None)]
+        self.rdvs_selectionne = [RendezVous(None,None,None,None,None,None,None,None)]
 
     def on_creer_clicked(self):
         """Gérer le clic sur le bouton Créer / Modifier"""
@@ -469,12 +459,10 @@ class PlanningView(QWidget):
         self.rdvs_selectionne[0].type_id = int(self.type_rdv_input.currentData()) if self.type_rdv_input.currentData() is not None else None
         self.rdvs_selectionne[0].presence = self.presence_input.currentText() if self.presence_input.currentText() != "" else None
 
-        print("RDV to create/modify:", self.rdvs_selectionne[0])
         self.creer_clicked.emit(self.rdvs_selectionne[0])
 
     def on_supprimer_clicked(self):
         """Gérer le clic sur le bouton Supprimer"""
-        print("Deleting RDV:", self.rdvs_selectionne[0])
         self.supprimer_clicked.emit(self.rdvs_selectionne[0])
         self.on_clear_clicked()
 

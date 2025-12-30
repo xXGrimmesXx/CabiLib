@@ -1,3 +1,4 @@
+import json
 from app.model.facture import Facture
 from app.model.patient import Patient
 from app.model.rendezVous import RendezVous
@@ -6,6 +7,7 @@ from app.model.ligneFacture import LigneFacture
 from datetime import timedelta, datetime
 import app.services.constantes_manager as cm
 import app.services.facture_generator as fg
+from app.services.internet_API_thread_worker import APIRequestQueue
 import app.services.mail_sender as ms
 
 from app.views.creer_facture_view import creerFactureView
@@ -66,9 +68,10 @@ class CreerFactureController:
             
             if(rdv.facture_id is not None and rdv.facture_id!="-1"):
                 print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
-                annulation_factures.append(rdv.facture_id)
-                #on passe au rendez-vous d'après
-                continue
+                if (rdv.facture_id not in annulation_factures):
+                    annulation_factures.append(rdv.facture_id)
+                    #on passe au rendez-vous d'après
+                    continue
             
             if (rdv.presence == "Absent"):
                 print("Le patient était absent au rendez-vous ID :", rdv.id)
@@ -172,12 +175,12 @@ class CreerFactureController:
         factures_creees = []
         for patient in patients:
             factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
-            ms.save_draft(None, 'me', {
+            APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
                 'to': patient.email,
                 'subject': f'Votre facture du {start_date.date()} au {end_date.date()}',
                 'body': f'Bonjour {patient.prenom},\n\nVeuillez trouver ci-joint votre facture pour la période du {start_date.date()} au {end_date.date()}.\n\nCordialement,\nVotre Cabinet Médical',
                 'attachments': [factures_creees[-1][1]] if factures_creees [-1][0]!=-1 else []
-            })
+            }))
 
         self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])
 
@@ -194,5 +197,11 @@ class CreerFactureController:
         facture_id,fp = self.facturer_patient(patient, start_date, end_date)
         if(facture_id!=-1) :
             self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
+            APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
+                'to': patient.email,
+                'subject': f'Votre facture du {start_date.date()} au {end_date.date()}',
+                'body': f'Bonjour {patient.prenom},\n\nVeuillez trouver ci-joint votre facture pour la période du {start_date.date()} au {end_date.date()}.\n\nCordialement,\nVotre Cabinet Médical',
+                'attachments': [fp]
+            }))
         else :
             self.view.erreur_generation_facture()

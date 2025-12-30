@@ -5,14 +5,20 @@ from email.message import EmailMessage
 from app.services.google_api_manager import get_gmailV1_service
 
 
-def save_draft(service, user_id, message_body):
-    if service is None:
-        service = get_gmailV1_service()
+def save_draft(message_body):
+    """Saves a draft email in the user's Gmail account.
+    Args:
+        message_body: A dictionary containing 'to', 'subject', 'body', and optional 'attachments' (list of file paths).
+    Returns:
+        The created draft email.
+    """
+    
+    service = get_gmailV1_service()
 
     message = EmailMessage()
     message.set_content(message_body.get('body', ''))
     message['To'] = message_body.get('to', '')
-    message['From'] = user_id
+    message['From'] = 'me'
     message['Subject'] = message_body.get('subject', '')
 
     files = message_body.get('attachments')
@@ -39,7 +45,7 @@ def save_draft(service, user_id, message_body):
             'raw': raw_message
         }
     }
-    draft = service.users().drafts().create(userId=user_id, body=create_message).execute()
+    draft = service.users().drafts().create(userId='me', body=create_message).execute()
     return draft
 
 if __name__ == '__main__':
