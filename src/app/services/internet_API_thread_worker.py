@@ -1,12 +1,12 @@
 import sqlite3
-import os
-import threading
-import requests
-import json
+from os import path, environ, makedirs
+from threading import Thread, Event
+from requests import get, RequestException
+from json import loads
 
 
 
-DB_PATH = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'api_queue.db').replace('\\', '/')
+DB_PATH = path.join(environ.get('APPDATA', '.'), 'CabiLib', 'api_queue.db').replace('\\', '/')
 
 class APIRequestQueueItem:    
     def __init__(self, id :int, service_name:str, payload:str, attempts:int, status:str, created_at:str):
@@ -25,9 +25,9 @@ class APIRequestQueue:
 
     @staticmethod
     def init_database():
-        if not os.path.exists(os.path.dirname(DB_PATH)):
-            os.makedirs(os.path.dirname(DB_PATH))
-        if not os.path.exists(DB_PATH):
+        if not path.exists(path.dirname(DB_PATH)):
+            makedirs(path.dirname(DB_PATH))
+        if not path.exists(DB_PATH):
             open(DB_PATH, 'a').close()
             print(f"[update_schema] Base de données créée: {DB_PATH}")
         conn = sqlite3.connect(DB_PATH)
@@ -144,6 +144,7 @@ class APIRequestQueue:
             
         except Exception as e:
             print(f"[API Queue] Erreur lors de la mise à jour du statut: {e}")
+            traceback.print_exc()
             conn.rollback()
         finally:
             conn.close()
@@ -152,9 +153,10 @@ class APIRequestQueue:
     def check_connection()-> bool:
         """Vérifie si une connexion Internet est disponible."""
         try:
-            response = requests.get('https://www.google.com', timeout=5)
+            response = get('https://www.google.com', timeout=5)
             return response.status_code == 200
-        except requests.RequestException:
+        except RequestException:
+            traceback.print_exc()
             return False
 
     @staticmethod
@@ -186,7 +188,7 @@ class APIRequestQueue:
                 from app.services.mail_sender import send_email
 
                 #convertir le payload json en dict
-                item.payload = json.loads(item.payload)
+                item.payload = loads(item.payload)
 
                 send_email(item.payload)
                 APIRequestQueue.update_api_request_status(item.id, 'sent', max_attempts)
@@ -195,7 +197,7 @@ class APIRequestQueue:
                 from app.services.mail_sender import save_draft
 
                 #convertir le payload json en dict
-                item.payload = json.loads(item.payload)
+                item.payload = loads(item.payload)
 
                 save_draft(item.payload)
                 APIRequestQueue.update_api_request_status(item.id, 'sent', max_attempts)
@@ -225,7 +227,6 @@ class APIRequestQueue:
 
         except Exception as e:
             print(f"[API Queue] Erreur lors du traitement de la requête {item.id}: {e}")
-            import traceback
             traceback.print_exc()
             APIRequestQueue.update_api_request_status(item.id, 'failed', max_attempts)
         
@@ -242,7 +243,7 @@ class APIWorkerThread:
         """
         self.check_interval = check_interval
         self.retry_interval = retry_interval
-        self._stop_event = threading.Event()
+        self._stop_event = Event()
         self._thread = None
         self._is_running = False
     
@@ -254,7 +255,7 @@ class APIWorkerThread:
         
         APIRequestQueue.init_database()
         self._stop_event.clear()
-        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread = Thread(target=self._run, daemon=True)
         self._thread.start()
         self._is_running = True
         print("[APIWorker] Thread démarré")
@@ -289,7 +290,6 @@ class APIWorkerThread:
                     
             except Exception as e:
                 print(f"[APIWorker] Erreur dans la boucle de traitement: {e}")
-                import traceback
                 traceback.print_exc()
                 self._stop_event.wait(self.check_interval)
         

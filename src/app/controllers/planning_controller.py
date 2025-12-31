@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject
+import traceback
 from datetime import timedelta
 from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
@@ -46,6 +47,7 @@ class PlanningController(QObject):
             self.load_week_rdvs()
         except Exception as e:
             print(f"Error in on_next_week: {e}")
+            traceback.print_exc()
     
     def on_cell_clicked(self, day_index: int, time_slot: str) -> None:
         """Gérer le clic sur une cellule du planning

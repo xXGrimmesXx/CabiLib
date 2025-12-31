@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QTableWidget, 
-                               QTableWidgetItem, QLabel, QPushButton, QLineEdit,QComboBox,QDateEdit, QTextEdit, QCompleter)
-from PySide6.QtCore import Qt, Signal, QStringListModel,QMargins
+from PySide6.QtWidgets import (QWidget, QGridLayout, QTableWidget, QTableWidgetItem, QLabel,
+                               QPushButton, QLineEdit,QComboBox,QDateEdit, QTextEdit, QCompleter)
+from PySide6.QtCore import Qt, Signal, QStringListModel
 
 from app.model.patient import Patient
 from app.services import constantes_manager
-import datetime
+from datetime import datetime
 
 
 class PatientView(QWidget):
@@ -244,7 +244,7 @@ class PatientView(QWidget):
             
             # Age - avec tri numérique
             age_item = QTableWidgetItem()
-            age_item.setData(Qt.DisplayRole, (datetime.datetime.now() - patient.date_naissance).days // 365)  # Utiliser setData pour tri numérique
+            age_item.setData(Qt.DisplayRole, (datetime.now() - patient.date_naissance).days // 365)  # Utiliser setData pour tri numérique
             self.patient_table.setItem(row_position, 3, age_item)
 
             self.patient_table.setItem(row_position, 4, QTableWidgetItem(patient.niveau))
@@ -264,7 +264,7 @@ class PatientView(QWidget):
         self.selected_patient_id = patient.id
         self.name_input.setText(patient.nom)
         self.prenom_input.setText(patient.prenom)
-        self.age_input.setText(str((datetime.datetime.now() - patient.date_naissance).days // 365))
+        self.age_input.setText(str((datetime.now() - patient.date_naissance).days // 365))
         self.sexe_input.setCurrentText(patient.sexe)
         self.date_naissance_input.setDate(patient.date_naissance)
         self.adresse_input.setText(patient.adresse)
@@ -287,7 +287,7 @@ class PatientView(QWidget):
             nom=self.name_input.text(),
             prenom=self.prenom_input.text(),
             sexe=self.sexe_input.currentText(),
-            date_naissance=datetime.datetime.strptime(self.date_naissance_input.date().toString("yyyy-MM-dd"), "%Y-%m-%d"),
+            date_naissance=datetime.strptime(self.date_naissance_input.date().toString("yyyy-MM-dd"), "%Y-%m-%d"),
             adresse=self.adresse_input.text(),
             ville=self.ville_input.text(),
             telephone1=self.telephone1_input.text(),
@@ -321,7 +321,7 @@ class PatientView(QWidget):
         
         # Age - avec tri numérique
         age_item = QTableWidgetItem()
-        age_item.setData(Qt.DisplayRole, (datetime.datetime.now() - patient.date_naissance).days // 365)
+        age_item.setData(Qt.DisplayRole, (datetime.now() - patient.date_naissance).days // 365)
         self.patient_table.setItem(row, 3, age_item)
 
         self.patient_table.setItem(row, 4, QTableWidgetItem(patient.niveau))
@@ -373,7 +373,7 @@ class PatientView(QWidget):
         self.prenom_input.clear()
         self.age_input.clear()
         self.sexe_input.setCurrentIndex(0)
-        self.date_naissance_input.setDate(datetime.datetime.now())
+        self.date_naissance_input.setDate(datetime.now())
         self.adresse_input.clear()
         self.ville_input.clear()
         self.telephone1_input.clear()

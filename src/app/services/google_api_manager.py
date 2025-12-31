@@ -1,4 +1,4 @@
-import os
+from os import path, environ
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -24,10 +24,9 @@ def validate_token():
         return _CREDS
 
     creds = None
-    token_path = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'token.json').replace('\\', '/')    
-    creds_path = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'credentials.json').replace('\\', '/')
-
-    if os.path.exists(token_path):
+    token_path = path.join(environ.get('APPDATA', '.'), 'CabiLib', 'token.json').replace('\\', '/')    
+    creds_path = path.join(environ.get('APPDATA', '.'), 'CabiLib', 'credentials.json').replace('\\', '/')
+    if path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
     if not creds or not creds.valid:

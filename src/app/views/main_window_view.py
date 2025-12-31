@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (QMainWindow, QTabWidget, QWidget, QMenu)
 from PySide6.QtCore import Qt, Signal, QEvent,QObject
+import traceback
 
 class MainWindow(QMainWindow):
     """VIEW - Interface graphique pour la gestion des patients"""
@@ -104,6 +105,7 @@ class MainWindow(QMainWindow):
             tab_bar.installEventFilter(self)
         except Exception:
             # If anything fails, don't break the app; menu is optional
+            traceback.print_exc()
             pass
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
@@ -138,5 +140,6 @@ class MainWindow(QMainWindow):
                         self._compta_menu.hide()
                 return False
         except Exception:
+            traceback.print_exc()
             return False
         return super().eventFilter(obj, event)

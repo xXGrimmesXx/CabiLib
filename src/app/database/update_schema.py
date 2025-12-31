@@ -1,9 +1,9 @@
-import os
+from os import path, environ, makedirs
 import sqlite3
 
 
 # Même logique de chemin que setup_db.py
-DB_PATH = os.path.join(os.environ.get('APPDATA', '.'), 'CabiLib', 'CabiLib.db').replace('\\', '/')
+DB_PATH = path.join(environ.get('APPDATA', '.'), 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
 
 # Schéma attendu (CREATE TABLE SQL)
@@ -99,10 +99,10 @@ def get_existing_columns(cursor, table):
 
 
 def ensure_table_and_columns(db_path, apply=False):
-    if not os.path.exists(os.path.dirname(db_path)):
-        print(f"Dossier DB absent: {os.path.dirname(db_path)}")
+    if not path.exists(path.dirname(db_path)):
+        print(f"Dossier DB absent: {path.dirname(db_path)}")
         return
-    if not os.path.exists(db_path):
+    if not path.exists(db_path):
         print(f"Fichier DB absent: {db_path} (rien à vérifier)")
         return
 
@@ -152,8 +152,8 @@ def ensure_table_and_columns(db_path, apply=False):
         print(' -', s)
 
 def ensure_db(db_path):
-    if not os.path.exists(db_path):
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    if not path.exists(db_path):
+        makedirs(path.dirname(db_path), exist_ok=True)
         #creer le fichier .db vide
         open(db_path, 'a').close()
         print(f"[update_schema] Base de données créée: {db_path}")

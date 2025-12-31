@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+import traceback
 from app.database.setup_db import DB_PATH
 import sqlite3
 
@@ -7,7 +8,7 @@ class Patient:
     nom: str
     prenom: str
     sexe: str
-    date_naissance: 'datetime.datetime'
+    date_naissance: datetime
     adresse: str
     ville: str
     telephone1: str
@@ -108,7 +109,7 @@ class Patient:
                 nom=data[1],
                 prenom=data[2],
                 sexe=data[3],
-                date_naissance=datetime.datetime.strptime(data[4], "%Y-%m-%d"),
+                date_naissance=datetime.strptime(data[4], "%Y-%m-%d"),
                 adresse=data[5],
                 amenagement=data[6],
                 niveau=data[7],
@@ -147,7 +148,7 @@ class Patient:
                 nom=data[1],
                 prenom=data[2],
                 sexe=data[3],
-                date_naissance=datetime.datetime.strptime(data[4], "%Y-%m-%d"),
+                date_naissance=datetime.strptime(data[4], "%Y-%m-%d"),
                 adresse=data[5],
                 amenagement=data[6],
                 niveau=data[7],
@@ -181,6 +182,7 @@ class Patient:
             return patient_id  # Retourner l'ID pour confirmation
         except Exception as e:
             print(f"✗ Erreur lors de l'ajout du patient : {e}")
+            traceback.print_exc()
             return None
 
     @staticmethod

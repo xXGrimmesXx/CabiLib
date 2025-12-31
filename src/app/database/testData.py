@@ -1,6 +1,7 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from os import path
+from sys import path as sys_path
+
+sys_path.insert(0, path.abspath(path.join(path.dirname(__file__), '..')))
 
 from database.setup_db import DB_PATH
 import sqlite3

@@ -1,5 +1,6 @@
 from app.database.setup_db import DB_PATH
 import sqlite3
+import traceback
 from datetime import timedelta
 
 class TypeRDV:
@@ -143,6 +144,7 @@ class TypeRDV:
                     APIRequestQueue.enqueue_api_request('calendar_modify_rdv', rdv.serialize())
                 except Exception as e:
                     print(f"[ERREUR CALENDAR] {e}")
+                    traceback.print_exc()
     
     @staticmethod
     def deleteTypeRDV(type_rdv_id: int) -> None:

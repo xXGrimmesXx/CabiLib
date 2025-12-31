@@ -1,4 +1,5 @@
 import json
+from os import path,environ
 from app.model.facture import Facture
 from app.model.patient import Patient
 from app.model.rendezVous import RendezVous
@@ -175,11 +176,29 @@ class CreerFactureController:
         factures_creees = []
         for patient in patients:
             factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
+            attachements = [factures_creees[-1][1]] if factures_creees [-1][0]!=-1 else []
+            attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'RIB_Praticien.pdf').replace('\\','/'))
+            print(attachements)
             APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
                 'to': patient.email,
-                'subject': f'Votre facture du {start_date.date()} au {end_date.date()}',
-                'body': f'Bonjour {patient.prenom},\n\nVeuillez trouver ci-joint votre facture pour la période du {start_date.date()} au {end_date.date()}.\n\nCordialement,\nVotre Cabinet Médical',
-                'attachments': [factures_creees[-1][1]] if factures_creees [-1][0]!=-1 else []
+                'subject': f'[Ergothérapie] Facture {patient.prenom} - du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}',
+                'body': f"""Bonjour,<br><br>
+Veuillez trouver ci-joint votre <strong>facture pour la période du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}</strong> concernant les séances d\'ergothérapie.<br>
+Pour le règlement, plusieurs moyens de paiement sont possibles : <br><br>
+1️⃣ <strong>Virement bancaire (préféré)</strong><br>
+Merci d\'utiliser comme libellé : <br>
+<strong>Nom + Prénom de l\'enfant + Mois de la facture</strong> <br>
+(Exemple : Dupont Léa - Novembre)<br>
+→ Les coordonnées bancaires sont jointes à ce mail.<br><br>
+2️⃣ <strong>Chèque</strong><br>
+A l\'ordre de : <strong>{cm.get_constante("PRACTITIONER_NAME")}</strong><br>
+Merci de déposer le chèque <strong>dans la boite au lettre du cabinet</strong>, dans une enveloppe <strong>portant mon nom.</strong><br><br>
+3️⃣ <strong>Espèces</strong><br>
+Vous pouvez également régler en espèces, à déposer <strong>dans la boite au lettre du cabinet</strong>, dans une enveloppe <strong>portant mon nom.</strong><br><br>
+N'hésitez pas à me contacter si vous avez la moindre question.<br><br>
+⚠️ <strong>Quel que soit le mode de paiement choisi, merci de m'informer de la date et du mode de règlement</strong>, afin de faciliter le suivi de votre dossier.⚠️<br>
+Cordialement,<br>""",
+                'attachments': attachements
             }))
 
         self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])

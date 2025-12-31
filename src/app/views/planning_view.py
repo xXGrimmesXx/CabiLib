@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                                QMessageBox)
 from PySide6.QtCore import Qt, Signal, QStringListModel, QTime
 from PySide6.QtGui import QColor, QFont, QCursor
+import traceback
 from datetime import datetime, timedelta
 from app.model.rendezVous import RendezVous
 from app.model.typeRDV import TypeRDV
@@ -283,7 +284,6 @@ class PlanningView(QWidget):
                 self.table.setColumnCount(len(headers))
             self.table.setHorizontalHeaderLabels(headers)
         except Exception as e:
-            import traceback
             print("Erreur dans set_week_label:", e)
             traceback.print_exc()
     
@@ -299,6 +299,7 @@ class PlanningView(QWidget):
                         self.table.setSpan(row, col, 1, 1)  # Reset span
                 except Exception as e:
                     print(f"[PlanningView] ERREUR clear_planning: row={row}, col={col}, {e}")
+                    traceback.print_exc()
     
     def add_rdv_to_planning(self,Rdv:RendezVous,patient:Patient,type_rendez_vous:TypeRDV) -> None:
         """
@@ -320,6 +321,7 @@ class PlanningView(QWidget):
         try:
             row = self.time_slots.index(time_slot)
         except ValueError:
+            traceback.print_exc()
             return  # Heure non trouvée
         
         col = jour_index + 1  # +1 car colonne 0 = heures
@@ -403,6 +405,7 @@ class PlanningView(QWidget):
                     self.patient_input.setCurrentIndex(index)
                 except Exception as e:
                     print(f"Error setting patient index: {e}")
+                    traceback.print_exc()
         else:
             self.patient_input.setCurrentIndex(0)  # Aucun
 
@@ -413,6 +416,7 @@ class PlanningView(QWidget):
                 self.time_input.setTime(rdv.date.time())
             except Exception as e:
                 print(f"Error setting date/time: {e}")
+                traceback.print_exc()
         else :
             self.date_input.setDate(datetime(2000,1,1,0,1,1))
 
@@ -425,6 +429,7 @@ class PlanningView(QWidget):
                     self.type_rdv_input.setCurrentIndex(type_rdv_index)
                 except Exception as e:
                     print(f"Error setting type RDV index: {e}")
+                    traceback.print_exc()
         else:
             self.type_rdv_input.setCurrentIndex(0)  # Aucun
 
@@ -433,6 +438,7 @@ class PlanningView(QWidget):
                 self.presence_input.setCurrentText(rdv.presence)
             except Exception as e:
                 print(f"Error setting presence: {e}")
+                traceback.print_exc()
         else:
             self.presence_input.setCurrentIndex(0)  # Aucun
 

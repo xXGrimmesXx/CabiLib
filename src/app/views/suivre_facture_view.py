@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import (QMainWindow, QWidget, QGridLayout, QTableWidget, 
-                               QTableWidgetItem, QLabel, QPushButton, QLineEdit,QComboBox,QDateEdit)
+from PySide6.QtWidgets import (QWidget, QGridLayout, QTableWidget, 
+                               QTableWidgetItem, QLabel, QLineEdit)
 from PySide6.QtCore import Qt, Signal
 from app.model.facture import Facture
 

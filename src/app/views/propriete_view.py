@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QGroupBox, QScrollArea, QSpinBox
 )
 from PySide6.QtCore import Signal, Qt
+import traceback
 from app.services import constantes_manager
 
 
@@ -138,7 +139,7 @@ class ProprieteView(QWidget):
         # ADELI
         layout.addLayout(self._create_text_field(
             "ADELI", 
-            "Numéro ADELI"
+            "Numéro RPPS"
         ))
         
         group.setLayout(layout)
@@ -230,6 +231,7 @@ class ProprieteView(QWidget):
             try:
                 spin_box.setValue(int(value))
             except (ValueError, TypeError):
+                traceback.print_exc()
                 spin_box.setValue(min_val)
         
         # Sauvegarde à chaque changement
@@ -333,6 +335,7 @@ class ProprieteView(QWidget):
             self.constante_modified.emit(key, value)
         except Exception as e:
             print(f"Erreur lors de la sauvegarde de {key}: {e}")
+            traceback.print_exc()
             
     def _choose_directory(self, key: str, line_edit: QLineEdit):
         """
@@ -388,6 +391,7 @@ class ProprieteView(QWidget):
             self.list_item_added.emit(key, value)
         except Exception as e:
             print(f"Erreur lors de l'ajout à {key}: {e}")
+            traceback.print_exc()
             
     def refresh(self):
         """Rafraîchit l'affichage (recharge depuis constantes_manager)."""

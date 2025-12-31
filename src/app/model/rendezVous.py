@@ -1,11 +1,9 @@
 from app.database.setup_db import DB_PATH
 import sqlite3
+import traceback
 from datetime import datetime,timedelta
-
-from datetime import datetime
 from app.model.typeRDV import TypeRDV
-import json
-
+from json import dumps, loads
 from app.services.internet_API_thread_worker import APIRequestQueue
 
 
@@ -67,7 +65,7 @@ class RendezVous:
         Returns:
             dict: Dictionnaire représentant le rendez-vous.
         """
-        return json.dumps({
+        return dumps({
             "id": self.id,
             "patient_id": self.patient_id,
             "date": self.date.isoformat() if isinstance(self.date, datetime) else str(self.date),
@@ -89,7 +87,7 @@ class RendezVous:
         Returns:
             RendezVous: Instance de RendezVous.
         """
-        data = json.loads(serialized_str)
+        data = loads(serialized_str)
         date_parsed = datetime.fromisoformat(data["date"]) if "T" in data["date"] else datetime.strptime(data["date"], '%Y-%m-%d %H:%M:%S')
         return RendezVous(
             id=data.get("id"),
@@ -196,11 +194,13 @@ class RendezVous:
             connexion.close()
         except Exception as e :
             print(f"[ERREUR] {e}")
+            traceback.print_exc()
             return
         try :
             APIRequestQueue.enqueue_api_request('calendar_create_event', rdv.serialize())
         except Exception as e :
             print(f"[ERREUR CALENDAR] {e}")
+            traceback.print_exc()
             return
 
     @staticmethod
@@ -225,6 +225,7 @@ class RendezVous:
             connexion.close()
         except Exception as e :
             print(f"[ERREUR] {e}")
+            traceback.print_exc()
             return
         try :
             if (old_rdv.patient_id != new_rdv.patient_id) or (old_rdv.date != new_rdv.date) or (old_rdv.motif != new_rdv.motif) or (old_rdv.type_id != new_rdv.type_id) :
@@ -232,6 +233,7 @@ class RendezVous:
 
         except Exception as e :
             print(f"[ERREUR CALENDAR] {e}")
+            traceback.print_exc()
             return
 
     @staticmethod

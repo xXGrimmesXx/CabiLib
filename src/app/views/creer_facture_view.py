@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
                                QRadioButton, QButtonGroup, QLabel, QComboBox,
-                               QCompleter, QPushButton, QMessageBox, QErrorMessage)
+                               QCompleter, QPushButton, QMessageBox)
 from PySide6.QtCore import Qt, Signal
 from app.model.facture import Facture
 from app.widgetPersonalise.separator import Separator
-import datetime
+from datetime import datetime
 
 
 class creerFactureView(QWidget):
@@ -69,12 +69,12 @@ class creerFactureView(QWidget):
         # Sélecteur de date
         date_layout = QHBoxLayout()
         date_layout.addWidget(QLabel("Date de début :"))
-        self.start_date_edit = QDateEdit(datetime.datetime.now())
+        self.start_date_edit = QDateEdit(datetime.now())
         self.start_date_edit.setCalendarPopup(True)
         date_layout.addWidget(self.start_date_edit)
 
         date_layout.addWidget(QLabel("Date de fin :"))
-        self.end_date_edit = QDateEdit(datetime.datetime.now())
+        self.end_date_edit = QDateEdit(datetime.now())
         self.end_date_edit.setCalendarPopup(True)
 
         date_layout.addWidget(self.end_date_edit)
@@ -137,10 +137,10 @@ class creerFactureView(QWidget):
 
     def on_creer_clicked(self) :
         start_date = self.start_date_edit.date().toPython()
-        start_date = datetime.datetime(start_date.year, start_date.month, start_date.day)
+        start_date = datetime(start_date.year, start_date.month, start_date.day)
 
         end_date = self.end_date_edit.date().toPython()
-        end_date = datetime.datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
+        end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
 
         if(self.mass_facture_button.isChecked()) :
             print("Emission du signal de facturation de masse")

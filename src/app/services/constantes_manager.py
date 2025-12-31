@@ -1,17 +1,17 @@
-import json
-import os
+from json import dump, loads
+from os import path, environ
 
-CONST_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'Constantes.json').replace('\\', '/')
+CONST_PATH = path.join(environ['APPDATA'], 'CabiLib', 'Constantes.json').replace('\\', '/')
 
 def load_constantes():
     """Charge toutes les constantes depuis le fichier JSON."""
     with open(CONST_PATH, encoding='utf-8') as f:
-        return json.load(f)
+        return loads(f.read())
 
 def save_constantes(data):
     """Écrit toutes les constantes dans le fichier JSON."""
     with open(CONST_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        dump(data, f, ensure_ascii=False, indent=2)
 
 def get_constante(key):
     """Récupère une constante par sa clé."""

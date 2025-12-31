@@ -1,11 +1,9 @@
 import sqlite3
-import os
-import importlib.util
-import shutil
-import datetime
-import traceback
+from os import path,environ
+from shutil import copy2
+from datetime import datetime
 
-DB_PATH = os.path.join(os.environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
+DB_PATH = path.join(environ['APPDATA'], 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
 
 def setup_database():
@@ -94,11 +92,11 @@ def resetDB():
     setup_database()
 
 def backup_db(db_path, backup_dir):
-    if not os.path.exists(db_path):
+    if not path.exists(db_path):
         return None
-    ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    bak = os.path.join(backup_dir, f"CabiLib.db-{ts}.bak")
-    shutil.copy2(db_path, bak)
+    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    bak = path.join(backup_dir, f"CabiLib.db-{ts}.bak")
+    copy2(db_path, bak)
     return bak
 
 if __name__ == "__main__":

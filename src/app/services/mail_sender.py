@@ -1,7 +1,8 @@
-import base64
-import os
-import mimetypes
+from base64 import urlsafe_b64encode
+from os import path
+from mimetypes import guess_type
 from email.message import EmailMessage
+import traceback
 from app.services.google_api_manager import get_gmailV1_service
 
 
@@ -16,7 +17,8 @@ def save_draft(message_body):
     service = get_gmailV1_service()
 
     message = EmailMessage()
-    message.set_content(message_body.get('body', ''))
+    # Utiliser HTML comme corps du message
+    message.set_content(message_body.get('body', ''), subtype='html')
     message['To'] = message_body.get('to', '')
     message['From'] = 'me'
     message['Subject'] = message_body.get('subject', '')
@@ -28,18 +30,20 @@ def save_draft(message_body):
                 with open(file_path, 'rb') as f:
                     data = f.read()
 
-                ctype, encoding = mimetypes.guess_type(file_path)
+                ctype, encoding = guess_type(file_path)
                 if ctype is None:
                     maintype, subtype = 'application', 'octet-stream'
                 else:
                     maintype, subtype = ctype.split('/', 1)
 
-                filename = os.path.basename(file_path)
+                filename = path.basename(file_path)
                 message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
             except Exception as e:
+                print(f"Erreur lors de l'ajout de la pièce jointe {file_path}:")
+                traceback.print_exc()
                 raise
 
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    raw_message = urlsafe_b64encode(message.as_bytes()).decode()
     create_message = {
         'message': {
             'raw': raw_message

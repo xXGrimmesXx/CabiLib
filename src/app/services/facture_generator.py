@@ -1,15 +1,16 @@
 from datetime import timedelta, datetime
-from weasyprint import HTML, CSS
-import os
-import sys
-import base64
+from weasyprint import HTML
+from os import path, environ, makedirs
+from sys import path as sys_path
+from base64 import b64encode
+import traceback
 # Import des modèles existants
 from app.model.facture import Facture
 from app.model.patient import Patient
 from app.model.ligneFacture import LigneFacture
 from app.model.typeRDV import TypeRDV
 from app.model.rendezVous import RendezVous
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) or '.')
+sys_path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))) or '.')
 from app.services import constantes_manager
 
 def format_date_fr(date_obj):
@@ -32,14 +33,15 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     ADELI = constantes_manager.get_constante("ADELI")
 
     # --- 2. Gestion du Logo ---
-    logo_file = os.path.join(os.environ.get("APPDATA"),"CabiLib", 'logo.png').replace('\\', '/')
+    logo_file = path.join(environ.get("APPDATA"),"CabiLib", 'logo.png').replace('\\', '/')
     logo_base64 = ''
     print("Logo file path:", logo_file)
     try:
         with open(logo_file, 'rb') as img_f:
             logo_bytes = img_f.read()
-            logo_base64 = base64.b64encode(logo_bytes).decode('utf-8')
+            logo_base64 = b64encode(logo_bytes).decode('utf-8')
     except Exception:
+        traceback.print_exc()
         logo_base64 = ''
     
     logo_img_tag = f'<img src="data:image/png;base64,{logo_base64}" class="logo-img" alt="Logo" />' if logo_base64 else ''
@@ -332,7 +334,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
             <div>Profession inscrite au livre IV du code de la Santé Publique Loi n° 95-116 du 4 février 1995</div>
             <div>TVA non applicable, article 261 du code général des impôts (CGI).</div>
             <div>Conformément à la loi 92-1442 du 31/12/92, toute somme due non versée à l'échéance<br>supportera des pénalités de retard égales à 3 fois le taux d'intérêt légal.</div>
-            <div style="margin-top: 5px;">Siret : {SIRET} &nbsp;&nbsp; APE {APE} &nbsp;&nbsp; ADELI : {ADELI}</div>
+            <div style="margin-top: 5px;">Siret : {SIRET} &nbsp;&nbsp; APE {APE} &nbsp;&nbsp; RPPS : {ADELI}</div>
         </div>
 
     </body>
@@ -342,11 +344,11 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     pdf = HTML(string=html_content).write_pdf()
     return pdf
 
-def save_facture_pdf(pdf_bytes: bytes, path:str ,filename: str) -> None:
-    abs_dir = os.path.abspath(path)
-    if not os.path.exists(abs_dir):
-        os.makedirs(abs_dir)
-    abs_file = os.path.join(abs_dir, filename)
+def save_facture_pdf(pdf_bytes: bytes, save_path:str ,filename: str) -> None:
+    abs_dir = path.abspath(save_path)
+    if not path.exists(abs_dir):
+        makedirs(abs_dir)
+    abs_file = path.join(abs_dir, filename)
     with open(abs_file, 'wb') as f:
         f.write(pdf_bytes)
 
@@ -354,6 +356,6 @@ def create_and_save (facture: Facture, patient: Patient, lignes: list[LigneFactu
     pdf = generate_facture_pdf(facture, patient, lignes, annulation_factures, date_debut, date_fin)
     filename = f"{facture.id}.pdf"
     basepath = constantes_manager.get_constante("FACTURES_DIR")
-    path = facture.date_emission.strftime("%Y-%m")
-    save_facture_pdf(pdf, os.path.join(basepath, path), filename)
-    return os.path.join(basepath, path, filename)
+    fac_path = facture.date_emission.strftime("%Y-%m")
+    save_facture_pdf(pdf, path.join(basepath, fac_path), filename)
+    return path.join(basepath, fac_path, filename)

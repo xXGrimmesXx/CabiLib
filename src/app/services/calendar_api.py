@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta,timezone
+import traceback
 from app.services.google_api_manager import get_calendarV3_service
 import app.services.constantes_manager as cm
 from app.model.rendezVous import RendezVous
 from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
-from zoneinfo import ZoneInfo
 from typing import Dict, Any as JSON
 
 try:
@@ -47,6 +47,7 @@ def create_calendar_if_not_exist ():
     return CALENDAR_ID
   except Exception as e:
     print("An error occurred while creating the calendar: %s" % e)
+    traceback.print_exc()
     return None
 
 def get_event_by_plage(start_datetime, end_datetime):
@@ -94,10 +95,12 @@ def get_event_by_plage(start_datetime, end_datetime):
       try:
         content = e.content.decode() if hasattr(e, "content") else str(e)
       except Exception:
+        traceback.print_exc()
         content = str(e)
       print(f"HTTP error fetching events: {content}")
     else:
       print(f"Error fetching events: {e}")
+    traceback.print_exc()
     return []
 
   events = events_result.get("items", [])
@@ -167,6 +170,7 @@ def modify_rdv (rdv:RendezVous) :
     
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")
+    traceback.print_exc()
     return None
   return None
 
@@ -192,6 +196,7 @@ def insert_rdv (rdv:RendezVous) :
     RendezVous.updateRendezVous(rdv.id,rdv)
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")
+    traceback.print_exc()
     return None
   return event
 
@@ -209,6 +214,7 @@ def main():
       insert_rdv(rdv)
     except Exception as e :
       print(f"[ERREUR] {e}")
+      traceback.print_exc()
       continue
 
 

@@ -1,3 +1,4 @@
+import traceback
 from app.views.patient_view import PatientView
 from app.controllers.patient_controller import PatientController
 from app.model.patient import Patient
@@ -37,6 +38,7 @@ class MainController:
         try:
             self.main_window.menu_action_triggered.connect(self.on_menu_action)
         except Exception:
+            traceback.print_exc()
             pass
         
         # Charger le premier onglet
