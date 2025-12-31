@@ -46,6 +46,20 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     
     logo_img_tag = f'<img src="data:image/png;base64,{logo_base64}" class="logo-img" alt="Logo" />' if logo_base64 else ''
     
+    # --- 2b. Gestion de la Signature ---
+    signature_file = path.join(environ.get("APPDATA"),"CabiLib", 'signature.png').replace('\\', '/')
+    signature_base64 = ''
+    print("Signature file path:", signature_file)
+    try:
+        with open(signature_file, 'rb') as img_f:
+            signature_bytes = img_f.read()
+            signature_base64 = b64encode(signature_bytes).decode('utf-8')
+    except Exception:
+        traceback.print_exc()
+        signature_base64 = ''
+    
+    signature_img_tag = f'<img src="data:image/jpeg;base64,{signature_base64}" class="signature-img" alt="Signature" />' if signature_base64 else ''
+    
     # --- 3. Préparation des données ---
     NOM_PAYEUR = f"M. & Mme {patient.nom}"
     ADRESSE_PAYEUR = patient.adresse if patient.adresse else ""
@@ -242,6 +256,11 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
                 width: 40%;
                 text-align: right;
             }}
+            .signature-img {{
+                max-width: 150px;
+                height: auto;
+                margin-top: 10px;
+            }}
             .signature-line {{
                 margin-top: 40px;
                 border-top: 1px solid #000;
@@ -328,6 +347,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
         <div class="signature-block">
             <div style="margin-bottom: 5px;">{PRACTITIONER_NAME}</div>
             <div class="signature-line">SIGNATURE</div>
+            {signature_img_tag}
         </div>
 
         <div class="footer-legal">

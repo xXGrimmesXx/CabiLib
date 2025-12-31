@@ -47,16 +47,18 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 var
   LogoPage: TInputFileWizardPage;
   RIBPage: TInputFileWizardPage;
+  SignaturePage: TInputFileWizardPage;
   SelectedLogoPath: String;
   SelectedRIBPath: String;
+  SelectedSignaturePath: String;
 
 procedure InitializeWizard;
 begin
   // Page pour le logo
   LogoPage := CreateInputFilePage(wpSelectTasks,
-    'Choisir le logo de l''application', 
+    'Choisir le logo du cabinet', 
     'Sélectionnez une image PNG pour le logo',
-    'Veuillez sélectionner un fichier image PNG qui servira de logo pour l''application.' + #13#10 +
+    'Veuillez sélectionner un fichier image PNG qui servira de logo pour la facture' + #13#10 +
     'Le fichier sera copié dans le dossier de configuration de CabiLib.');
   
   LogoPage.Add('Fichier logo (PNG):', 
@@ -77,6 +79,19 @@ begin
     '.pdf');
   
   RIBPage.Edits[0].Text := '';
+
+  // Page pour la signature
+  SignaturePage := CreateInputFilePage(RIBPage.ID,
+    'Choisir la signature du praticien', 
+    'Sélectionnez une image PNG de la signature',
+    'Veuillez sélectionner un fichier image PNG contenant la signature du praticien.' + #13#10 +
+    'Le fichier sera copié dans le dossier de configuration de CabiLib.');
+  
+  SignaturePage.Add('Fichier signature (PNG):', 
+    'Fichiers image PNG|*.png|Tous les fichiers|*.*',
+    '.png');
+  
+  SignaturePage.Edits[0].Text := '';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -116,6 +131,23 @@ begin
       Result := False;
     end;
   end;
+
+  // Validation de la page Signature
+  if CurPageID = SignaturePage.ID then
+  begin
+    SelectedSignaturePath := SignaturePage.Values[0];
+    
+    if SelectedSignaturePath = '' then
+    begin
+      MsgBox('Veuillez sélectionner un fichier signature.', mbError, MB_OK);
+      Result := False;
+    end
+    else if not FileExists(SelectedSignaturePath) then
+    begin
+      MsgBox('Le fichier sélectionné n''existe pas.', mbError, MB_OK);
+      Result := False;
+    end;
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -123,6 +155,7 @@ var
   DestDir: String;
   DestLogoFile: String;
   DestRIBFile: String;
+  DestSignatureFile: String;
 begin
   if CurStep = ssPostInstall then
   begin
@@ -152,6 +185,17 @@ begin
         Log('RIB copié avec succès: ' + DestRIBFile)
       else
         MsgBox('Erreur lors de la copie du RIB.', mbError, MB_OK);
+    end;
+
+    // Copier la signature
+    if SelectedSignaturePath <> '' then
+    begin
+      DestSignatureFile := DestDir + '\signature.png';
+      
+      if FileCopy(SelectedSignaturePath, DestSignatureFile, False) then
+        Log('Signature copiée avec succès: ' + DestSignatureFile)
+      else
+        MsgBox('Erreur lors de la copie de la signature.', mbError, MB_OK);
     end;
   end;
 end;
