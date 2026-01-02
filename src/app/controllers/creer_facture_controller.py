@@ -24,7 +24,6 @@ class CreerFactureController:
         self.typeRDVModel: TypeRDV = TypeRDV
         self.ligneFactureModel: LigneFacture = LigneFacture
         self.view: creerFactureView = view
-        self.type_rdv_liste: list[TypeRDV] = self.typeRDVModel.getAllTypesRDV()
         # Connecter les signaux de la vue aux méthodes du contrôleur
         self.view.mass_facture_generer.connect(self.on_mass_facture_generer)
         self.view.single_facture_generer.connect(self.on_single_facture_generer)
@@ -83,7 +82,7 @@ class CreerFactureController:
             elif (rdv.presence == "Présent"):
                 print("Le patient était présent au rendez-vous ID :", rdv.id)
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
-                new_ligne = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
+                new_ligne = LigneFacture(facture.id,rdv.id,self.typeRDVModel.getTypeRDVById(rdv.type_id).prix)
                 rdv.facture_id = facture.id
                 if(preview==False):
                     LigneFacture.addLigneFacture(new_ligne)
