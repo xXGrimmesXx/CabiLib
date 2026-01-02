@@ -158,3 +158,29 @@ class LigneFacture:
             lignes.append(ligne)
         
         return lignes
+    
+    @staticmethod
+    def getLignesFactureByRendezVousId(rdv_id: int) -> list['LigneFacture']:
+        """
+        Récupère toutes les lignes de facture associées à un rendez-vous donné.
+
+        Args:
+            rdv_id (int): Identifiant du rendez-vous.
+
+        Returns:
+            list[LigneFacture]: Liste des lignes de facture associées.
+        """
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+        cursor.execute("SELECT * FROM ligne_facture WHERE idRendezVous = ?", (rdv_id,))
+        lignes_data = cursor.fetchall()
+        connexion.close()
+        lignes = []
+        for data in lignes_data:
+            ligne = LigneFacture(
+                facture_id=data[1],
+                rdv_id=data[0],
+                montant_facture=data[2]
+            )
+            lignes.append(ligne)
+        return lignes

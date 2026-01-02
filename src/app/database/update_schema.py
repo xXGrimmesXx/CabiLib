@@ -26,7 +26,8 @@ TABLE_CREATE_SQL = {
         "typeTelephone2 TEXT,\n"
         "email TEXT,\n"
         "etat_suivi TEXT,\n"
-        "description TEXT)"
+        "description TEXT,\n"
+        "nom_facturation TEXT,\n)"
     ),
     'rendez_vous': (
         "CREATE TABLE rendez_vous("

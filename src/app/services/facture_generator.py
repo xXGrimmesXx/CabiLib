@@ -22,7 +22,7 @@ def format_date_fr(date_obj):
     }
     return f"{date_obj.day} {mois[date_obj.month]} {date_obj.year}"
 
-def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> bytes:
+def generate_facture_html(facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> bytes:
     # --- 1. Chargement des constantes ---
     PRACTITIONER_NAME = constantes_manager.get_constante("PRACTITIONER_NAME") 
     PRACTITIONER_PHONE = constantes_manager.get_constante("PRACTITIONER_PHONE") 
@@ -61,7 +61,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     signature_img_tag = f'<img src="data:image/jpeg;base64,{signature_base64}" class="signature-img" alt="Signature" />' if signature_base64 else ''
     
     # --- 3. Préparation des données ---
-    NOM_PAYEUR = f"M. & Mme {patient.nom}"
+    NOM_PAYEUR = f"{patient.nom_facturation if patient.nom_facturation else patient.nom}"
     ADRESSE_PAYEUR = patient.adresse if patient.adresse else ""
     VILLE_PAYEUR = f"{patient.ville}" if patient.ville else ""
     
@@ -79,7 +79,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
         
         if rendez_vous:
             typeRDV = TypeRDV.getTypeRDVById(rendez_vous.type_id)
-            description = f"{typeRDV.nom} ({int(typeRDV.duree.total_seconds()//3600)}H{int((typeRDV.duree.total_seconds()%3600)//60)}min)" if typeRDV else "Séance"
+            description = f"{typeRDV.nom}" if typeRDV else "Séance"
             
             lignes_data.append({
                 "description": description,
@@ -345,8 +345,7 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
         </table>
 
         <div class="signature-block">
-            <div style="margin-bottom: 5px;">{PRACTITIONER_NAME}</div>
-            <div class="signature-line">SIGNATURE</div>
+            <div style="margin-bottom: 5px;">{PRACTITIONER_NAME.upper()}</div>
             {signature_img_tag}
         </div>
 
@@ -361,6 +360,10 @@ def generate_facture_pdf(facture: Facture, patient: Patient, lignes: list[LigneF
     </html>
     """
 
+    return html_content
+
+def generate_facture_pdf(html_content: str) -> bytes:
+    
     pdf = HTML(string=html_content).write_pdf()
     return pdf
 
@@ -373,7 +376,8 @@ def save_facture_pdf(pdf_bytes: bytes, save_path:str ,filename: str) -> None:
         f.write(pdf_bytes)
 
 def create_and_save (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
-    pdf = generate_facture_pdf(facture, patient, lignes, annulation_factures, date_debut, date_fin)
+    html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
+    pdf = generate_facture_pdf(html_content)
     filename = f"{facture.id}.pdf"
     basepath = constantes_manager.get_constante("FACTURES_DIR")
     fac_path = facture.date_emission.strftime("%Y-%m")

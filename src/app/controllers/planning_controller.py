@@ -5,6 +5,7 @@ from app.model.patient import Patient
 from app.model.typeRDV import TypeRDV
 from app.model.rendezVous import RendezVous
 from app.views.planning_view import PlanningView
+from app.model.ligneFacture import LigneFacture
 
 class PlanningController(QObject):
     """Contrôleur pour gérer le planning des rendez-vous"""
@@ -128,5 +129,9 @@ class PlanningController(QObject):
     def on_supprimer_clicked(self, rdv):
         """Gérer la suppression d'un rendez-vous"""
         if rdv.id is not None:
+            factures = LigneFacture.getLignesFactureByRendezVousId(rdv.id)
+            if factures is not None and len(factures) > 0:
+                self.view.erreur_suppression_rdv_facture()
+                return
             self.rendez_vous_model.deleteRendezVous(rdv.id)
             self.load_week_rdvs()

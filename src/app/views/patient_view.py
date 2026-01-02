@@ -119,7 +119,11 @@ class PatientView(QWidget):
         row4 = QHBoxLayout()
         row4.addWidget(QLabel("Email :"))
         self.email_input = QLineEdit(); self.email_input.setPlaceholderText("exemple@email.com")
+        nom_facturation_label = QLabel("Nom facturation :")
+        self.nom_facturation_input = QLineEdit()
         row4.addWidget(self.email_input)
+        row4.addWidget(nom_facturation_label)
+        row4.addWidget(self.nom_facturation_input)
         detail_vbox.addLayout(row4)
 
         row5 = QHBoxLayout()
@@ -145,7 +149,7 @@ class PatientView(QWidget):
         # Ligne 6 : Niveau scolaire, Ecole
         row6 = QHBoxLayout()
         row6.addWidget(QLabel("Niveau scolaire :"))
-        niveau_options = constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS") or []
+        niveau_options = [""] + (constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS") or [])
         self.niveau_input = QComboBox(); self.niveau_input.setEditable(True); self.niveau_input.addItems(niveau_options)
         self.completer_niveau = QCompleter(niveau_options); self.completer_niveau.setCaseSensitivity(Qt.CaseInsensitive); self.completer_niveau.setFilterMode(Qt.MatchContains)
         self.niveau_input.setCompleter(self.completer_niveau)
@@ -158,7 +162,7 @@ class PatientView(QWidget):
         # Ligne 7 : Aménagement, Etat du suivi
         row7 = QHBoxLayout()
         row7.addWidget(QLabel("Aménagement :"))
-        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or []
+        amenagement_options = [""] + (constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or [])
         self.amenagement_input = QComboBox(); self.amenagement_input.addItems(amenagement_options); self.amenagement_input.setEditable(True)
         self.completer_amenagement = QCompleter(amenagement_options); self.completer_amenagement.setCaseSensitivity(Qt.CaseInsensitive); self.completer_amenagement.setFilterMode(Qt.MatchContains)
         self.amenagement_input.setCompleter(self.completer_amenagement)
@@ -200,7 +204,7 @@ class PatientView(QWidget):
     def on_refresh(self):
         """Rafraîchir la vue (ex: recharger les listes déroulantes si besoin)"""
         self.niveau_input.clear()
-        niveau_options = constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS")
+        niveau_options = [""] + (constantes_manager.get_constante("NIVEAU_SCOLAIRE_OPTIONS") or [])
         self.niveau_input.addItems(niveau_options)
         self.completer_niveau.setModel(QStringListModel(niveau_options))
 
@@ -214,7 +218,7 @@ class PatientView(QWidget):
         self.completer_type_telephone2.setModel(QStringListModel(type_tel_options))
 
         self.amenagement_input.clear()
-        amenagement_options = constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or []
+        amenagement_options = [""] + (constantes_manager.get_constante("AMENAGEMENTS_OPTIONS") or [])
         self.amenagement_input.addItems(amenagement_options)
         self.completer_amenagement.setModel(QStringListModel(amenagement_options))
 
@@ -250,7 +254,7 @@ class PatientView(QWidget):
             self.patient_table.setItem(row_position, 4, QTableWidgetItem(patient.niveau))
             self.patient_table.setItem(row_position, 5, QTableWidgetItem(patient.ecole))
 
-            self.patient_table.setItem(row_position, 6, QTableWidgetItem(patient.date_naissance.strftime("%Y-%m-%d")))
+            self.patient_table.setItem(row_position, 6, QTableWidgetItem(patient.date_naissance.strftime("%d-%m-%Y")))
 
             self.patient_table.setItem(row_position, 7, QTableWidgetItem(patient.ville))
             self.patient_table.setItem(row_position, 8, QTableWidgetItem(patient.telephone1))
@@ -279,6 +283,7 @@ class PatientView(QWidget):
         self.amenagement_input.setCurrentText(patient.amenagement)
         self.etat_suivi_input.setCurrentText(patient.etat_suivi)
         self.description_input.setText(patient.description)
+        self.nom_facturation_input.setText(patient.nom_facturation if patient.nom_facturation else "")
     
     def get_patient_details(self):
         """Récupérer les valeurs du formulaire"""
@@ -299,7 +304,8 @@ class PatientView(QWidget):
             ecole=self.ecole_input.text(),
             amenagement=self.amenagement_input.currentText(),
             etat_suivi=self.etat_suivi_input.currentText(),
-            description=self.description_input.toPlainText()
+            description=self.description_input.toPlainText(),
+            nom_facturation=self.nom_facturation_input.text()
         )
     
     def get_selected_row(self):
@@ -327,7 +333,7 @@ class PatientView(QWidget):
         self.patient_table.setItem(row, 4, QTableWidgetItem(patient.niveau))
         self.patient_table.setItem(row, 5, QTableWidgetItem(patient.ecole))
         
-        self.patient_table.setItem(row, 6, QTableWidgetItem(patient.date_naissance.strftime("%Y-%m-%d")))
+        self.patient_table.setItem(row, 6, QTableWidgetItem(patient.date_naissance.strftime("%d-%m-%Y")))
         self.patient_table.setItem(row, 7, QTableWidgetItem(patient.ville))
         self.patient_table.setItem(row, 8, QTableWidgetItem(patient.telephone1))
         self.patient_table.setItem(row, 9, QTableWidgetItem(patient.email))
@@ -386,6 +392,7 @@ class PatientView(QWidget):
         self.amenagement_input.setCurrentIndex(0)
         self.etat_suivi_input.setCurrentIndex(0)
         self.description_input.clear()
+        self.nom_facturation_input.clear()
 
         self.patient_table.clearSelection()
         self.selected_patient_id = None

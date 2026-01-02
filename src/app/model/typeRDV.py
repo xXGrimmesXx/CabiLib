@@ -132,7 +132,7 @@ class TypeRDV:
             UPDATE type_rdv 
             SET nom = ?, description = ?, prix = ?, duree = ?, localisation = ?, couleur = ?, estgroupe = ?
             WHERE id = ?
-        """, (new_type_rdv.nom, new_type_rdv.description, new_type_rdv.prix, new_type_rdv.duree, new_type_rdv.localisation, new_type_rdv.couleur, new_type_rdv.estgroupe, new_type_rdv.id))
+        """, (new_type_rdv.nom, new_type_rdv.description, new_type_rdv.prix, new_type_rdv.duree.total_seconds() // 60, new_type_rdv.localisation, new_type_rdv.couleur, new_type_rdv.estgroupe, new_type_rdv.id))
         connexion.commit()
         connexion.close()
         if (old_type.duree != new_type_rdv.duree) or (old_type.nom != new_type_rdv.nom):

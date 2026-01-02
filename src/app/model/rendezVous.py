@@ -381,3 +381,47 @@ class RendezVous:
         print(f"Converted {len(rdvs)} rows to RendezVous instances.")
 
         return rdvs
+    
+    def deleteRendezVous(rdv_id: int) -> None:
+        """
+        Supprime un rendez-vous de la base de données.
+
+        Args:
+            rdv_id (int): Identifiant du rendez-vous à supprimer.
+        """
+        from app.services.calendar_api import delete_rdv
+        try :
+            connexion = sqlite3.connect(DB_PATH)
+            cursor = connexion.cursor()
+            rdv = RendezVous.getRendezVousById(rdv_id)
+            cursor.execute("DELETE FROM rendez_vous WHERE id = ?", (rdv_id,))
+            connexion.commit()
+            connexion.close()
+        except Exception as e :
+            print(f"[ERREUR] {e}")
+            traceback.print_exc()
+            return
+        try :
+            if rdv is not None :
+                APIRequestQueue.enqueue_api_request('calendar_delete_rdv', rdv.serialize())
+        except Exception as e :
+            print(f"[ERREUR CALENDAR] {e}")
+            traceback.print_exc()
+            return
+        
+    def getRendezVousByTypeId(type_id: int) -> list['RendezVous']:
+        """
+        Récupère tous les rendez-vous d'un type donné.
+
+        Args:
+            type_id (int): Identifiant du type de rendez-vous.
+
+        Returns:
+            list[RendezVous]: Liste des rendez-vous du type.
+        """
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+        cursor.execute("SELECT * FROM rendez_vous WHERE type_id = ?", (type_id,))
+        rdv_data = cursor.fetchall()
+        connexion.close()
+        return RendezVous.data_to_rendezvous(rdv_data)

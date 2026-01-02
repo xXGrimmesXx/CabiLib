@@ -200,6 +200,28 @@ def insert_rdv (rdv:RendezVous) :
     return None
   return event
 
+def delete_rdv (rdv:RendezVous) :
+  """
+  Supprime un rendez-vous du calendrier Google.
+  
+  Args:
+      rdv (RendezVous): L'objet RendezVous à supprimer du calendrier.
+  """
+  service = get_calendarV3_service()
+  global CALENDAR_ID
+  if CALENDAR_ID is None :
+    create_calendar_if_not_exist()
+  try : 
+    if (rdv.google_calendar_id is not None) and (rdv.google_calendar_id != "") :
+      service.events().delete(calendarId=CALENDAR_ID, eventId=rdv.google_calendar_id).execute()
+      print(f"Rendez-vous supprimé avec l'ID : {rdv.google_calendar_id}")
+  except Exception as e:
+    print(f"An error occurred while deleting the event: {e}")
+    traceback.print_exc()
+    return None
+  return None
+
+
 def main():
   """Shows basic usage of the Google Calendar API.
   Prints the start and name of the next 10 events on the user's calendar.

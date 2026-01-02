@@ -3,6 +3,7 @@ from os import path, environ, makedirs
 from threading import Thread, Event
 from requests import get, RequestException
 from json import loads
+import traceback
 
 
 
@@ -220,6 +221,16 @@ class APIRequestQueue:
                 rdv = RendezVous.parse(item.payload)
                 modify_rdv(rdv)
                 APIRequestQueue.update_api_request_status(item.id, 'sent', max_attempts)
+            
+            elif item.service_name == 'calendar_delete_rdv':
+                from app.services.calendar_api import delete_rdv
+                from app.model.rendezVous import RendezVous
+                
+                rdv = RendezVous.parse(item.payload)
+                delete_rdv(rdv)
+                APIRequestQueue.update_api_request_status(item.id, 'sent', max_attempts)
+
+
 
             else:
                 print(f"[API Queue] Service inconnu: {item.service_name}")

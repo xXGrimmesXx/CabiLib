@@ -1,4 +1,5 @@
 from app.model.typeRDV import TypeRDV
+from app.model.rendezVous import RendezVous
 
 class TypeRDVController:
     def __init__(self, model_class, view):
@@ -10,6 +11,7 @@ class TypeRDVController:
         self.view.type_rdv_selected.connect(self.on_type_rdv_selected)
         self.view.type_rdv_updated.connect(self.on_type_rdv_updated)
         self.view.type_rdv_created.connect(self.on_type_rdv_created)
+        self.view.type_rdv_deleted.connect(self.on_type_rdv_deleted)
         self.view.refresh.connect(self.on_refresh)
 
     def on_refresh(self):
@@ -37,3 +39,14 @@ class TypeRDVController:
         """Créer un nouveau type de RDV"""
         TypeRDV.addTypeRDV(type_rdv)
         self.load_types_rdv()
+
+    def on_type_rdv_deleted(self, type_rdv_id):
+        """Supprimer un type de RDV"""
+        if type_rdv_id and RendezVous.getRendezVousByTypeId(type_rdv_id):
+            self.view.afficher_erreur_suppression_type_rdv_lie()
+            return
+        else :
+            TypeRDV.deleteTypeRDV(type_rdv_id)
+            self.load_types_rdv()
+            
+        

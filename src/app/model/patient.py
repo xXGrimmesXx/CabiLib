@@ -21,8 +21,9 @@ class Patient:
     amenagement: str | None
     etat_suivi: str | None
     description: str | None
+    nom_facturation: str | None
 
-    def __init__(self, nom: str, prenom: str, sexe: str, date_naissance: 'datetime.datetime', adresse: str, ville: str, telephone1: str, typeTelephone1: str, telephone2: str, typeTelephone2: str, email: str, niveau: str = None, ecole: str = None, amenagement: str = None, etat_suivi: str = None, description: str = None, id: int = 0) -> None:
+    def __init__(self, nom: str, prenom: str, sexe: str, date_naissance: 'datetime.datetime', adresse: str, ville: str, telephone1: str, typeTelephone1: str, telephone2: str, typeTelephone2: str, email: str, niveau: str = None, ecole: str = None, amenagement: str = None, etat_suivi: str = None, description: str = None, nom_facturation: str = None, id: int = 0) -> None:
         """
         Initialise une instance de Patient.
 
@@ -62,6 +63,7 @@ class Patient:
         self.amenagement = amenagement
         self.etat_suivi = etat_suivi
         self.description = description
+        self.nom_facturation = nom_facturation
 
     def __repr__(self) -> str:
         """
@@ -121,7 +123,8 @@ class Patient:
                 typeTelephone2=data[13],
                 email=data[14],
                 etat_suivi=data[15],
-                description=data[16]
+                description=data[16],
+                nom_facturation=data[17]
             )
             patients.append(patient)
         return patients
@@ -160,7 +163,8 @@ class Patient:
                 typeTelephone2=data[13],
                 email=data[14],
                 etat_suivi=data[15],
-                description=data[16]
+                description=data[16],
+                nom_facturation=data[17]
             )
         return None
         

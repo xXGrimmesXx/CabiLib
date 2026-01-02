@@ -28,6 +28,8 @@ class CreerFactureController:
         # Connecter les signaux de la vue aux méthodes du contrôleur
         self.view.mass_facture_generer.connect(self.on_mass_facture_generer)
         self.view.single_facture_generer.connect(self.on_single_facture_generer)
+        self.view.single_facture_preview.connect(self.on_single_facture_preview)
+        self.view.mass_facture_preview.connect(self.on_mass_facture_preview)
         self.view.refresh.connect(self.on_refresh)
         self.view.set_patient_list(self.patientModel.getAllPatients())
 
@@ -175,14 +177,107 @@ class CreerFactureController:
         patients = self.patientModel.getAllPatients()
         factures_creees = []
         for patient in patients:
-            factures_creees.append((self.facturer_patient(patient, start_date, end_date)))
-            attachements = [factures_creees[-1][1]] if factures_creees [-1][0]!=-1 else []
-            attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'RIB_Praticien.pdf').replace('\\','/'))
-            print(attachements)
-            APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
-                'to': patient.email,
-                'subject': f'[Ergothérapie] Facture {patient.prenom} - du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}',
-                'body': f"""Bonjour,<br><br>
+            facture_id,fp = self.facturer_patient(patient, start_date, end_date)
+            if(facture_id!=-1) :
+                factures_creees.append(Facture(facture_id,patient.id))
+                self.save_template_mail(patient, start_date, end_date, fp)
+            else :
+                self.view.erreur_generation_facture_patient()
+                
+        self.view.confirmation_facture_generee(factures_creees)
+
+    def on_single_facture_generer(self, start_date: datetime, end_date: datetime, patient_id: int)-> None:
+        """Générer une facture pour un patient spécifique entre start_date et end_date.
+        args:
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+            patient_id (int): L'ID du patient pour lequel la facture est générée.
+        """
+        
+        print("Génération d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
+        patient = self.patientModel.getPatientById(patient_id)
+        facture_id,fp = self.facturer_patient(patient, start_date, end_date)
+        if(facture_id!=-1) :
+            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
+            self.save_template_mail(patient, start_date, end_date, fp)
+        else :
+            self.view.erreur_generation_facture()
+
+    def on_single_facture_preview(self, start_date: datetime, end_date: datetime, patient_id: int) -> None:
+        """Prévisualiser une facture pour un patient spécifique entre start_date et end_date.
+        args:
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+            patient_id (int): L'ID du patient pour lequel la facture est prévisualisée.
+        """
+        print("Prévisualisation d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
+        patient = self.patientModel.getPatientById(patient_id)
+        facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
+        liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
+        rdvs_factures = []
+        annulation_factures = []
+        for rdv in liste_rdvs:
+            if(rdv.facture_id is not None and rdv.facture_id!="-1"):
+                if (rdv.facture_id not in annulation_factures):
+                    annulation_factures.append(rdv.facture_id)
+                    continue
+            if (rdv.presence == "Présent"):
+                rdvs_factures.append(rdv)
+        if (len(rdvs_factures) == 0):
+            self.view.erreur_generation_facture()
+            return
+        for rdv in rdvs_factures :
+            lfac = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
+            LigneFacture.addLigneFacture(lfac)
+        lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
+        html_content = fg.generate_facture_html(facture, patient, lfacs, annulation_factures,start_date,end_date)
+        self.view.afficher_preview_facture(html_content)
+
+    def on_mass_facture_preview(self, start_date: datetime, end_date: datetime) -> None:
+        """Prévisualiser des factures de masse pour tous les patients entre start_date et end_date.
+        args:
+            start_date (datetime): La date de début de la période de facturation.
+            end_date (datetime): La date de fin de la période de facturation.
+        """
+        print("Prévisualisation de factures de masse du", start_date, "au", end_date)
+        patients = self.patientModel.getAllPatients()
+        previews = []
+        for patient in patients:
+            facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
+            liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
+            rdvs_factures = []
+            annulation_factures = []
+            for rdv in liste_rdvs:
+                if(rdv.facture_id is not None and rdv.facture_id!="-1"):
+                    if (rdv.facture_id not in annulation_factures):
+                        annulation_factures.append(rdv.facture_id)
+                        continue
+                if (rdv.presence == "Présent"):
+                    rdvs_factures.append(rdv)
+            if (len(rdvs_factures) == 0):
+                continue
+            for rdv in rdvs_factures :
+                lfac =LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
+                LigneFacture.addLigneFacture(lfac)
+            lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
+            html_content = fg.generate_facture_html(facture, patient, lfacs, annulation_factures,start_date,end_date)
+            previews.append((patient,html_content))
+        self.view.afficher_preview_mass_facture(previews)
+
+    def save_template_mail(self, patient: Patient, start_date: datetime, end_date: datetime, facture_path: str) -> None:
+        """Enregistrer un modèle d'email pour les factures.
+        args:
+            patient (Patient): Le patient pour lequel le modèle est enregistré.
+            subject (str): Le sujet de l'email.
+            body (str): Le corps de l'email.
+        """
+        attachements = [facture_path]
+        attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'RIB_Praticien.pdf').replace('\\','/'))
+        print(attachements)
+        APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
+            'to': patient.email,
+            'subject': f'[Ergothérapie] Facture {patient.prenom} - du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}',
+            'body': f"""Bonjour,<br><br>
 Veuillez trouver ci-joint votre <strong>facture pour la période du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}</strong> concernant les séances d\'ergothérapie.<br>
 Pour le règlement, plusieurs moyens de paiement sont possibles : <br><br>
 1️⃣ <strong>Virement bancaire (préféré)</strong><br>
@@ -198,29 +293,5 @@ Vous pouvez également régler en espèces, à déposer <strong>dans la boite au
 N'hésitez pas à me contacter si vous avez la moindre question.<br><br>
 ⚠️ <strong>Quel que soit le mode de paiement choisi, merci de m'informer de la date et du mode de règlement</strong>, afin de faciliter le suivi de votre dossier.⚠️<br>
 Cordialement,<br>""",
-                'attachments': attachements
-            }))
-
-        self.view.confirmation_facture_generee([Facture(fac[0],patient.id) for fac,patient in zip(factures_creees,patients) if fac[0]!=-1])
-
-    def on_single_facture_generer(self, start_date: datetime, end_date: datetime, patient_id: int)-> None:
-        """Générer une facture pour un patient spécifique entre start_date et end_date.
-        args:
-            start_date (datetime): La date de début de la période de facturation.
-            end_date (datetime): La date de fin de la période de facturation.
-            patient_id (int): L'ID du patient pour lequel la facture est générée.
-        """
-        
-        print("Génération d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
-        patient = self.patientModel.getPatientById(patient_id)
-        facture_id,fp = self.facturer_patient(patient, start_date, end_date)
-        if(facture_id!=-1) :
-            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
-            APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
-                'to': patient.email,
-                'subject': f'Votre facture du {start_date.date()} au {end_date.date()}',
-                'body': f'Bonjour {patient.prenom},\n\nVeuillez trouver ci-joint votre facture pour la période du {start_date.date()} au {end_date.date()}.\n\nCordialement,\nVotre Cabinet Médical',
-                'attachments': [fp]
-            }))
-        else :
-            self.view.erreur_generation_facture()
+            'attachments': attachements
+        }))

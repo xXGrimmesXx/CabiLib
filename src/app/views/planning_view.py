@@ -486,3 +486,7 @@ class PlanningView(QWidget):
     def hide_rdv_onglet(self):
         """Cache l'onglet de gestion des rendez-vous"""
         self.rdv_panel_widget.hide()
+
+    def erreur_suppression_rdv_facture(self):
+        """Afficher un message d'erreur lors de la suppression d'un RDV lié à une facture"""
+        QMessageBox.critical(self, "Erreur de suppression", "Ce rendez-vous est lié à une facture et ne peut pas être supprimé.")

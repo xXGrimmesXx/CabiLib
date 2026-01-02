@@ -20,6 +20,8 @@ class TypeRDVView(QWidget):
     """Signal émis lors de la suppression d'un type de RDV (id)."""
     type_rdv_created: Signal = Signal(object)
     """Signal émis lors de la création d'un type de RDV."""
+    type_rdv_deleted: Signal = Signal(int)
+    """Signal émis lors de la suppression d'un type de RDV."""
     refresh: Signal = Signal()
     """Signal pour rafraîchir la vue des types de RDV."""
     
@@ -131,6 +133,10 @@ class TypeRDVView(QWidget):
         self.clear_button = QPushButton("Effacer les champs")
         self.clear_button.clicked.connect(self._on_clear_clicked)
         buttons_layout.addWidget(self.clear_button)
+
+        self.delete_button = QPushButton("Supprimer le type")
+        self.delete_button.clicked.connect(self.on_delete_clicked)
+        buttons_layout.addWidget(self.delete_button)
 
     def on_refresh(self):
         """Rafraîchir la vue (ex: recharger les listes déroulantes si besoin)"""
@@ -265,3 +271,21 @@ class TypeRDVView(QWidget):
         msg.setWindowTitle("Erreur")
         msg.exec()
         return None
+    
+    def on_delete_clicked(self):
+        """Gérer le clic sur le bouton Supprimer le type"""
+        if self.selected_type_rdv_id is not None:
+            self.type_rdv_deleted.emit(self.selected_type_rdv_id)
+            self.selected_type_rdv_id = None
+            self._on_clear_clicked()
+            self.refresh.emit()
+
+    def afficher_erreur_suppression_type_rdv_lie(self):
+        """Afficher une erreur si le type de RDV est lié à des rendez-vous"""
+        from PySide6.QtWidgets import QMessageBox
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Erreur de suppression")
+        msg.setInformativeText('Ce type de rendez-vous est lié à des rendez-vous existants et ne peut pas être supprimé.')
+        msg.setWindowTitle("Erreur")
+        msg.exec()
