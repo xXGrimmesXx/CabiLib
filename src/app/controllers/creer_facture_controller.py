@@ -61,7 +61,7 @@ class CreerFactureController:
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
         {"\n".join([f"- RDV ID {rdv.id} le {rdv.date} avec statut de présence : {rdv.presence}" for rdv in liste_rdvs])}"""
-        #print(msg)
+        print(msg)
         
         for rdv in liste_rdvs:
             # si le rendez-vous est déjà facturé on ne le compte pas dans les rendez-vous à facturer

@@ -45,15 +45,16 @@ class Facture:
         """
         connexion = sqlite3.connect(DB_PATH)
         cursor = connexion.cursor()
-        id_fac = Facture.generate_numero_facture(facture.date_emission)
+        if (facture.id is None):
+            facture.id = Facture.generate_numero_facture(facture.date_emission)
+        
         cursor.execute(
             "INSERT INTO facture (id,patient_id, date_emission, description, statut, date_paiement) VALUES (?, ?, ?, ?, ?, ?)",
-            (id_fac, facture.patient_id, facture.date_emission, facture.description, facture.statut, facture.date_paiement)
+            (facture.id, facture.patient_id, facture.date_emission, facture.description, facture.statut, facture.date_paiement)
         )
         connexion.commit()
         connexion.close()
-        return id_fac
-
+        return facture.id
     @staticmethod
     def getFactureById(facture_id: str) -> 'Facture | None':
         """

@@ -380,7 +380,7 @@ def create_and_save_pdf (facture: Facture, patient: Patient, lignes: list[LigneF
     pdf = generate_facture_pdf(html_content)
     filename = f"{facture.id}.pdf"
     basepath = constantes_manager.get_constante("FACTURES_DIR")
-    fac_path = facture.date_emission.strftime("%Y-%m")
+    fac_path = date_fin.strftime("%Y-%m")
     save_facture_pdf(pdf, path.join(basepath, fac_path), filename)
     return path.join(basepath, fac_path, filename)
 

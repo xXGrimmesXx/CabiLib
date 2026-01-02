@@ -6,12 +6,22 @@ from PySide6.QtGui import QPalette, QColor, QIcon
 from app.views.main_window_view import MainWindow
 from app.controllers.main_controller import MainController
 import app.services.internet_API_thread_worker as api_worker
+import sqlite3
 
 def main():
     """Point d'entrée de l'application"""
     
     api_worker.start_api_worker(0,60)
     ensure_db(DB_PATH)
+
+    connexion = sqlite3.connect(DB_PATH)
+    cursor = connexion.cursor()
+    cursor.execute("DELETE FROM ligne_facture")
+    cursor.execute("DELETE FROM facture")
+    cursor.execute("UPDATE rendez_vous SET facture_id = NULL")
+    connexion.commit()
+    connexion.close()
+
     
     app = QApplication(sys.argv)
     app.setApplicationName("CabiLib - Gestion Cabinet")
