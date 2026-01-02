@@ -17,6 +17,10 @@ class creerFactureView(QWidget):
     """Signal émis pour générer des factures en masse (date de début, date de fin)."""
     single_facture_generer: Signal = Signal(object, object, int)
     """Signal émis pour générer une facture individuelle (date de début, date de fin, id patient)."""
+    mass_facture_preview: Signal = Signal(object, object)
+    """Signal émis pour prévisualiser des factures en masse (date de début, date de fin)."""
+    single_facture_preview: Signal = Signal(object, object, int)
+    """Signal émis pour prévisualiser une facture individuelle (date de début, date de fin, id patient)."""
     refresh: Signal = Signal()
     """Signal pour rafraîchir la vue de facturation."""
     
@@ -109,9 +113,18 @@ class creerFactureView(QWidget):
         patient_section_layout.addWidget(Separator(Qt.Horizontal))
         patient_section_layout.setContentsMargins(0, 20, 0, 20)
 
+        generation_layout = QHBoxLayout()
+        self.main_layout.addLayout(generation_layout)
+        
+        self.preview_button = QPushButton("Aperçu avant impression")
+        self.preview_button.clicked.connect(self.on_preview_clicked)
+        generation_layout.addWidget(self.preview_button)
+
         self.creer_button = QPushButton("Générer les factures")
         self.creer_button.clicked.connect(self.on_creer_clicked)
-        self.main_layout.addWidget(self.creer_button)
+        generation_layout.addWidget(self.creer_button)
+
+        
 
     def on_refresh(self):
         self.refresh.emit()
@@ -149,6 +162,22 @@ class creerFactureView(QWidget):
             patient_id = self.patient_input.currentData()
             print("Emission du signal de facturation individuelle pour le patient ID :",patient_id)
             self.single_facture_generer.emit(start_date,end_date,patient_id)
+
+    def on_preview_clicked(self) :
+        start_date = self.start_date_edit.date().toPython()
+        start_date = datetime(start_date.year, start_date.month, start_date.day)
+
+        end_date = self.end_date_edit.date().toPython()
+        end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
+
+        if(self.mass_facture_button.isChecked()) :
+            print("Emission du signal de preview de masse")
+            self.mass_facture_preview.emit(start_date,end_date)
+        else :
+            patient_id = self.patient_input.currentData()
+            print("Emission du signal de preview individuelle pour le patient ID :",patient_id)
+            self.single_facture_preview.emit(start_date,end_date,patient_id)
+
 
     def erreur_completion_rdv(self, patient, rdvs_a_renseigner):
         """Afficher une erreur si des rendez-vous n'ont pas de statut de présence défini"""

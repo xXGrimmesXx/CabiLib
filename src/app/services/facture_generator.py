@@ -375,7 +375,7 @@ def save_facture_pdf(pdf_bytes: bytes, save_path:str ,filename: str) -> None:
     with open(abs_file, 'wb') as f:
         f.write(pdf_bytes)
 
-def create_and_save (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
+def create_and_save_pdf (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
     html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
     pdf = generate_facture_pdf(html_content)
     filename = f"{facture.id}.pdf"
@@ -383,3 +383,16 @@ def create_and_save (facture: Facture, patient: Patient, lignes: list[LigneFactu
     fac_path = facture.date_emission.strftime("%Y-%m")
     save_facture_pdf(pdf, path.join(basepath, fac_path), filename)
     return path.join(basepath, fac_path, filename)
+
+def create_and_save_html (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
+    html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
+    filename = f"{facture.id}.html"
+    basepath = path.join(environ.get("APPDATA"),"CabiLib", 'facturesPreview').replace('\\', '/')
+    fac_path = facture.date_emission.strftime("%Y-%m")
+    abs_dir = path.abspath(path.join(basepath, fac_path))
+    if not path.exists(abs_dir):
+        makedirs(abs_dir)
+    abs_file = path.join(abs_dir, filename)
+    with open(abs_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    return abs_file

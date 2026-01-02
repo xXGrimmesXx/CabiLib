@@ -9,7 +9,7 @@ from datetime import timedelta, datetime
 import app.services.constantes_manager as cm
 import app.services.facture_generator as fg
 from app.services.internet_API_thread_worker import APIRequestQueue
-import app.services.mail_sender as ms
+import webbrowser
 
 from app.views.creer_facture_view import creerFactureView
 
@@ -36,7 +36,7 @@ class CreerFactureController:
     def on_refresh(self):
         self.view.set_patient_list(self.patientModel.getAllPatients())
 
-    def facturer_patient(self, patient: Patient, start_date: datetime, end_date: datetime) -> tuple[int,str]:
+    def facturer_patient(self, patient: Patient, start_date: datetime, end_date: datetime,preview=False) -> tuple[int,str]:
         """Facturer un patient pour les rendez-vous entre start_date et end_date.
 
         args:
@@ -55,9 +55,9 @@ class CreerFactureController:
         rdvs_patient_absent = []
         rdvs_a_renseigner = []
         annulation_factures = []
-        factures_generees = []
+        lignes_facture = []
         #Calculer le bon numéro de facture
-        facture = Facture(Facture.generate_numero_facture(datetime.today()),patient.id)
+        facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
         msg = f"""Facturation du patient {patient.prenom} {patient.nom} entre le {start_date} et le {end_date}\n
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
@@ -84,9 +84,13 @@ class CreerFactureController:
                 print("Le patient était présent au rendez-vous ID :", rdv.id)
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
                 new_ligne = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
-                LigneFacture.addLigneFacture(new_ligne)
                 rdv.facture_id = facture.id
-                self.rdvModel.updateRendezVous(rdv.id, rdv)
+                if(preview==False):
+                    LigneFacture.addLigneFacture(new_ligne)
+                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                else :
+                    lignes_facture.append(new_ligne)
+
                 #a enlever peut-etre
                 rdvs_factures.append(rdv)
             elif (rdv.presence == "A définir"):
@@ -95,7 +99,8 @@ class CreerFactureController:
             elif (rdv.presence == "Absent excusé" or rdv.presence == "Annulé"):
                 print("Le rendez-vous ID :", rdv.id, "ne sera pas facturé (présence :", rdv.presence,")")
                 rdv.facture_id = -1  # on marque que ce rdv ne sera pas facturé
-                self.rdvModel.updateRendezVous(rdv.id, rdv)
+                if(preview==False):
+                    self.rdvModel.updateRendezVous(rdv.id, rdv)
             else :
                 print("Statut de présence inconnu pour le rendez-vous ID :", rdv.id,"\t",rdv.presence)
 
@@ -106,23 +111,25 @@ class CreerFactureController:
         
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
-                lignes = LigneFacture.getAllLignesByFactureId(fac)
+                if (preview==False) :
+                    lignes = LigneFacture.getAllLignesByFactureId(fac)
+                else :
+                    lignes = lignes_facture
                 for l in lignes :                    
                     rdv = self.rdvModel.getRendezVousById(l.rdv_id)
                     rdv.facture_id = facture.id
-                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    if(preview==False):
+                        self.rdvModel.updateRendezVous(rdv.id, rdv)
                     rdvs_factures.append(rdv)
 
                     lfac_test = LigneFacture.getLigneFacture(facture.id,rdv.id)
                     #on vérifie que la ligne de facture n'existe pas déjà avant de la recréer
-                    if(lfac_test is None) :
-                        lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
-                        LigneFacture.addLigneFacture(lfac)
-                        
-
+                    if (preview==False) :
+                        if(lfac_test is None) :
+                            lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
+                            LigneFacture.addLigneFacture(lfac)              
 
         # si le patient a des absences, on demande confirmation avant de facturer
-        
         elif (len(rdvs_patient_absent) > 0):
             #date a partir de la quelle on voit si le patient à déjà été absent
             historique_date = start_date - cm.get_constante("HISTORIQUE_ABSENCE_JOURS")*timedelta(days=1)
@@ -134,31 +141,42 @@ class CreerFactureController:
                 for rdv in rdvs_patient_absent :
                     
                     rdv.facture_id = facture.id
-                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    if(preview==False):
+                        self.rdvModel.updateRendezVous(rdv.id, rdv)
 
                     #TODO peut etre à enlever
                     rdvs_factures.append(rdv)
                     lfac = LigneFacture(facture.id,rdv.id,33)
-                    LigneFacture.addLigneFacture(lfac)
+                    if (preview==False):
+                        LigneFacture.addLigneFacture(lfac)
+                    else :
+                        lignes_facture.append(lfac)
             else :
                 # on marque le chois du praticien en mettant le montant des rendez-vous absents à 0
                 for rdv in rdvs_patient_absent:
                     
                     rdv.facture_id = facture.id
-                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    if (preview==False):
+                        self.rdvModel.updateRendezVous(rdv.id, rdv)
 
                     #TODO peut etre à enlever
                     rdvs_factures.append(rdv)
                     lfac = LigneFacture(facture.id,rdv.id,0)
-                    LigneFacture.addLigneFacture(lfac)
+                    if (preview==False):
+                        LigneFacture.addLigneFacture(lfac)
+                    else:
+                        lignes_facture.append(lfac)
 
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
             print("Création de la facture pour le patient :",patient.prenom,patient.nom)
             print("\n\n\n-----------------------------FIN EMISSION FACTURE----------------------------\n\n\n")
-            Facture.addFacture(facture)
-            lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
-            fp = fg.create_and_save(facture, patient, lfacs, annulation_factures,start_date,end_date)
+            if (preview==False):
+                Facture.addFacture(facture)
+                lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
+                fp = fg.create_and_save_pdf(facture, patient, lfacs, annulation_factures,start_date,end_date)
+            else :
+                fp = fg.create_and_save_html(facture, patient, lignes_facture, annulation_factures,start_date,end_date)
             return facture.id,fp
         else :
             print("Aucun rendez-vous à facturer pour le patient :",patient.prenom,patient.nom)
@@ -182,7 +200,7 @@ class CreerFactureController:
                 factures_creees.append(Facture(facture_id,patient.id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             else :
-                self.view.erreur_generation_facture_patient()
+                self.view.erreur_generation_facture()
                 
         self.view.confirmation_facture_generee(factures_creees)
 
@@ -212,26 +230,15 @@ class CreerFactureController:
         """
         print("Prévisualisation d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
         patient = self.patientModel.getPatientById(patient_id)
-        facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
-        liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
-        rdvs_factures = []
-        annulation_factures = []
-        for rdv in liste_rdvs:
-            if(rdv.facture_id is not None and rdv.facture_id!="-1"):
-                if (rdv.facture_id not in annulation_factures):
-                    annulation_factures.append(rdv.facture_id)
-                    continue
-            if (rdv.presence == "Présent"):
-                rdvs_factures.append(rdv)
-        if (len(rdvs_factures) == 0):
+        facture_id,fp =self.facturer_patient(patient, start_date, end_date,preview=True)
+
+        if(facture_id!=-1) :
+            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
+            self.save_template_mail(patient, start_date, end_date, fp)
+            webbrowser.open_new_tab(fp)
+        else :
             self.view.erreur_generation_facture()
-            return
-        for rdv in rdvs_factures :
-            lfac = LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
-            LigneFacture.addLigneFacture(lfac)
-        lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
-        html_content = fg.generate_facture_html(facture, patient, lfacs, annulation_factures,start_date,end_date)
-        self.view.afficher_preview_facture(html_content)
+
 
     def on_mass_facture_preview(self, start_date: datetime, end_date: datetime) -> None:
         """Prévisualiser des factures de masse pour tous les patients entre start_date et end_date.
@@ -241,28 +248,16 @@ class CreerFactureController:
         """
         print("Prévisualisation de factures de masse du", start_date, "au", end_date)
         patients = self.patientModel.getAllPatients()
-        previews = []
+        factures_creees = []
         for patient in patients:
-            facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
-            liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
-            rdvs_factures = []
-            annulation_factures = []
-            for rdv in liste_rdvs:
-                if(rdv.facture_id is not None and rdv.facture_id!="-1"):
-                    if (rdv.facture_id not in annulation_factures):
-                        annulation_factures.append(rdv.facture_id)
-                        continue
-                if (rdv.presence == "Présent"):
-                    rdvs_factures.append(rdv)
-            if (len(rdvs_factures) == 0):
-                continue
-            for rdv in rdvs_factures :
-                lfac =LigneFacture(facture.id,rdv.id,self.type_rdv_liste[rdv.type_id-1].prix)
-                LigneFacture.addLigneFacture(lfac)
-            lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
-            html_content = fg.generate_facture_html(facture, patient, lfacs, annulation_factures,start_date,end_date)
-            previews.append((patient,html_content))
-        self.view.afficher_preview_mass_facture(previews)
+            facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
+            if(facture_id!=-1) :
+                factures_creees.append(Facture(facture_id,patient.id))
+                webbrowser.open_new_tab(fp)
+            else :
+                self.view.erreur_generation_facture()
+                
+        self.view.confirmation_facture_generee(factures_creees)
 
     def save_template_mail(self, patient: Patient, start_date: datetime, end_date: datetime, facture_path: str) -> None:
         """Enregistrer un modèle d'email pour les factures.
