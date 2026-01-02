@@ -175,9 +175,9 @@ class Patient:
             cursor = connexion.cursor()
 
             cursor.execute("""
-                INSERT INTO patient (nom, prenom, sexe, date_naissance, adresse, amenagement, niveau, ecole, ville, telephone1, typeTelephone1, telephone2, typeTelephone2, email, etat_suivi, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description))
+                INSERT INTO patient (nom, prenom, sexe, date_naissance, adresse, amenagement, niveau, ecole, ville, telephone1, typeTelephone1, telephone2, typeTelephone2, email, etat_suivi, description, nom_facturation)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation))
             
             patient_id = cursor.lastrowid  # Récupérer l'ID du patient inséré
             connexion.commit()
@@ -196,8 +196,8 @@ class Patient:
 
         cursor.execute("""
             UPDATE patient
-            SET nom = ?, prenom = ?, sexe = ?, date_naissance = ?, adresse = ?, amenagement = ?, niveau = ?, ecole = ?, ville = ?, telephone1 = ?, typeTelephone1 = ?, telephone2 = ?, typeTelephone2 = ?, email = ?, etat_suivi = ?, description = ?
-            WHERE id = ?""", (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient_id))
+            SET nom = ?, prenom = ?, sexe = ?, date_naissance = ?, adresse = ?, amenagement = ?, niveau = ?, ecole = ?, ville = ?, telephone1 = ?, typeTelephone1 = ?, telephone2 = ?, typeTelephone2 = ?, email = ?, etat_suivi = ?, description = ?, nom_facturation = ?
+            WHERE id = ?""", (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation, patient_id))
         connexion.commit()
         connexion.close()
 
