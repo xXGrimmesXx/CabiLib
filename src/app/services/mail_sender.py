@@ -37,7 +37,19 @@ def save_draft(message_body):
                     maintype, subtype = ctype.split('/', 1)
 
                 filename = path.basename(file_path)
-                message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
+                
+                # Si c'est une image, l'ajouter comme inline avec Content-ID
+                if maintype == 'image':
+                    message.add_attachment(
+                        data, 
+                        maintype=maintype, 
+                        subtype=subtype, 
+                        filename=filename,
+                        cid=f'<{filename}>'  # Ajouter un Content-ID
+                    )
+                else:
+                    # Sinon, l'ajouter comme pièce jointe normale
+                    message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
             except Exception as e:
                 print(f"Erreur lors de l'ajout de la pièce jointe {file_path}:")
                 traceback.print_exc()

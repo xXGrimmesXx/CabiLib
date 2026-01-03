@@ -13,15 +13,6 @@ def main():
     
     api_worker.start_api_worker(0,60)
     ensure_db(DB_PATH)
-
-    connexion = sqlite3.connect(DB_PATH)
-    cursor = connexion.cursor()
-    cursor.execute("DELETE FROM ligne_facture")
-    cursor.execute("DELETE FROM facture")
-    cursor.execute("UPDATE rendez_vous SET facture_id = NULL")
-    connexion.commit()
-    connexion.close()
-
     
     app = QApplication(sys.argv)
     app.setApplicationName("CabiLib - Gestion Cabinet")

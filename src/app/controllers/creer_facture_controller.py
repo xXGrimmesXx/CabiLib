@@ -267,6 +267,7 @@ class CreerFactureController:
         """
         attachements = [facture_path]
         attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'RIB_Praticien.pdf').replace('\\','/'))
+        attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'logo.png').replace('\\','/'))
         print(attachements)
         APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
             'to': patient.email,
@@ -286,6 +287,11 @@ Merci de déposer le chèque <strong>dans la boite au lettre du cabinet</strong>
 Vous pouvez également régler en espèces, à déposer <strong>dans la boite au lettre du cabinet</strong>, dans une enveloppe <strong>portant mon nom.</strong><br><br>
 N'hésitez pas à me contacter si vous avez la moindre question.<br><br>
 ⚠️ <strong>Quel que soit le mode de paiement choisi, merci de m'informer de la date et du mode de règlement</strong>, afin de faciliter le suivi de votre dossier.⚠️<br>
-Cordialement,<br>""",
+Cordialement,<br><br>
+
+{cm.get_constante("PRACTITIONER_NAME")} - Ergotherapeute D.E.<br>
+{cm.get_constante("CABINET_ADDRESS")}<br>
+{cm.get_constante("PRACTITIONER_PHONE")}<br>
+<img src="cid:logo.png" alt="CabiLib Logo" width="100"/></body>""",
             'attachments': attachements
         }))
