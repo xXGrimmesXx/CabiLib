@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
                                QTableWidgetItem, QPushButton, QLabel, QHeaderView,
-                               QToolTip, QComboBox, QCompleter,QFrame,QDateEdit,QTimeEdit,
+                               QToolTip, QComboBox, QCompleter,QDateEdit,QTimeEdit,
                                QMessageBox, QCheckBox, QSpinBox)
-from PySide6.QtCore import Qt, Signal, QStringListModel, QTime
-from PySide6.QtGui import QColor, QFont, QCursor
+from PySide6.QtCore import Qt, Signal, QStringListModel, QTime, QSize
+from PySide6.QtGui import QColor, QFont, QCursor, QIcon
+from app.widgetPersonalise.icon_top_right_delegate import IconTopRightDelegate
 import traceback
 from datetime import datetime, timedelta
 from app.model.rendezVous import RendezVous
@@ -58,6 +59,7 @@ class PlanningView(QWidget):
         rdv_panel_layout.addWidget(self.close_rdv_panel_btn)
         self.close_rdv_panel_btn.clicked.connect(self.hide_rdv_onglet)
         self.close_rdv_panel_btn.setMaximumWidth(30)
+
         self.close_rdv_panel_btn.setCursor(QCursor(Qt.PointingHandCursor))
         self.close_rdv_panel_btn.setStyleSheet("QPushButton { border: none; font-size: 16px; } QPushButton:hover { color: red; }")
 
@@ -124,7 +126,7 @@ class PlanningView(QWidget):
 
         rdv_panel_layout.addLayout(repetition_layout)
         self.repetition_checkbox_input = QCheckBox()
-        self.repetition_checkbox_input.setChecked(True)
+        self.repetition_checkbox_input.setChecked(False)
         self.repetition_checkbox_input.setText("Répéter le rendez-vous")
         repetition_choix_layout.addWidget(self.repetition_checkbox_input)
         
@@ -206,6 +208,10 @@ class PlanningView(QWidget):
         
         # Tableau du planning
         self.table = QTableWidget()
+
+        delegate = IconTopRightDelegate()
+        self.table.setItemDelegate(delegate)
+        
         self.table.setColumnCount(7)  # Heure + 6 jours (Lundi à Samedi)
         self.table.setHorizontalHeaderLabels(["Heure", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"])
         
@@ -367,12 +373,15 @@ class PlanningView(QWidget):
         item = QTableWidgetItem(rdv_text)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
+        # Stocke le statut de présence dans la data de la cellule (rôle personnalisé)
+        item.setData(999, Rdv.presence)
         
         # Police compacte
         font = QFont()
         font.setPointSize(9)
         font.setBold(True)
         item.setFont(font)
+        item.setData(999,Rdv.presence) 
 
         toolTip = f"""
         <b>{patient.nom} {patient.prenom}</b><br>
@@ -386,6 +395,13 @@ class PlanningView(QWidget):
 
         if type_rendez_vous.duree > timedelta(minutes=15):
             self.table.setSpan(row, col, max(1, type_rendez_vous.duree.total_seconds() // (15 * 60)), 1)  # Fusionner les cellules selon la durée
+       
+       
+        # Applique le delegate global si ce n'est pas déjà fait
+        if not hasattr(self, '_icon_delegate_set'):
+            self.table.setItemDelegate(IconTopRightDelegate(self.table))
+            self._icon_delegate_set = True
+
         self.table.setItem(row, col, item)
     
     def get_current_week_start(self):
@@ -413,8 +429,11 @@ class PlanningView(QWidget):
         self.types_rdv = types_rdv
         self.type_rdv_input.clear()
         self.type_rdv_input.addItem("")  # Ajouter une entrée vide au début
-        for type_rdv in self.types_rdv:
+        for i in range(len(self.types_rdv)):
+            type_rdv = self.types_rdv[i]
             self.type_rdv_input.addItem(type_rdv.nom, type_rdv.id)
+            self.type_rdv_input.setItemData(i+1, QColor(type_rdv.couleur), Qt.BackgroundRole)  # +1 pour l'entrée vide au début
+
         # Utiliser le modèle du QComboBox pour le QCompleter
         self.type_rdv_completer.setModel(self.type_rdv_input.model())
         self.type_rdv_completer.setCompletionRole(Qt.DisplayRole)
@@ -496,12 +515,13 @@ class PlanningView(QWidget):
         self.rdvs_selectionne[0].date = datetime(date.year(), date.month(), date.day(), time.hour(), time.minute(), 0, 0)
         self.rdvs_selectionne[0].type_id = int(self.type_rdv_input.currentData()) if self.type_rdv_input.currentData() is not None else None
         self.rdvs_selectionne[0].presence = self.presence_input.currentText() if self.presence_input.currentText() != "" else None
+        rdvs_a_creer = [self.rdvs_selectionne[0]]
 
         if (self.repetition_checkbox_input.isChecked()):
             frequence = self.frequence_input.value()
             date_fin_repetition = self.date_fin_repetition_input.date()
             current_date = self.rdvs_selectionne[0].date + timedelta(weeks=frequence)
-            rdvs_a_creer = [self.rdvs_selectionne[0]]
+            
             while current_date <= date_fin_repetition:
                 rdv_copy = RendezVous(
                     id=None,
@@ -513,7 +533,6 @@ class PlanningView(QWidget):
                 )
                 rdvs_a_creer.append(rdv_copy)
                 current_date += timedelta(weeks=frequence)
-
         self.creer_clicked.emit(rdvs_a_creer)
 
     def on_supprimer_clicked(self):
