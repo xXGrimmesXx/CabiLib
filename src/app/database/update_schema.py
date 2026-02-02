@@ -27,6 +27,7 @@ TABLE_CREATE_SQL = {
         "email TEXT,\n"
         "etat_suivi TEXT,\n"
         "description TEXT,\n"
+        "acronyme TEXT,\n"
         "nom_facturation TEXT,\n)"
     ),
     'rendez_vous': (

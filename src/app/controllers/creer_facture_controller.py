@@ -199,7 +199,7 @@ class CreerFactureController:
                 factures_creees.append(Facture(facture_id,patient.id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             else :
-                self.view.erreur_generation_facture()
+                self.view.erreur_generation_facture(patient)
                 
         self.view.confirmation_facture_generee(factures_creees)
 
@@ -218,7 +218,7 @@ class CreerFactureController:
             self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
             self.save_template_mail(patient, start_date, end_date, fp)
         else :
-            self.view.erreur_generation_facture()
+            self.view.erreur_generation_facture(patient)
 
     def on_single_facture_preview(self, start_date: datetime, end_date: datetime, patient_id: int) -> None:
         """Prévisualiser une facture pour un patient spécifique entre start_date et end_date.
@@ -236,7 +236,7 @@ class CreerFactureController:
             self.save_template_mail(patient, start_date, end_date, fp)
             webbrowser.open_new_tab(fp)
         else :
-            self.view.erreur_generation_facture()
+            self.view.erreur_generation_facture(patient)
 
 
     def on_mass_facture_preview(self, start_date: datetime, end_date: datetime) -> None:
@@ -254,7 +254,7 @@ class CreerFactureController:
                 factures_creees.append(Facture(facture_id,patient.id))
                 webbrowser.open_new_tab(fp)
             else :
-                self.view.erreur_generation_facture()
+                self.view.erreur_generation_facture(patient)
                 
         self.view.confirmation_facture_generee(factures_creees)
 

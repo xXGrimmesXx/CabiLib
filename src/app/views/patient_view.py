@@ -92,9 +92,10 @@ class PatientView(QWidget):
         row1.addWidget(QLabel("Prénom :"))
         self.prenom_input = QLineEdit(); self.prenom_input.setMaximumWidth(150)
         row1.addWidget(self.prenom_input)
-        row1.addWidget(QLabel("Age :"))
-        self.age_input = QLineEdit(); self.age_input.setMaximumWidth(80)
-        row1.addWidget(self.age_input)
+        row1.addWidget(QLabel("Acronyme :"))
+        self.acronyme_input = QLineEdit(); self.acronyme_input.setMaximumWidth(150)
+        row1.addWidget(self.acronyme_input)
+        
         detail_vbox.addLayout(row1)
 
         row2 = QHBoxLayout()
@@ -104,6 +105,9 @@ class PatientView(QWidget):
         row2.addWidget(QLabel("Date de Naissance :"))
         self.date_naissance_input = QDateEdit(); self.date_naissance_input.setCalendarPopup(True); self.date_naissance_input.setDisplayFormat("dd-MM-yyyy"); self.date_naissance_input.setMaximumWidth(150)
         row2.addWidget(self.date_naissance_input)
+        row2.addWidget(QLabel("Age :"))
+        self.age_input = QLineEdit(); self.age_input.setMaximumWidth(80)
+        row2.addWidget(self.age_input)
         detail_vbox.addLayout(row2)
 
         row3 = QHBoxLayout()
@@ -284,6 +288,7 @@ class PatientView(QWidget):
         self.etat_suivi_input.setCurrentText(patient.etat_suivi)
         self.description_input.setText(patient.description)
         self.nom_facturation_input.setText(patient.nom_facturation if patient.nom_facturation else "")
+        self.acronyme_input.setText(patient.acronyme if patient.acronyme else "")
     
     def get_patient_details(self):
         """Récupérer les valeurs du formulaire"""
@@ -305,7 +310,8 @@ class PatientView(QWidget):
             amenagement=self.amenagement_input.currentText(),
             etat_suivi=self.etat_suivi_input.currentText(),
             description=self.description_input.toPlainText(),
-            nom_facturation=self.nom_facturation_input.text()
+            nom_facturation=self.nom_facturation_input.text(),
+            acronyme=self.acronyme_input.text()
         )
     
     def get_selected_row(self):
@@ -393,6 +399,7 @@ class PatientView(QWidget):
         self.etat_suivi_input.setCurrentIndex(0)
         self.description_input.clear()
         self.nom_facturation_input.clear()
+        self.acronyme_input.clear()
 
         self.patient_table.clearSelection()
         self.selected_patient_id = None

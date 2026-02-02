@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
                                QCompleter, QPushButton, QMessageBox)
 from PySide6.QtCore import Qt, Signal
 from app.model.facture import Facture
+from app.model.patient import Patient
 from app.widgetPersonalise.separator import Separator
 from datetime import datetime
 
@@ -215,7 +216,7 @@ class creerFactureView(QWidget):
         
         QMessageBox.information(self, "Facture générée", msg)
 
-    def erreur_generation_facture(self):
+    def erreur_generation_facture(self,patient:Patient):
         """Afficher une erreur de génération de facture"""
-        msg = "Aucune facture n'a pu être générée pour le patient sélectionné."
+        msg = f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}."
         QMessageBox.warning(self, "Erreur de génération de facture", msg)

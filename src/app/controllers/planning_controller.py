@@ -102,28 +102,32 @@ class PlanningController(QObject):
                     continue
                 self.view.add_rdv_to_planning(rdv, patient, rdv_type)
 
-    def on_creer_clicked(self, rdv):
+    def on_creer_clicked(self, rdvs: list[RendezVous]):
         """Gérer la création ou la modification d'un rendez-vous"""
-        if (rdv is None):
+        if rdvs is None or len(rdvs) == 0:
             self.view.afficher_champs_obligatoires()
             return
-        elif( rdv.patient_id is None or rdv.date is None or rdv.type_id is None or rdv.presence is None):
-            self.view.afficher_champs_obligatoires()
-            return
-        elif not self.rendez_vous_model.creneauLibre(rdv):
-            self.view.afficher_creneau_indisponible()
-            return
-        
-        if(rdv.id is None):
-            if (rdv.date and rdv.patient_id and rdv.type_id):
-                self.rendez_vous_model.addRendezVous(rdv)
-            else :
+        for rdv in rdvs:
+            if (rdv is None):
                 self.view.afficher_champs_obligatoires()
                 return
-        else :
-            self.rendez_vous_model.updateRendezVous(rdv.id, rdv)
-        
-        # Recharger la semaine actuelle
+            elif( rdv.patient_id is None or rdv.date is None or rdv.type_id is None or rdv.presence is None):
+                self.view.afficher_champs_obligatoires()
+                return
+            elif not self.rendez_vous_model.creneauLibre(rdv):
+                self.view.afficher_creneau_indisponible()
+                return
+            
+            if(rdv.id is None):
+                if (rdv.date and rdv.patient_id and rdv.type_id):
+                    self.rendez_vous_model.addRendezVous(rdv)
+                else :
+                    self.view.afficher_champs_obligatoires()
+                    return
+            else :
+                self.rendez_vous_model.updateRendezVous(rdv.id, rdv)
+            
+            # Recharger la semaine actuelle
         self.load_week_rdvs()
 
     def on_supprimer_clicked(self, rdv):

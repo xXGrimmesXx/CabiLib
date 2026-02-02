@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
                                QTableWidgetItem, QPushButton, QLabel, QHeaderView,
                                QToolTip, QComboBox, QCompleter,QFrame,QDateEdit,QTimeEdit,
-                               QMessageBox)
+                               QMessageBox, QCheckBox, QSpinBox)
 from PySide6.QtCore import Qt, Signal, QStringListModel, QTime
 from PySide6.QtGui import QColor, QFont, QCursor
 import traceback
@@ -116,9 +116,41 @@ class PlanningView(QWidget):
         self.time_input.setTime(datetime.now().time())
         dateheure_layout.addWidget(QLabel("Heure:"))
         dateheure_layout.addWidget(self.time_input)
+
+        repetition_layout = QVBoxLayout()
+
+        repetition_choix_layout = QHBoxLayout()
+        repetition_layout.addLayout(repetition_choix_layout)
+
+        rdv_panel_layout.addLayout(repetition_layout)
+        self.repetition_checkbox_input = QCheckBox()
+        self.repetition_checkbox_input.setChecked(True)
+        self.repetition_checkbox_input.setText("Répéter le rendez-vous")
+        repetition_choix_layout.addWidget(self.repetition_checkbox_input)
+        
+        
+        # Fréquence de répétition
+        frequence_layout = QHBoxLayout()
+        repetition_layout.addLayout(frequence_layout)
+        frequence_layout.addWidget(QLabel("Fréquence:"))
+        self.frequence_input = QSpinBox()
+        self.frequence_input.setMinimum(1)
+        self.frequence_input.setMaximum(52)
+        self.frequence_input.setValue(1)
+        self.frequence_input.setSuffix(" semaine(s)")
+        frequence_layout.addWidget(self.frequence_input)
+        
+        # Date de fin de répétition
+        date_fin_repetition_layout = QHBoxLayout()
+        repetition_layout.addLayout(date_fin_repetition_layout)
+        date_fin_repetition_layout.addWidget(QLabel("Fin de répétition:"))
+        self.date_fin_repetition_input = QDateEdit()
+        self.date_fin_repetition_input.setCalendarPopup(True)
+        self.date_fin_repetition_input.setDateTime(datetime.now() + timedelta(days=30))
+        date_fin_repetition_layout.addWidget(self.date_fin_repetition_input)
         
 
-        #rdv_panel_layout.addWidget(Separator(Qt.Horizontal))
+        rdv_panel_layout.addWidget(Separator(Qt.Horizontal))
 
         #type de RDV
         type_rdv_layout = QHBoxLayout()
@@ -465,7 +497,24 @@ class PlanningView(QWidget):
         self.rdvs_selectionne[0].type_id = int(self.type_rdv_input.currentData()) if self.type_rdv_input.currentData() is not None else None
         self.rdvs_selectionne[0].presence = self.presence_input.currentText() if self.presence_input.currentText() != "" else None
 
-        self.creer_clicked.emit(self.rdvs_selectionne[0])
+        if (self.repetition_checkbox_input.isChecked()):
+            frequence = self.frequence_input.value()
+            date_fin_repetition = self.date_fin_repetition_input.date()
+            current_date = self.rdvs_selectionne[0].date + timedelta(weeks=frequence)
+            rdvs_a_creer = [self.rdvs_selectionne[0]]
+            while current_date <= date_fin_repetition:
+                rdv_copy = RendezVous(
+                    id=None,
+                    motif="",
+                    patient_id=self.rdvs_selectionne[0].patient_id,
+                    date=current_date,
+                    type_id=self.rdvs_selectionne[0].type_id,
+                    presence="A définir",
+                )
+                rdvs_a_creer.append(rdv_copy)
+                current_date += timedelta(weeks=frequence)
+
+        self.creer_clicked.emit(rdvs_a_creer)
 
     def on_supprimer_clicked(self):
         """Gérer le clic sur le bouton Supprimer"""

@@ -22,8 +22,9 @@ class Patient:
     etat_suivi: str | None
     description: str | None
     nom_facturation: str | None
+    acronyme: str | None
 
-    def __init__(self, nom: str, prenom: str, sexe: str, date_naissance: 'datetime.datetime', adresse: str, ville: str, telephone1: str, typeTelephone1: str, telephone2: str, typeTelephone2: str, email: str, niveau: str = None, ecole: str = None, amenagement: str = None, etat_suivi: str = None, description: str = None, nom_facturation: str = None, id: int = 0) -> None:
+    def __init__(self, nom: str, prenom: str, sexe: str, date_naissance: 'datetime.datetime', adresse: str, ville: str, telephone1: str, typeTelephone1: str, telephone2: str, typeTelephone2: str, email: str, niveau: str = None, ecole: str = None, amenagement: str = None, etat_suivi: str = None, description: str = None, nom_facturation: str = None, acronyme: str = None, id: int = 0) -> None:
         """
         Initialise une instance de Patient.
 
@@ -44,6 +45,7 @@ class Patient:
             amenagement (str | None, optionnel): Aménagements particuliers.
             etat_suivi (str | None, optionnel): État du suivi.
             description (str | None, optionnel): Description complémentaire.
+            acronyme (str | None, optionnel): Acronyme.
             id (int, optionnel): Identifiant unique du patient.
         """
         self.id = id
@@ -64,7 +66,7 @@ class Patient:
         self.etat_suivi = etat_suivi
         self.description = description
         self.nom_facturation = nom_facturation
-
+        self.acronyme = acronyme
     def __repr__(self) -> str:
         """
         Retourne une représentation textuelle du patient.
@@ -124,7 +126,8 @@ class Patient:
                 email=data[14],
                 etat_suivi=data[15],
                 description=data[16],
-                nom_facturation=data[17]
+                nom_facturation=data[17],
+                acronyme=data[18]
             )
             patients.append(patient)
         return patients
@@ -164,7 +167,8 @@ class Patient:
                 email=data[14],
                 etat_suivi=data[15],
                 description=data[16],
-                nom_facturation=data[17]
+                nom_facturation=data[17],
+                acronyme=data[18]
             )
         return None
         
@@ -175,9 +179,9 @@ class Patient:
             cursor = connexion.cursor()
 
             cursor.execute("""
-                INSERT INTO patient (nom, prenom, sexe, date_naissance, adresse, amenagement, niveau, ecole, ville, telephone1, typeTelephone1, telephone2, typeTelephone2, email, etat_suivi, description, nom_facturation)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation))
+                INSERT INTO patient (nom, prenom, sexe, date_naissance, adresse, amenagement, niveau, ecole, ville, telephone1, typeTelephone1, telephone2, typeTelephone2, email, etat_suivi, description, nom_facturation, acronyme)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation, patient.acronyme))
             
             patient_id = cursor.lastrowid  # Récupérer l'ID du patient inséré
             connexion.commit()
@@ -196,8 +200,8 @@ class Patient:
 
         cursor.execute("""
             UPDATE patient
-            SET nom = ?, prenom = ?, sexe = ?, date_naissance = ?, adresse = ?, amenagement = ?, niveau = ?, ecole = ?, ville = ?, telephone1 = ?, typeTelephone1 = ?, telephone2 = ?, typeTelephone2 = ?, email = ?, etat_suivi = ?, description = ?, nom_facturation = ?
-            WHERE id = ?""", (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation, patient_id))
+            SET nom = ?, prenom = ?, sexe = ?, date_naissance = ?, adresse = ?, amenagement = ?, niveau = ?, ecole = ?, ville = ?, telephone1 = ?, typeTelephone1 = ?, telephone2 = ?, typeTelephone2 = ?, email = ?, etat_suivi = ?, description = ?, nom_facturation = ?, acronyme = ?
+            WHERE id = ?""", (patient.nom, patient.prenom, patient.sexe, patient.date_naissance.strftime("%Y-%m-%d"), patient.adresse, patient.amenagement, patient.niveau, patient.ecole, patient.ville, patient.telephone1, patient.typeTelephone1, patient.telephone2, patient.typeTelephone2, patient.email, patient.etat_suivi, patient.description, patient.nom_facturation, patient.acronyme, patient_id))
         connexion.commit()
         connexion.close()
 

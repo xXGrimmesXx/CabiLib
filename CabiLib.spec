@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['src\\cabilib_logo.png'],
+    icon=['C:\\Users\\mloui\\Desktop\\CabiLib\\src\\cabilib_logo.png'],
 )
