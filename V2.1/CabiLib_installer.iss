@@ -40,6 +40,7 @@ Source: "C:\Users\mloui\Desktop\CabiLib\src\Constantes.json"; DestDir: "{userapp
 Source: "C:\Users\mloui\Desktop\CabiLib\src\icons\absent.png"; DestDir: "{userappdata}/CabiLib/icons"; Flags: onlyifdoesntexist
 Source: "C:\Users\mloui\Desktop\CabiLib\src\icons\present.png"; DestDir: "{userappdata}/CabiLib/icons"; Flags: onlyifdoesntexist
 Source: "C:\Users\mloui\Desktop\CabiLib\src\icons\undefined.png"; DestDir: "{userappdata}/CabiLib/icons"; Flags: onlyifdoesntexist
+Source: "C:\Users\mloui\Desktop\CabiLib\src\icons\excused.png"; DestDir: "{userappdata}/CabiLib/icons"; Flags: onlyifdoesntexist
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

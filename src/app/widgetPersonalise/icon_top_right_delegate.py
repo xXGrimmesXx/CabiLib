@@ -28,6 +28,8 @@ class IconTopRightDelegate(QStyledItemDelegate):
             icon_path = path.join(environ.get("APPDATA"), "CabiLib/icons", "present.png").replace("\\", "/")
         elif presence == "Absent":
             icon_path = path.join(environ.get("APPDATA"), "CabiLib/icons", "absent.png").replace("\\", "/")
+        elif presence == "Absent excusé":
+            icon_path = path.join(environ.get("APPDATA"), "CabiLib/icons", "excused.png").replace("\\", "/")
         if icon_path:
             icon = QIcon(icon_path)
             if not icon.isNull():
