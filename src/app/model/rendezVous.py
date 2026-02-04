@@ -378,8 +378,6 @@ class RendezVous:
             )
             rdvs.append(rdv)
 
-        print(f"Converted {len(rdvs)} rows to RendezVous instances.")
-
         return rdvs
     
     def deleteRendezVous(rdv_id: int) -> None:

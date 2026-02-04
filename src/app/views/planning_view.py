@@ -442,11 +442,9 @@ class PlanningView(QWidget):
     def afficher_details_rdv(self):
         """Afficher les détails du rendez-vous dans le panneau"""
         if not self.rdvs_selectionne or len(self.rdvs_selectionne) == 0:
-            print("Aucun RDV sélectionné")
             return
         rdv = self.rdvs_selectionne[0]
         if rdv is None:
-            print("RDV est None")
             return
         # Sélectionner le patient
         if(rdv.patient_id is not None):

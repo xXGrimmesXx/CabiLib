@@ -35,7 +35,6 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     # --- 2. Gestion du Logo ---
     logo_file = path.join(environ.get("APPDATA"),"CabiLib", 'logo.png').replace('\\', '/')
     logo_base64 = ''
-    print("Logo file path:", logo_file)
     try:
         with open(logo_file, 'rb') as img_f:
             logo_bytes = img_f.read()
@@ -49,7 +48,6 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     # --- 2b. Gestion de la Signature ---
     signature_file = path.join(environ.get("APPDATA"),"CabiLib", 'signature.png').replace('\\', '/')
     signature_base64 = ''
-    print("Signature file path:", signature_file)
     try:
         with open(signature_file, 'rb') as img_f:
             signature_bytes = img_f.read()
@@ -93,7 +91,6 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     # Annulation
     annulation_block = ""
     if (annulation_factures is not None and annulation_factures != []):
-        print(annulation_factures)
         cancelled_list = ", ".join(annulation_factures)
         label = "Annule et remplace la facture :" if len(annulation_factures) == 1 else "Annule et remplace les factures :"
         annulation_block = f"""

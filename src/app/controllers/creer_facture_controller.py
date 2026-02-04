@@ -46,7 +46,7 @@ class CreerFactureController:
         returns:
             tuple[int,str]: L'ID de la facture créée et le chemin du PDF généré. Si aucun rendez-vous n'est facturé, retourne -1 et une chaîne vide.
         """
-        print("\n\n\n-----------------------------DEBUT EMISSION FACTURE----------------------------\n\n\n")
+        print("\n-----------------------------DEBUT EMISSION FACTURE----------------------------\n")
         print("Facturation du patient :",patient.prenom,patient.nom)
         print("Entre le", start_date, "et le", end_date)
         liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
@@ -61,26 +61,28 @@ class CreerFactureController:
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
         {"\n".join([f"- RDV ID {rdv.id} le {rdv.date} avec statut de présence : {rdv.presence}" for rdv in liste_rdvs])}"""
-        print(msg)
+        #print(msg)
+        if (patient.id == 37):
+            print(liste_rdvs)
         
         for rdv in liste_rdvs:
             # si le rendez-vous est déjà facturé on ne le compte pas dans les rendez-vous à facturer
             # on demande si on veut quand meme editer la facture sans ces rdvs
-            print("\nTraitement du rendez-vous ID : ", rdv.id, " le ", rdv.date," présence : ",rdv.presence)
+            #print("\nTraitement du rendez-vous ID : ", rdv.id, " le ", rdv.date," présence : ",rdv.presence)
             
             if(rdv.facture_id is not None and rdv.facture_id!="-1"):
-                print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
+                #print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
                 if (rdv.facture_id not in annulation_factures):
                     annulation_factures.append(rdv.facture_id)
                     #on passe au rendez-vous d'après
                     continue
             
             if (rdv.presence == "Absent"):
-                print("Le patient était absent au rendez-vous ID :", rdv.id)
+                #print("Le patient était absent au rendez-vous ID :", rdv.id)
                 #si le patient est absent on ajoute le rdv à la liste des rdv ou il etait absent
                 rdvs_patient_absent.append(rdv)
             elif (rdv.presence == "Présent"):
-                print("Le patient était présent au rendez-vous ID :", rdv.id)
+                #print("Le patient était présent au rendez-vous ID :", rdv.id)
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
                 new_ligne = LigneFacture(facture.id,rdv.id,self.typeRDVModel.getTypeRDVById(rdv.type_id).prix)
                 rdv.facture_id = facture.id
@@ -93,15 +95,16 @@ class CreerFactureController:
                 #a enlever peut-etre
                 rdvs_factures.append(rdv)
             elif (rdv.presence == "A définir"):
-                print("Le statut de présence n'est pas défini pour le rendez-vous ID :", rdv.id)
+                #print("Le statut de présence n'est pas défini pour le rendez-vous ID :", rdv.id)
                 rdvs_a_renseigner.append(rdv)
             elif (rdv.presence == "Absent excusé" or rdv.presence == "Annulé"):
-                print("Le rendez-vous ID :", rdv.id, "ne sera pas facturé (présence :", rdv.presence,")")
+                #print("Le rendez-vous ID :", rdv.id, "ne sera pas facturé (présence :", rdv.presence,")")
                 rdv.facture_id = -1  # on marque que ce rdv ne sera pas facturé
                 if(preview==False):
                     self.rdvModel.updateRendezVous(rdv.id, rdv)
             else :
-                print("Statut de présence inconnu pour le rendez-vous ID :", rdv.id,"\t",rdv.presence)
+                pass
+                #print("Statut de présence inconnu pour le rendez-vous ID :", rdv.id,"\t",rdv.presence)
 
         # si un des rendez-vous n'a pas de statut de présence défini, on n'émet pas la facture
         if (len(rdvs_a_renseigner) > 0):
@@ -110,20 +113,21 @@ class CreerFactureController:
         
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
-                if (preview==False) :
-                    lignes = LigneFacture.getAllLignesByFactureId(fac)
-                else :
-                    lignes = lignes_facture
+                # on ajoute les lignes de facture déjà existantes à la nouvelle facture
+                lignes = LigneFacture.getAllLignesByFactureId(fac)
                 for l in lignes :                    
                     rdv = self.rdvModel.getRendezVousById(l.rdv_id)
                     rdv.facture_id = facture.id
                     if(preview==False):
+                        # si ce n'est pas une prévisualisation, on met à jour la base de données
                         self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    # on ajoute le rdv à la liste des rdvs facturés
                     rdvs_factures.append(rdv)
 
                     lfac_test = LigneFacture.getLigneFacture(facture.id,rdv.id)
-                    #on vérifie que la ligne de facture n'existe pas déjà avant de la recréer
+                    #Si ce n'est pas une prévisualisation, on ajoute la ligne de facture à la base de données
                     if (preview==False) :
+                        # on évite les doublons
                         if(lfac_test is None) :
                             lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
                             LigneFacture.addLigneFacture(lfac)              
@@ -158,7 +162,6 @@ class CreerFactureController:
                     if (preview==False):
                         self.rdvModel.updateRendezVous(rdv.id, rdv)
 
-                    #TODO peut etre à enlever
                     rdvs_factures.append(rdv)
                     lfac = LigneFacture(facture.id,rdv.id,0)
                     if (preview==False):
@@ -169,7 +172,7 @@ class CreerFactureController:
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
             print("Création de la facture pour le patient :",patient.prenom,patient.nom)
-            print("\n\n\n-----------------------------FIN EMISSION FACTURE----------------------------\n\n\n")
+            print("\n-----------------------------FIN EMISSION FACTURE----------------------------\n")
             if (preview==False):
                 Facture.addFacture(facture)
                 lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
@@ -180,8 +183,6 @@ class CreerFactureController:
         else :
             print("Aucun rendez-vous à facturer pour le patient :",patient.prenom,patient.nom)
             return -1,""
-        
-
 
     def on_mass_facture_generer(self, start_date: datetime, end_date: datetime)-> None:
         """Générer des factures de masse pour tous les patients entre start_date et end_date.
@@ -233,11 +234,9 @@ class CreerFactureController:
 
         if(facture_id!=-1) :
             self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
-            self.save_template_mail(patient, start_date, end_date, fp)
             webbrowser.open_new_tab(fp)
         else :
             self.view.erreur_generation_facture(patient)
-
 
     def on_mass_facture_preview(self, start_date: datetime, end_date: datetime) -> None:
         """Prévisualiser des factures de masse pour tous les patients entre start_date et end_date.
@@ -247,6 +246,7 @@ class CreerFactureController:
         """
         print("Prévisualisation de factures de masse du", start_date, "au", end_date)
         patients = self.patientModel.getAllPatients()
+        print("Nombre de patients à facturer :",len(patients))
         factures_creees = []
         for patient in patients:
             facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
@@ -257,6 +257,7 @@ class CreerFactureController:
                 self.view.erreur_generation_facture(patient)
                 
         self.view.confirmation_facture_generee(factures_creees)
+        print("Nombre de factures créées :",len(factures_creees))
 
     def save_template_mail(self, patient: Patient, start_date: datetime, end_date: datetime, facture_path: str) -> None:
         """Enregistrer un modèle d'email pour les factures.
@@ -268,7 +269,6 @@ class CreerFactureController:
         attachements = [facture_path]
         attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'RIB_Praticien.pdf').replace('\\','/'))
         attachements.append(path.join(environ['APPDATA'], 'CabiLib', 'logo.png').replace('\\','/'))
-        print(attachements)
         APIRequestQueue.enqueue_api_request('gmail_save_draft', json.dumps({
             'to': patient.email,
             'subject': f'[Ergothérapie] Facture {patient.prenom} - du {start_date.date().strftime("%d-%m-%Y")} au {end_date.date().strftime("%d-%m-%Y")}',

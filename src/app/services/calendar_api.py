@@ -104,8 +104,6 @@ def get_event_by_plage(start_datetime, end_datetime):
     return []
 
   events = events_result.get("items", [])
-  print(f"Fetched {len(events)} events from {time_min} to {time_max}.")
-  print("\n\n", events)
   return events
 
 def create_event(rdv:RendezVous):
@@ -189,10 +187,8 @@ def insert_rdv (rdv:RendezVous) :
   if CALENDAR_ID is None :
     create_calendar_if_not_exist()
   try : 
-    print("Inserting event into calendar...")
     event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
     rdv.google_calendar_id = event.get('id')
-    print(f"Rendez-vous inséré avec l'ID : {rdv.google_calendar_id}")
     RendezVous.updateRendezVous(rdv.id,rdv)
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")

@@ -157,11 +157,9 @@ class creerFactureView(QWidget):
         end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
 
         if(self.mass_facture_button.isChecked()) :
-            print("Emission du signal de facturation de masse")
             self.mass_facture_generer.emit(start_date,end_date)
         else :
             patient_id = self.patient_input.currentData()
-            print("Emission du signal de facturation individuelle pour le patient ID :",patient_id)
             self.single_facture_generer.emit(start_date,end_date,patient_id)
 
     def on_preview_clicked(self) :
@@ -172,11 +170,9 @@ class creerFactureView(QWidget):
         end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
 
         if(self.mass_facture_button.isChecked()) :
-            print("Emission du signal de preview de masse")
             self.mass_facture_preview.emit(start_date,end_date)
         else :
             patient_id = self.patient_input.currentData()
-            print("Emission du signal de preview individuelle pour le patient ID :",patient_id)
             self.single_facture_preview.emit(start_date,end_date,patient_id)
 
 
@@ -195,7 +191,7 @@ class creerFactureView(QWidget):
         for rdv in rdvs_patient_absent:
             msg += f"- Rendez-vous du {rdv.date.strftime('%d/%m/%Y à %H:%M')}\n"
             
-        print("Absence précédentes du patient :\n",absence_precedentes)
+        #print("Absence précédentes du patient :\n",absence_precedentes)
         if(len(absence_precedentes)>0) :
             msg += "\nHistorique des absences précédentes :\n"
             for rdv in absence_precedentes:
