@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main.py'],
+    ['C:\\Users\\mloui\\Desktop\\CabiLib\\src\\main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['cabilib_logo.png'],
+    icon=['C:\\Users\\mloui\\Desktop\\CabiLib\\src\\cabilib_logo.png'],
 )

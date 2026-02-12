@@ -93,7 +93,45 @@ class ProprieteView(QWidget):
             "CABINET_ADDRESS", 
             "Adresse du cabinet"
         ))
-        
+
+        # Nom du cabinet
+        layout.addLayout(self._create_text_field(
+            "CABINET_NAME", 
+            "Nom du cabinet"
+        ))
+
+        # Nom du responsable du cabinet
+        layout.addLayout(self._create_text_field(
+            "CABINET_RESPONSABLE_NAME", 
+            "Nom du responsable du cabinet"
+        ))
+
+        # Téléphone du responsable
+        layout.addLayout(self._create_text_field(
+            "CABINET_RESPONSABLE_PHONE", 
+            "Téléphone du responsable du cabinet"
+        ))
+
+        # APE du responsable
+        layout.addLayout(self._create_text_field(
+            "CABINET_RESPONSABLE_APE", 
+            "Code APE du responsable du cabinet"
+        ))
+
+        # SIRET du responsable
+        layout.addLayout(self._create_text_field(
+            "CABINET_RESPONSABLE_SIRET", 
+            "SIRET du responsable du cabinet"
+        ))
+
+        # Facteur de redevance
+        layout.addLayout(self._create_number_field(
+            "REDEVANCE_FACTOR", 
+            "Facteur de redevance (%)",
+            min_val=0,
+            max_val=100
+        ))
+
         # Dossier des factures (avec bouton de sélection)
         layout.addLayout(self._create_directory_field(
             "FACTURES_DIR", 
