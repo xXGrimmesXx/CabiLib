@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(QWidget(), "🏥 Types de RDV")
         # Comptabilité (onglet avec menu déroulant)
         self.tabs.addTab(QWidget(), "💰 Comptabilité ▾")
+        self.tabs.addTab(QWidget(), "📊 Redevance")
         self.tabs.addTab(QWidget(), "⚙️ Propriétés")
         # Map index to key explicite
         self.index_to_key = {
@@ -38,7 +39,8 @@ class MainWindow(QMainWindow):
             2: "suivi_factures",
             3: "types_rdv",
             4: "comptabilite",
-            5: "proprietes"
+            5: "redevance",
+            6: "proprietes"
         }
         self.tabs.currentChanged.connect(self._emit_tab_key)
         self.setCentralWidget(self.tabs)

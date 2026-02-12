@@ -423,3 +423,15 @@ class RendezVous:
         rdv_data = cursor.fetchall()
         connexion.close()
         return RendezVous.data_to_rendezvous(rdv_data)
+    
+    @staticmethod
+    def get_by_patient_id_and_date_range_and_type_id(patient_id, start_date, end_date, type_id):
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+        cursor.execute("""SELECT * FROM rendez_vous
+                       WHERE patient_id = ? AND 
+                       date >= ? AND date <= ? 
+                       AND type_id = ?""", (patient_id, start_date.strftime("%Y-%m-%d %H:%M:%S"), end_date.strftime("%Y-%m-%d %H:%M:%S"), type_id))
+        rdv_data = cursor.fetchall()
+        connexion.close()
+        return RendezVous.data_to_rendezvous(rdv_data)

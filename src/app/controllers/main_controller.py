@@ -21,6 +21,9 @@ from app.model.typeRDV import TypeRDV
 
 from app.views.comptabilite_view import ComptabiliteView
 
+from app.views.redevance_view import RedevanceView
+from app.controllers.redevance_controller import RedevanceController
+
 from app.views.main_window_view import MainWindow
 
 
@@ -54,7 +57,8 @@ class MainController:
             "suivi_factures": 2,
             "types_rdv": 3,
             "comptabilite": 4,
-            "proprietes": 5
+            "redevance": 5,
+            "proprietes": 6
         }
 
         if key in self.views and key in self.controllers:
@@ -103,11 +107,19 @@ class MainController:
             self.views["comptabilite"] = self.current_view
             self.controllers["comptabilite"] = self.current_controller
 
+        elif key == "redevance":
+            self.current_view = RedevanceView()
+            self.current_controller = RedevanceController(self.current_view)
+            self.main_window.replace_tab(5, self.current_view)
+            self.views["redevance"] = self.current_view
+            self.controllers["redevance"] = self.current_controller
+
+
         elif key == "proprietes":
             from app.controllers.propriete_controller import ProprieteController
             self.current_controller = ProprieteController()
             self.current_view = self.current_controller.view
-            self.main_window.replace_tab(5, self.current_view)
+            self.main_window.replace_tab(6, self.current_view)
             self.views["proprietes"] = self.current_view
             self.controllers["proprietes"] = self.current_controller
     
