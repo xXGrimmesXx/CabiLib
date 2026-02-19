@@ -24,6 +24,9 @@ from app.views.comptabilite_view import ComptabiliteView
 from app.views.redevance_view import RedevanceView
 from app.controllers.redevance_controller import RedevanceController
 
+from app.views.statistiques_view import StatistiquesView
+from app.controllers.statistiques_controller import StatistiquesController
+
 from app.views.main_window_view import MainWindow
 
 
@@ -139,34 +142,39 @@ class MainController:
                 self.controllers["facture"] = controller
             else:
                 view = self.views["facture"]
-            compta_view = self.views.get("comptabilite")
+            compta_view = self.views.get("creer_facture")
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
                 self.main_window.replace_tab(4, view)
-                self.views["comptabilite"] = view
+                self.views["creer_facture"] = view
             self.main_window.tabs.setCurrentIndex(4)
         elif action_name == 'creer_devis':
             self.load_tab("comptabilite")
             from app.views.creer_devis_view import CreerDevisView
             view = CreerDevisView()
-            compta_view = self.views.get("comptabilite")
+            compta_view = self.views.get("creer_devis")
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
                 self.main_window.replace_tab(4, view)
-                self.views["comptabilite"] = view
-                self.controllers["comptabilite"] = None
+                self.views["creer_devis"] = view
+                self.controllers["creer_devis"] = None
             self.main_window.tabs.setCurrentIndex(4)
         elif action_name == 'statistiques':
             self.load_tab("comptabilite")
             from app.views.statistiques_view import StatistiquesView
-            view = StatistiquesView()
-            compta_view = self.views.get("comptabilite")
-            if hasattr(compta_view, 'set_current_widget'):
-                compta_view.set_current_widget(view)
+            from app.controllers.statistiques_controller import StatistiquesController
+
+            if "statistiques" in self.views and "statistiques" in self.controllers:
+                controller = self.controllers["statistiques"]
+                controller.refresh()
+                view = self.views["statistiques"]
             else:
-                self.main_window.replace_tab(4, view)
-                self.views["comptabilite"] = view
-                self.controllers["comptabilite"] = None
+                view = StatistiquesView()
+                controller = StatistiquesController(view)
+            
+            self.main_window.replace_tab(4, view)
+            self.views["statistiques"] = view
+            self.controllers["statistiques"] = controller
             self.main_window.tabs.setCurrentIndex(4)

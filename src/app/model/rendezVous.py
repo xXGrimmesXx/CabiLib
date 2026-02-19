@@ -435,3 +435,88 @@ class RendezVous:
         rdv_data = cursor.fetchall()
         connexion.close()
         return RendezVous.data_to_rendezvous(rdv_data)
+    
+    @staticmethod
+    def get_montant_mois(datetime: datetime) -> float:
+        """
+        Récupère le montant des rendez-vous du mois courant
+        Returns:
+            float: Montant total des rendez-vous du mois courant.
+        """
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+        cursor.execute("""
+            SELECT SUM(prix) FROM rendez_vous r
+            JOIN type_rdv t ON r.type_id = t.id
+            WHERE strftime('%Y-%m', date) = strftime('%Y-%m', ?)
+        """, (datetime.strftime('%Y-%m-%d %H:%M:%S'),))
+        montant = cursor.fetchone()[0]
+        connexion.close()
+        return montant if montant is not None else 0.0
+    
+    @staticmethod
+    def get_montant_année_courante(datetime: datetime) -> float:
+        """
+        Récupère le montant des rendez-vous de l'année courante
+        Returns:
+            float: Montant total des rendez-vous de l'année courante.
+        """
+        connexion = sqlite3.connect(DB_PATH)
+        cursor = connexion.cursor()
+        cursor.execute("""
+            SELECT SUM(montant_facture) FROM ligne_facture lf
+            JOIN facture f ON lf.idFacture = f.id
+            WHERE strftime('%Y', f.date_emission) = strftime('%Y', ?)
+        """, (datetime.strftime('%Y-%m-%d %H:%M:%S'),))
+        montant = cursor.fetchone()[0]
+        connexion.close()
+        return montant if montant is not None else 0.0
+    
+    @staticmethod
+    def get_historique_chiffre_affaire_12_derniers_mois(datetime: datetime) -> tuple[list[int], list[float]]:
+        """
+        Récupère l'historique du chiffre d'affaire des 12 derniers mois
+        Returns:
+            tuple[list[int], list[float]]: Liste des mois et liste des chiffres d'affaire correspondants.
+        """
+        mois = []
+        CA = []
+        for i in range(11, -1, -1):
+            n_mois = datetime.month - i
+            print(n_mois)
+
+            if n_mois <= 0:
+                n_mois += 12
+                mois.append(n_mois)
+                CA.append(RendezVous.get_montant_mois(datetime.replace(month=n_mois,year=datetime.year-1)))
+            else:
+                mois.append(n_mois)
+                CA.append(RendezVous.get_montant_mois(datetime.replace(month=n_mois)))
+        return mois, CA
+    
+    @staticmethod
+    def get_historique_chiffre_affaire_plusmoins_6_mois(datetime: datetime) -> tuple[list[int], list[float]]:
+        """
+        Récupère l'historique du chiffre d'affaire des 12 derniers mois
+        Returns:
+            tuple[list[int], list[float]]: Liste des mois et liste des chiffres d'affaire correspondants.
+        """
+        mois = []
+        CA = []
+        for i in range(6, -6, -1):
+            n_mois = datetime.month - i
+            print(n_mois)
+
+            if n_mois <= 0:
+                n_mois += 12
+                mois.append(n_mois)
+                CA.append(RendezVous.get_montant_mois(datetime.replace(month=n_mois,year=datetime.year-1)))
+            elif n_mois > 12:
+                n_mois -= 12
+                mois.append(n_mois)
+                CA.append(RendezVous.get_montant_mois(datetime.replace(month=n_mois,year=datetime.year+1)))
+            else:
+                mois.append(n_mois)
+                CA.append(RendezVous.get_montant_mois(datetime.replace(month=n_mois)))
+        return mois, CA
+    
