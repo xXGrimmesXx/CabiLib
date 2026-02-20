@@ -79,7 +79,6 @@ class StatistiquesView(QWidget):
         
         layout.addWidget(self.historique_graph)
         layout.addStretch()  # Pousse les éléments vers le haut
-
     def show_tooltip(self, scatter, points):
         """Gère l'affichage de la bulle d'info lors du survol."""
         print("Hover event triggered")
