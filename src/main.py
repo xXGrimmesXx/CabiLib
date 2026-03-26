@@ -1,18 +1,16 @@
-from app.database.update_schema import ensure_db
-from app.database.setup_db import DB_PATH
+from app.backend.database.update_schema import ensure_db
 import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QPalette, QColor, QIcon
-from app.views.main_window_view import MainWindow
-from app.controllers.main_controller import MainController
-import app.services.internet_API_thread_worker as api_worker
-import sqlite3
+from app.frontend.views.main_window_view import MainWindow
+from app.frontend.controllers.main_controller import MainController
+import app.backend.services.internet_API_thread_worker as api_worker
 
 def main():
     """Point d'entrée de l'application"""
     
     api_worker.start_api_worker(0,60)
-    ensure_db(DB_PATH)
+    ensure_db()
     
     app = QApplication(sys.argv)
     app.setApplicationName("CabiLib - Gestion Cabinet")
