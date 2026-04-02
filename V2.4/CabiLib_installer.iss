@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 ; Non-commercial use only
 #define MyAppName "CabiLib"
-#define MyAppVersion "2.2"
+#define MyAppVersion "2.4"
 #define MyAppPublisher "Louis Arnould"
 #define MyAppExeName "CabiLib.exe"
 [Setup]
@@ -34,7 +34,7 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 [Files]
-Source: "C:\Users\mloui\Desktop\CabiLib\V2.2\Build\{#MyAppExeName}"; DestDir: "{app}";
+Source: "C:\Users\mloui\Desktop\CabiLib\V2.4\Build\{#MyAppExeName}"; DestDir: "{app}";
 Source: "C:\Users\mloui\Desktop\CabiLib\src\credentials.json"; DestDir: "{userappdata}/CabiLib"; Flags: ignoreversion
 Source: "C:\Users\mloui\Desktop\CabiLib\src\Constantes.json"; DestDir: "{userappdata}/CabiLib"; Flags: onlyifdoesntexist
 Source: "C:\Users\mloui\Desktop\CabiLib\src\icons\absent.png"; DestDir: "{userappdata}/CabiLib/icons"; Flags: onlyifdoesntexist
@@ -55,58 +55,79 @@ var
   SelectedLogoPath: String;
   SelectedRIBPath: String;
   SelectedSignaturePath: String;
+  LogoExists: Boolean;
+  RIBExists: Boolean;
+  SignatureExists: Boolean;
 
 procedure InitializeWizard;
+var
+  DestDir: String;
 begin
+  DestDir := ExpandConstant('{userappdata}\CabiLib');
+
+  // Vérifie si les fichiers existent déjà
+  LogoExists      := FileExists(DestDir + '\logo.png');
+  RIBExists       := FileExists(DestDir + '\RIB_Praticien.pdf');
+  SignatureExists  := FileExists(DestDir + '\signature.png');
+
   // Page pour le logo
   LogoPage := CreateInputFilePage(wpSelectTasks,
-    'Choisir le logo du cabinet', 
+    'Choisir le logo du cabinet',
     'Sélectionnez une image PNG pour le logo',
     'Veuillez sélectionner un fichier image PNG qui servira de logo pour la facture' + #13#10 +
     'Le fichier sera copié dans le dossier de configuration de CabiLib.');
-  
-  LogoPage.Add('Fichier logo (PNG):', 
+
+  LogoPage.Add('Fichier logo (PNG):',
     'Fichiers image PNG|*.png|Tous les fichiers|*.*',
     '.png');
-  
+
   LogoPage.Edits[0].Text := '';
 
   // Page pour le RIB
   RIBPage := CreateInputFilePage(LogoPage.ID,
-    'Choisir le RIB du praticien', 
+    'Choisir le RIB du praticien',
     'Sélectionnez le fichier PDF du RIB',
     'Veuillez sélectionner le fichier PDF contenant le RIB du praticien.' + #13#10 +
     'Le fichier sera copié dans le dossier de configuration de CabiLib.');
-  
-  RIBPage.Add('Fichier RIB (PDF):', 
+
+  RIBPage.Add('Fichier RIB (PDF):',
     'Fichiers PDF|*.pdf|Tous les fichiers|*.*',
     '.pdf');
-  
+
   RIBPage.Edits[0].Text := '';
 
   // Page pour la signature
   SignaturePage := CreateInputFilePage(RIBPage.ID,
-    'Choisir la signature du praticien', 
+    'Choisir la signature du praticien',
     'Sélectionnez une image PNG de la signature',
     'Veuillez sélectionner un fichier image PNG contenant la signature du praticien.' + #13#10 +
     'Le fichier sera copié dans le dossier de configuration de CabiLib.');
-  
-  SignaturePage.Add('Fichier signature (PNG):', 
+
+  SignaturePage.Add('Fichier signature (PNG):',
     'Fichiers image PNG|*.png|Tous les fichiers|*.*',
     '.png');
-  
+
   SignaturePage.Edits[0].Text := '';
+end;
+
+// Saute automatiquement les pages dont le fichier existe déjà
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  if (PageID = LogoPage.ID)      and LogoExists      then Result := True;
+  if (PageID = RIBPage.ID)       and RIBExists       then Result := True;
+  if (PageID = SignaturePage.ID) and SignatureExists  then Result := True;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
-  
-  // Validation de la page Logo
+
+  // Validation de la page Logo (seulement si elle n'a pas été sautée)
   if CurPageID = LogoPage.ID then
   begin
     SelectedLogoPath := LogoPage.Values[0];
-    
+
     if SelectedLogoPath = '' then
     begin
       MsgBox('Veuillez sélectionner un fichier logo.', mbError, MB_OK);
@@ -119,11 +140,11 @@ begin
     end;
   end;
 
-  // Validation de la page RIB
+  // Validation de la page RIB (seulement si elle n'a pas été sautée)
   if CurPageID = RIBPage.ID then
   begin
     SelectedRIBPath := RIBPage.Values[0];
-    
+
     if SelectedRIBPath = '' then
     begin
       MsgBox('Veuillez sélectionner un fichier RIB.', mbError, MB_OK);
@@ -136,11 +157,11 @@ begin
     end;
   end;
 
-  // Validation de la page Signature
+  // Validation de la page Signature (seulement si elle n'a pas été sautée)
   if CurPageID = SignaturePage.ID then
   begin
     SelectedSignaturePath := SignaturePage.Values[0];
-    
+
     if SelectedSignaturePath = '' then
     begin
       MsgBox('Veuillez sélectionner un fichier signature.', mbError, MB_OK);
@@ -164,38 +185,38 @@ begin
   if CurStep = ssPostInstall then
   begin
     DestDir := ExpandConstant('{userappdata}\CabiLib');
-    
+
     // Créer le dossier s'il n'existe pas
     if not DirExists(DestDir) then
       CreateDir(DestDir);
-    
-    // Copier le logo
+
+    // Copier le logo seulement si un nouveau fichier a été sélectionné
     if SelectedLogoPath <> '' then
     begin
       DestLogoFile := DestDir + '\logo.png';
-      
+
       if FileCopy(SelectedLogoPath, DestLogoFile, False) then
         Log('Logo copié avec succès: ' + DestLogoFile)
       else
         MsgBox('Erreur lors de la copie du logo.', mbError, MB_OK);
     end;
 
-    // Copier le RIB
+    // Copier le RIB seulement si un nouveau fichier a été sélectionné
     if SelectedRIBPath <> '' then
     begin
       DestRIBFile := DestDir + '\RIB_Praticien.pdf';
-      
+
       if FileCopy(SelectedRIBPath, DestRIBFile, False) then
         Log('RIB copié avec succès: ' + DestRIBFile)
       else
         MsgBox('Erreur lors de la copie du RIB.', mbError, MB_OK);
     end;
 
-    // Copier la signature
+    // Copier la signature seulement si un nouveau fichier a été sélectionné
     if SelectedSignaturePath <> '' then
     begin
       DestSignatureFile := DestDir + '\signature.png';
-      
+
       if FileCopy(SelectedSignaturePath, DestSignatureFile, False) then
         Log('Signature copiée avec succès: ' + DestSignatureFile)
       else

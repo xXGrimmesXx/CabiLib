@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (QWidget, QGridLayout, QTableWidget, 
-                               QTableWidgetItem, QLabel, QLineEdit)
+                               QTableWidgetItem, QLabel, QLineEdit,
+                               QHBoxLayout, QVBoxLayout)
 from PySide6.QtCore import Qt, Signal
 from app.backend.model.facture import Facture
 
@@ -45,7 +46,7 @@ class SuivreFactureView(QWidget):
         # Table des patients
         self.facture_table = QTableWidget()
         self.facture_table.setColumnCount(6)
-        self.facture_table.setHorizontalHeaderLabels(["Numéro de facture", "Numéro du patient", "Date d'émission", "Statut","Date de paiement","Description"])
+        self.facture_table.setHorizontalHeaderLabels(["Numéro de facture", "Numéro du patient", "Date d'émission", "Méthode de paiement","Date de paiement","Description"])
         self.facture_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.facture_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.facture_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -70,6 +71,18 @@ class SuivreFactureView(QWidget):
         self.lignesFacture.setColumnWidth(1, 150)
         main_grid.addWidget(self.lignesFacture, 2, 0, 1, 1)
         main_grid.setRowStretch(2, 1)  # La table prend 1x plus de place que les autres lignes
+
+        facture_detail = QVBoxLayout()
+        
+        main_grid.addLayout(facture_detail, 2, 1, 1, 2)
+
+        titre = QLabel("Détails de la facture")
+        titre.setAlignment(Qt.AlignCenter)
+        titre.setStyleSheet("font-size: 15pt; font-weight: bold;")
+        facture_detail.addWidget(titre)
+        facture_detail.addWidget(QLabel(" (À implémenter)"))
+        # (Ajouter ici des widgets pour afficher les détails de la facture si nécessaire)
+        
         
 
 
