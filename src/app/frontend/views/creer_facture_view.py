@@ -4,7 +4,9 @@ from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
 from PySide6.QtCore import Qt, Signal
 from app.backend.model.facture import Facture
 from app.backend.model.patient import Patient
+from app.backend.model.rendezVous import RendezVous
 from app.frontend.widgetPersonalise.separator import Separator
+from app.frontend.widgetPersonalise.checkable_combobox import CheckableComboBox
 from datetime import datetime
 
 
@@ -12,16 +14,12 @@ class creerFactureView(QWidget):
     """VIEW - Interface graphique pour la gestion des patients"""
     
     # Signaux pour communiquer avec le Controller
-    generate_facture_clicked: Signal = Signal(object)
-    """Signal émis lors du clic pour générer une facture (options de facturation)."""
-    mass_facture_generer: Signal = Signal(object, object)
-    """Signal émis pour générer des factures en masse (date de début, date de fin)."""
-    single_facture_generer: Signal = Signal(object, object, int)
-    """Signal émis pour générer une facture individuelle (date de début, date de fin, id patient)."""
-    mass_facture_preview: Signal = Signal(object, object)
-    """Signal émis pour prévisualiser des factures en masse (date de début, date de fin)."""
-    single_facture_preview: Signal = Signal(object, object, int)
-    """Signal émis pour prévisualiser une facture individuelle (date de début, date de fin, id patient)."""
+    facture_generer: Signal = Signal(object, object, list)
+    """Signal émis pour générer la facture pour les patient selectionnés (date de début, date de fin, ids patients)."""
+    facture_preview: Signal = Signal(object, object, list)
+    """Signal émis pour prévisualiser la facture pour les patients selectionnés (date de début, date de fin, ids patients)."""
+    date_changed: Signal = Signal(object,object)
+    """Signal émis lorsque les dates de début ou de fin sont modifiées (date debut, date de fin)."""
     refresh: Signal = Signal()
     """Signal pour rafraîchir la vue de facturation."""
     
@@ -50,20 +48,9 @@ class creerFactureView(QWidget):
 
         facture_option = QHBoxLayout()
         facture_option.setSizeConstraint(QHBoxLayout.SetMinimumSize)
-        facture_option.addWidget(QLabel("Options de facturation :"))
-        self.mass_facture_button = QRadioButton("Facturer tous les patients")
-        self.single_facture_button = QRadioButton("Facturer un seul patient")
-
-        self.mass_facture_button.clicked.connect(self.on_mass_facture_clicked)
-        self.single_facture_button.clicked.connect(self.on_single_facture_clicked)
-
-        self.button_group = QButtonGroup()
-        self.button_group.addButton(self.mass_facture_button)
-        self.button_group.addButton(self.single_facture_button)
-        self.mass_facture_button.setChecked(True)
-
-        facture_option.addWidget(self.mass_facture_button)
-        facture_option.addWidget(self.single_facture_button)
+        facture_option.addWidget(QLabel("Selectionner les patients à facturer : "))
+        self.patient_factures = CheckableComboBox()
+        facture_option.addWidget(self.patient_factures)
         facture_option.addStretch()
 
         facture_option.setContentsMargins(0, 20, 0, 20)
@@ -76,12 +63,13 @@ class creerFactureView(QWidget):
         date_layout.addWidget(QLabel("Date de début :"))
         self.start_date_edit = QDateEdit(datetime.now())
         self.start_date_edit.setCalendarPopup(True)
+        self.start_date_edit.dateChanged.connect(lambda: self.date_changed.emit(self.start_date_edit.date().toPython(), self.end_date_edit.date().toPython()))
         date_layout.addWidget(self.start_date_edit)
 
         date_layout.addWidget(QLabel("Date de fin :"))
         self.end_date_edit = QDateEdit(datetime.now())
         self.end_date_edit.setCalendarPopup(True)
-
+        self.end_date_edit.dateChanged.connect(lambda: self.date_changed.emit(self.start_date_edit.date().toPython(), self.end_date_edit.date().toPython()))
         date_layout.addWidget(self.end_date_edit)
         date_layout.addStretch()
         date_layout.setContentsMargins(0, 20, 0, 20)
@@ -89,30 +77,6 @@ class creerFactureView(QWidget):
         self.main_layout.addLayout(date_layout)
 
         self.main_layout.addWidget(Separator(Qt.Horizontal))
-
-        #option pour la facturation individuelle
-
-        self.factu_individuelle_widget = QWidget()
-        self.factu_individuelle_widget.setHidden(True)
-        self.main_layout.addWidget(self.factu_individuelle_widget)
-
-        patient_section_layout = QVBoxLayout(self.factu_individuelle_widget)
-        patient_layout = QHBoxLayout()
-        patient_section_layout.addLayout(patient_layout)
-        patient_layout.addWidget(QLabel("Selectionner le patient"))
-
-        self.patient_input = QComboBox()
-        self.patient_input.setEditable(True)
-        self.patient_completer = QCompleter()
-        self.patient_completer.setCaseSensitivity(Qt.CaseInsensitive)  # Insensible à la casse
-        self.patient_completer.setFilterMode(Qt.MatchContains)  # Filtre par contenu (pas seulement début)
-        self.patient_input.setCompleter(self.patient_completer)
-        patient_layout.addWidget(self.patient_input)
-
-        patient_layout.addStretch()
-
-        patient_section_layout.addWidget(Separator(Qt.Horizontal))
-        patient_section_layout.setContentsMargins(0, 20, 0, 20)
 
         generation_layout = QHBoxLayout()
         self.main_layout.addLayout(generation_layout)
@@ -130,24 +94,11 @@ class creerFactureView(QWidget):
     def on_refresh(self):
         self.refresh.emit()
 
-    def set_patient_list(self, patients):
+    def set_patient_list(self, patients : list[Patient]):
         """Remplir la liste des patients"""
-        self.patient_input.clear()
-        self.patient_input.addItem("",-1)
+        self.patient_factures.clear()
         for patient in patients:
-            self.patient_input.addItem(f"{patient.prenom} {patient.nom}", patient.id)
-        # Utiliser le modèle du QComboBox pour le QCompleter
-        self.patient_completer.setModel(self.patient_input.model())
-        self.patient_completer.setCompletionRole(Qt.DisplayRole)
-        self.patient_completer.activated.connect(self.patient_input.setCurrentIndex)
-
-    def on_mass_facture_clicked(self) :
-        self.factu_individuelle_widget.setHidden(True)
-        self.creer_button.setText("Générer les factures")
-
-    def on_single_facture_clicked(self) :
-        self.factu_individuelle_widget.setHidden(False)
-        self.creer_button.setText("Générer la facture")
+            self.patient_factures.addItem(f"{patient.prenom} {patient.nom}", patient.id)
 
     def on_creer_clicked(self) :
         start_date = self.start_date_edit.date().toPython()
@@ -156,11 +107,7 @@ class creerFactureView(QWidget):
         end_date = self.end_date_edit.date().toPython()
         end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
 
-        if(self.mass_facture_button.isChecked()) :
-            self.mass_facture_generer.emit(start_date,end_date)
-        else :
-            patient_id = self.patient_input.currentData()
-            self.single_facture_generer.emit(start_date,end_date,patient_id)
+        self.facture_generer.emit(start_date,end_date,self.patient_factures.selectedData())
 
     def on_preview_clicked(self) :
         start_date = self.start_date_edit.date().toPython()
@@ -169,14 +116,11 @@ class creerFactureView(QWidget):
         end_date = self.end_date_edit.date().toPython()
         end_date = datetime(end_date.year, end_date.month, end_date.day,23,59,59,999999)
 
-        if(self.mass_facture_button.isChecked()) :
-            self.mass_facture_preview.emit(start_date,end_date)
-        else :
-            patient_id = self.patient_input.currentData()
-            self.single_facture_preview.emit(start_date,end_date,patient_id)
+        
+        self.facture_preview.emit(start_date,end_date,self.patient_factures.selectedData())
 
 
-    def erreur_completion_rdv(self, patient, rdvs_a_renseigner):
+    def erreur_completion_rdv(self, patient: Patient, rdvs_a_renseigner: list[RendezVous]):
         """Afficher une erreur si des rendez-vous n'ont pas de statut de présence défini"""
         msg = f"Le patient {patient.prenom} {patient.nom} a des rendez-vous sans statut de présence défini :\n"
         for rdv in rdvs_a_renseigner:
@@ -185,7 +129,7 @@ class creerFactureView(QWidget):
         
         QMessageBox.warning(self, "Erreur de facturation", msg)
 
-    def erreur_patient_absent(self, patient, rdvs_patient_absent,absence_precedentes):
+    def erreur_patient_absent(self, patient: Patient, rdvs_patient_absent: list[RendezVous], absence_precedentes: list[RendezVous]):
         """Afficher une alerte si le patient a des absences"""
         msg = f"Le patient {patient.prenom} {patient.nom} a des absences aux rendez-vous suivants :\n"
         for rdv in rdvs_patient_absent:

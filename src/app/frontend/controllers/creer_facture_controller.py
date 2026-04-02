@@ -11,8 +11,11 @@ from app.backend.services.internet_API_thread_worker import APIRequestQueue
 import webbrowser
 
 from app.backend.services.patient_service import PatientService
+from app.backend.services.rendezVous_service import RendezVousService
 
 from app.frontend.views.creer_facture_view import creerFactureView
+from app.exceptions import CabiLibException, EntiteIntrouvableException, RegleMetierException
+from app.frontend.widgetPersonalise.error_boxes import ExceptionHandler
 
 
 class CreerFactureController:
@@ -20,10 +23,9 @@ class CreerFactureController:
     
         self.view: creerFactureView = view
         # Connecter les signaux de la vue aux méthodes du contrôleur
-        self.view.mass_facture_generer.connect(self.on_mass_facture_generer)
-        self.view.single_facture_generer.connect(self.on_single_facture_generer)
-        self.view.single_facture_preview.connect(self.on_single_facture_preview)
-        self.view.mass_facture_preview.connect(self.on_mass_facture_preview)
+        self.view.facture_generer.connect(self.on_facture_generer)
+        self.view.facture_preview.connect(self.on_facture_preview)
+        self.view.date_changed.connect(self.on_date_changed)
         self.view.refresh.connect(self.on_refresh)
         self.view.set_patient_list(PatientService.get_all_patients())
 
@@ -103,8 +105,11 @@ class CreerFactureController:
 
         # si un des rendez-vous n'a pas de statut de présence défini, on n'émet pas la facture
         if (len(rdvs_a_renseigner) > 0):
-            self.view.erreur_completion_rdv(patient, rdvs_a_renseigner)
-            return -1,""
+            msg = f"Le patient {patient.prenom} {patient.nom} a des rendez-vous sans statut de présence défini :\n"
+            for rdv in rdvs_a_renseigner:
+                msg += f"- Rendez-vous du {rdv.date.strftime('%d/%m/%Y à %H:%M')}\n"
+            msg += "Veuillez renseigner le statut de présence avant de facturer."
+            raise RegleMetierException(msg)
         
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
@@ -177,9 +182,9 @@ class CreerFactureController:
             return facture.id,fp
         else :
             print("Aucun rendez-vous à facturer pour le patient :",patient.prenom,patient.nom)
-            return -1,""
+            raise RegleMetierException(f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}\n(Aucun rendez-vous à facturer)")
 
-    def on_mass_facture_generer(self, start_date: datetime, end_date: datetime)-> None:
+    def on_facture_generer(self, start_date: datetime, end_date: datetime, patients: list)-> None:
         """Générer des factures de masse pour tous les patients entre start_date et end_date.
         args:
             start_date (datetime): La date de début de la période de facturation.
@@ -187,72 +192,69 @@ class CreerFactureController:
         """
 
         print("Génération de factures de masse du", start_date, "au", end_date)
-        patients = self.patientModel.getAllPatients()
         factures_creees = []
-        for patient in patients:
-            facture_id,fp = self.facturer_patient(patient, start_date, end_date)
-            if(facture_id!=-1) :
+        for pID in patients:
+            try:
+                patient = self.patientModel.getPatientById(pID)
+                facture_id,fp = self.facturer_patient(patient, start_date, end_date)
                 factures_creees.append(Facture(facture_id,patient.id))
                 self.save_template_mail(patient, start_date, end_date, fp)
-            else :
-                self.view.erreur_generation_facture(patient)
+            except EntiteIntrouvableException:
+                print(f"Patient ID {pID} non trouvé.")
+                continue
+            except CabiLibException as e:
+                ExceptionHandler.handle(self.view, e)
+                continue
                 
         self.view.confirmation_facture_generee(factures_creees)
 
-    def on_single_facture_generer(self, start_date: datetime, end_date: datetime, patient_id: int)-> None:
-        """Générer une facture pour un patient spécifique entre start_date et end_date.
-        args:
-            start_date (datetime): La date de début de la période de facturation.
-            end_date (datetime): La date de fin de la période de facturation.
-            patient_id (int): L'ID du patient pour lequel la facture est générée.
-        """
-        
-        print("Génération d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
-        patient = self.patientModel.getPatientById(patient_id)
-        facture_id,fp = self.facturer_patient(patient, start_date, end_date)
-        if(facture_id!=-1) :
-            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
-            self.save_template_mail(patient, start_date, end_date, fp)
-        else :
-            self.view.erreur_generation_facture(patient)
-
-    def on_single_facture_preview(self, start_date: datetime, end_date: datetime, patient_id: int) -> None:
-        """Prévisualiser une facture pour un patient spécifique entre start_date et end_date.
-        args:
-            start_date (datetime): La date de début de la période de facturation.
-            end_date (datetime): La date de fin de la période de facturation.
-            patient_id (int): L'ID du patient pour lequel la facture est prévisualisée.
-        """
-        print("Prévisualisation d'une facture pour le patient ID", patient_id, "du", start_date, "au", end_date)
-        patient = self.patientModel.getPatientById(patient_id)
-        facture_id,fp =self.facturer_patient(patient, start_date, end_date,preview=True)
-
-        if(facture_id!=-1) :
-            self.view.confirmation_facture_generee([Facture(facture_id,patient.id)])
-            webbrowser.open_new_tab(fp)
-        else :
-            self.view.erreur_generation_facture(patient)
-
-    def on_mass_facture_preview(self, start_date: datetime, end_date: datetime) -> None:
+    def on_facture_preview(self, start_date: datetime, end_date: datetime, patients: list) -> None:
         """Prévisualiser des factures de masse pour tous les patients entre start_date et end_date.
         args:
             start_date (datetime): La date de début de la période de facturation.
             end_date (datetime): La date de fin de la période de facturation.
+            patients (list): La liste des IDs des patients à facturer.
         """
         print("Prévisualisation de factures de masse du", start_date, "au", end_date)
-        patients = self.patientModel.getAllPatients()
         print("Nombre de patients à facturer :",len(patients))
         factures_creees = []
-        for patient in patients:
-            facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
-            if(facture_id!=-1) :
+        for pID in patients:
+            try :
+                patient = self.patientModel.getPatientById(pID) 
+                facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
                 factures_creees.append(Facture(facture_id,patient.id))
                 webbrowser.open_new_tab(fp)
-            else :
-                self.view.erreur_generation_facture(patient)
+            except EntiteIntrouvableException:
+                print(f"Patient ID {pID} non trouvé.")
+                continue
+            except CabiLibException as e:
+                ExceptionHandler.handle(self.view, e)
+                continue
                 
         self.view.confirmation_facture_generee(factures_creees)
         print("Nombre de factures créées :",len(factures_creees))
+    
+    def on_date_changed(self, start_date: datetime, end_date: datetime) -> None:
+        """Gérer le changement de date dans la vue de création de facture.
+        args:
+            start_date (datetime): La nouvelle date de début.
+            end_date (datetime): La nouvelle date de fin.
+        """
+        end_date = datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59, 999999)
+        print(f"Dates modifiées - Nouvelle période : du {start_date.strftime('%Y-%m-%d %H:%M:%S')} au {end_date.strftime('%Y-%m-%d %H:%M:%S')}")
+        rdvs = RendezVousService.get_rendezvous_by_plage(start_date, end_date)
+        patients = []
+        print(f"Nombre de RDV trouvés : {len(rdvs)}")
+        for rdv in rdvs:
+            try:
+                patient = PatientService.get_patient_by_id(rdv.patient_id)
+                if patient not in patients:
+                    patients.append(patient)
+            except EntiteIntrouvableException:
+                print(f"Patient ID {rdv.patient_id} non trouvé.")
+                continue
+        print(f"Nombre de patients avec RDV dans la période : {len(patients)}")
+        self.view.set_patient_list(patients)
 
     def save_template_mail(self, patient: Patient, start_date: datetime, end_date: datetime, facture_path: str) -> None:
         """Enregistrer un modèle d'email pour les factures.
