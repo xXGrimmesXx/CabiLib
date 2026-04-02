@@ -43,9 +43,6 @@ class CreerFactureController:
         returns:
             tuple[int,str]: L'ID de la facture créée et le chemin du PDF généré. Si aucun rendez-vous n'est facturé, retourne -1 et une chaîne vide.
         """
-        print("\n-----------------------------DEBUT EMISSION FACTURE----------------------------\n")
-        print("Facturation du patient :",patient.prenom,patient.nom)
-        print("Entre le", start_date, "et le", end_date)
         liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
         rdvs_factures = []
         rdvs_patient_absent = []
@@ -58,28 +55,23 @@ class CreerFactureController:
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
         {"\n".join([f"- RDV ID {rdv.id} le {rdv.date} avec statut de présence : {rdv.presence}" for rdv in liste_rdvs])}"""
-        #print(msg)
-        if (patient.id == 37):
-            print(liste_rdvs)
         
         for rdv in liste_rdvs:
             # si le rendez-vous est déjà facturé on ne le compte pas dans les rendez-vous à facturer
             # on demande si on veut quand meme editer la facture sans ces rdvs
-            #print("\nTraitement du rendez-vous ID : ", rdv.id, " le ", rdv.date," présence : ",rdv.presence)
             
             if(rdv.facture_id is not None and rdv.facture_id!="-1"):
-                #print("Le rendez-vous ID :", rdv.id, "a déjà une facture ID :", rdv.facture_id)
+    
                 if (rdv.facture_id not in annulation_factures):
                     annulation_factures.append(rdv.facture_id)
                     #on passe au rendez-vous d'après
                     continue
             
             if (rdv.presence == "Absent"):
-                #print("Le patient était absent au rendez-vous ID :", rdv.id)
                 #si le patient est absent on ajoute le rdv à la liste des rdv ou il etait absent
                 rdvs_patient_absent.append(rdv)
             elif (rdv.presence == "Présent"):
-                #print("Le patient était présent au rendez-vous ID :", rdv.id)
+                
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
                 new_ligne = LigneFacture(facture.id,rdv.id,self.typeRDVModel.getTypeRDVById(rdv.type_id).prix)
                 rdv.facture_id = facture.id
@@ -92,16 +84,16 @@ class CreerFactureController:
                 #a enlever peut-etre
                 rdvs_factures.append(rdv)
             elif (rdv.presence == "A définir"):
-                #print("Le statut de présence n'est pas défini pour le rendez-vous ID :", rdv.id)
+                
                 rdvs_a_renseigner.append(rdv)
             elif (rdv.presence == "Absent excusé" or rdv.presence == "Annulé"):
-                #print("Le rendez-vous ID :", rdv.id, "ne sera pas facturé (présence :", rdv.presence,")")
+                
                 rdv.facture_id = -1  # on marque que ce rdv ne sera pas facturé
                 if(preview==False):
                     self.rdvModel.updateRendezVous(rdv.id, rdv)
             else :
                 pass
-                #print("Statut de présence inconnu pour le rendez-vous ID :", rdv.id,"\t",rdv.presence)
+            
 
         # si un des rendez-vous n'a pas de statut de présence défini, on n'émet pas la facture
         if (len(rdvs_a_renseigner) > 0):
@@ -171,8 +163,6 @@ class CreerFactureController:
 
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
-            print("Création de la facture pour le patient :",patient.prenom,patient.nom)
-            print("\n-----------------------------FIN EMISSION FACTURE----------------------------\n")
             if (preview==False):
                 Facture.addFacture(facture)
                 lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
@@ -181,7 +171,6 @@ class CreerFactureController:
                 fp = fg.create_and_save_html(facture, patient, lignes_facture, annulation_factures,start_date,end_date)
             return facture.id,fp
         else :
-            print("Aucun rendez-vous à facturer pour le patient :",patient.prenom,patient.nom)
             raise RegleMetierException(f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}\n(Aucun rendez-vous à facturer)")
 
     def on_facture_generer(self, start_date: datetime, end_date: datetime, patients: list)-> None:
@@ -191,7 +180,6 @@ class CreerFactureController:
             end_date (datetime): La date de fin de la période de facturation.
         """
 
-        print("Génération de factures de masse du", start_date, "au", end_date)
         factures_creees = []
         for pID in patients:
             try:
@@ -200,7 +188,7 @@ class CreerFactureController:
                 factures_creees.append(Facture(facture_id,patient.id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             except EntiteIntrouvableException:
-                print(f"Patient ID {pID} non trouvé.")
+                ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {pID} non trouvé."))
                 continue
             except CabiLibException as e:
                 ExceptionHandler.handle(self.view, e)
@@ -215,8 +203,6 @@ class CreerFactureController:
             end_date (datetime): La date de fin de la période de facturation.
             patients (list): La liste des IDs des patients à facturer.
         """
-        print("Prévisualisation de factures de masse du", start_date, "au", end_date)
-        print("Nombre de patients à facturer :",len(patients))
         factures_creees = []
         for pID in patients:
             try :
@@ -225,14 +211,13 @@ class CreerFactureController:
                 factures_creees.append(Facture(facture_id,patient.id))
                 webbrowser.open_new_tab(fp)
             except EntiteIntrouvableException:
-                print(f"Patient ID {pID} non trouvé.")
+                ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {pID} non trouvé."))
                 continue
             except CabiLibException as e:
                 ExceptionHandler.handle(self.view, e)
                 continue
                 
         self.view.confirmation_facture_generee(factures_creees)
-        print("Nombre de factures créées :",len(factures_creees))
     
     def on_date_changed(self, start_date: datetime, end_date: datetime) -> None:
         """Gérer le changement de date dans la vue de création de facture.
@@ -241,19 +226,16 @@ class CreerFactureController:
             end_date (datetime): La nouvelle date de fin.
         """
         end_date = datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59, 999999)
-        print(f"Dates modifiées - Nouvelle période : du {start_date.strftime('%Y-%m-%d %H:%M:%S')} au {end_date.strftime('%Y-%m-%d %H:%M:%S')}")
         rdvs = RendezVousService.get_rendezvous_by_plage(start_date, end_date)
         patients = []
-        print(f"Nombre de RDV trouvés : {len(rdvs)}")
         for rdv in rdvs:
             try:
                 patient = PatientService.get_patient_by_id(rdv.patient_id)
                 if patient not in patients:
                     patients.append(patient)
             except EntiteIntrouvableException:
-                print(f"Patient ID {rdv.patient_id} non trouvé.")
+                ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {rdv.patient_id} non trouvé."))
                 continue
-        print(f"Nombre de patients avec RDV dans la période : {len(patients)}")
         self.view.set_patient_list(patients)
 
     def save_template_mail(self, patient: Patient, start_date: datetime, end_date: datetime, facture_path: str) -> None:

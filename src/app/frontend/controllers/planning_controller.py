@@ -76,7 +76,6 @@ class PlanningController(QObject):
             
             date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
             rendez_vous = RendezVousService.get_rendezvous_by_datetime(date)
-            print(f"Rendez-vous trouvés pour {date}: \n{rendez_vous}")
             if (rendez_vous is not None and rendez_vous!=[]):
                 self.view.rdvs_selectionne = rendez_vous
                 self.view.afficher_details_rdv()
@@ -171,7 +170,6 @@ class PlanningController(QObject):
                     heure_max_str = cm.get_constante("HEURE_FIN")
                     heure_max = QTime.fromString(heure_max_str, "HH:mm")
                     heure_max = heure_max.addSecs(-rdv_type.duree.seconds)  # Soustraire la durée du RDV
-                    print(f"Type de RDV sélectionné: {rdv_type.nom}, durée: {-rdv_type.duree.seconds/60} minutes, heure max pour le créneau: {heure_max.toString('HH:mm')}")
                     self.view.time_input.setMaximumTime(heure_max)
 
         except CabiLibException as e:

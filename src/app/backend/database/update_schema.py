@@ -11,6 +11,7 @@ def ensure_db():
     import app.backend.model.typeRDV
     import app.backend.model.facture
     import app.backend.model.ligneFacture
+    import app.backend.model.contact
     
     if not path.exists(DB_PATH):
         makedirs(path.dirname(DB_PATH), exist_ok=True)

@@ -77,5 +77,4 @@ class RendezVousService:
             montant = RendezVousService.get_montant_mois(date + relativedelta.relativedelta(months=i))
             mois.append((date + relativedelta.relativedelta(months=i)).month)
             CA.append(montant)
-        print(f"DEBUG: Mois = {mois}\n CA = {CA}")
         return mois, CA

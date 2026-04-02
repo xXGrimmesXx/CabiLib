@@ -12,6 +12,7 @@ class RendezVous(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     patient_id = Column(Integer, ForeignKey('patient.id'))
+    adresse_id = Column(Integer, ForeignKey('contact.id'), nullable=True)
     date = Column(DateTime)
     motif = Column(String)
     type_id = Column(Integer, ForeignKey('type_rdv.id'))
@@ -37,6 +38,7 @@ class RendezVous(Base):
         return dumps({
             "id": self.id,
             "patient_id": self.patient_id,
+            "adresse_id": self.adresse_id,
             "date": self.date.isoformat() if isinstance(self.date, datetime) else str(self.date),
             "motif": self.motif,
             "type_id": self.type_id,
@@ -66,6 +68,7 @@ class RendezVous(Base):
             type_id=data["type_id"],
             presence=data["presence"],
             facture_id=data.get("facture_id", "-1"),
-            google_calendar_id=data.get("google_calendar_id", "")
+            google_calendar_id=data.get("google_calendar_id", ""),
+            adresse_id=data.get("adresse_id", None)
         )
     

@@ -5,6 +5,11 @@ import app.backend.services.constantes_manager as cm
 from app.backend.model.rendezVous import RendezVous
 from app.backend.model.patient import Patient
 from app.backend.model.typeRDV import TypeRDV
+
+from app.backend.services.patient_service import PatientService
+from app.backend.services.typeRDV_service import TypeRDVService
+from app.backend.services.rendezVous_service import RendezVousService
+
 from typing import Dict, Any as JSON
 
 try:
@@ -13,6 +18,46 @@ except Exception:
   HttpError = Exception
 
 CALENDAR_ID = None
+COLORS = {
+  "1": "#a4bdfc",
+  "2": "#7ae7bf",
+  "3": "#dbadff",
+  "4": "#ff887c",
+  "5": "#fbd75b",
+  "6": "#ffb878",
+  "7": "#46d6db",
+  "8": "#e1e1e1",
+  "9": "#5484ed",
+  "10": "#51b749",
+  "11": "#dc2127"
+}
+
+def get_color_for_type_rdv(type: TypeRDV) -> str:
+  """Retourne la couleur associée à un type de rendez-vous.
+
+  Args:
+    type: L'objet TypeRDV.
+  Returns:
+    Une chaîne de caractères représentant la couleur hexadécimale associée au type de rendez-vous.
+  """
+  dist = [distance_to_color(COLORS[str(i)], type.couleur) for i in range(1, 12)]
+  min_dist_index = dist.index(min(dist))
+  return str(min_dist_index+1)
+
+
+def distance_to_color(col1, col2) -> int:
+  """Retourne la distance entre deux couleurs hexadécimales.
+
+  Args:
+    col1: Une chaîne de caractères représentant la première couleur hexadécimale.
+    col2: Une chaîne de caractères représentant la deuxième couleur hexadécimale.
+  Returns:
+    Un entier représentant la distance entre les deux couleurs.
+  """
+  r1, g1, b1 = int(col1[1:3], 16), int(col1[3:5], 16), int(col1[5:7], 16)
+  r2, g2, b2 = int(col2[1:3], 16), int(col2[3:5], 16), int(col2[5:7], 16)
+  return ((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) ** 0.5
+
 
 def create_calendar_if_not_exist ():
   """Creates a Google Calendar if it does not already exist.
@@ -115,8 +160,8 @@ def create_event(rdv:RendezVous):
       event (Dict) : l'objet rendez-vous à envoyer a l'API google calendar
   """
 
-  typerdv = TypeRDV.getTypeRDVById(rdv.type_id)
-  patient = Patient.getPatientById(rdv.patient_id)
+  typerdv = TypeRDVService.get_type_by_id(rdv.type_id)
+  patient = PatientService.get_patient_by_id(rdv.patient_id)
   start_date = rdv.date.isoformat()
   end_date = rdv.date + typerdv.duree
   end_date = end_date.isoformat()
@@ -130,11 +175,12 @@ def create_event(rdv:RendezVous):
   else:
       localisation = typerdv.localisation if typerdv.localisation else ""
   description = f"{rdv.motif}\nid : {rdv.id}"
-
+  print(f"color : {get_color_for_type_rdv(typerdv)}")
   event = {
       'summary': summary,
       'location': localisation,
       'description': description,
+      'colorId': get_color_for_type_rdv(typerdv),
       'start': {
           'dateTime': start_date,
           'timeZone': 'Europe/Paris',
@@ -189,7 +235,7 @@ def insert_rdv (rdv:RendezVous) :
   try : 
     event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
     rdv.google_calendar_id = event.get('id')
-    RendezVous.updateRendezVous(rdv.id,rdv)
+    RendezVousService.update_rendezvous(rdv.id,rdv)
   except Exception as e:
     print(f"An error occurred while inserting the event: {e}")
     traceback.print_exc()

@@ -40,4 +40,4 @@ class ProprieteController:
 			key: Clé de la liste
 			value: Valeur ajoutée
 		"""
-		print(f"Valeur ajoutée à {key}: {value}")
+		print(f"Élément ajouté à la liste {key}: {value}")
