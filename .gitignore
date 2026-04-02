@@ -2,5 +2,11 @@
 Factures/
 token.json
 credentials.json
-*.pyc
 .db
+
+# Fichiers compilés Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*$py.class
