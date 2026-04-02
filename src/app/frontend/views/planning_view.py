@@ -28,6 +28,9 @@ class PlanningView(QWidget):
     """Signal émis lors de la demande de suppression d'un rendez-vous."""
     creer_clicked: Signal = Signal(object)
     """Signal émis lors de la création d'un rendez-vous."""
+    type_rdv_changed: Signal = Signal(int)
+    """Signal émis lors du changement de type de rendez-vous dans le formulaire."""
+
     refresh: Signal = Signal()
     """Signal pour rafraîchir la vue du planning."""
     
@@ -164,6 +167,7 @@ class PlanningView(QWidget):
         self.type_rdv_completer.setCaseSensitivity(Qt.CaseInsensitive)  # Insensible à la casse
         self.type_rdv_completer.setFilterMode(Qt.MatchContains)  # Filtre par contenu (pas seulement début)
         self.type_rdv_input.setCompleter(self.type_rdv_completer)
+        self.type_rdv_input.currentIndexChanged.connect(lambda: self.type_rdv_changed.emit(int(self.type_rdv_input.currentData()) if self.type_rdv_input.currentData() is not None else -1))
         type_rdv_layout.addWidget(self.type_rdv_input)
 
         rdv_panel_layout.addWidget(Separator(Qt.Horizontal))
@@ -354,9 +358,11 @@ class PlanningView(QWidget):
         # Arrondir au créneau de 15 min le plus proche
         rounded_minute = (minute // 15) * 15
         time_slot = f"{hour:02d}:{rounded_minute:02d}"
+        print(f"DEBUG: Ajout du RDV pour {patient.nom} {patient.prenom} à {time_slot} le jour index {jour_index} date {date}")
         
         # Trouver la ligne correspondant à l'heure
         try:
+            print(f"DEBUG: Recherche du créneau {time_slot} dans {self.time_slots}")
             row = self.time_slots.index(time_slot)
         except ValueError:
             traceback.print_exc()
@@ -552,6 +558,10 @@ class PlanningView(QWidget):
     def hide_rdv_onglet(self):
         """Cache l'onglet de gestion des rendez-vous"""
         self.rdv_panel_widget.hide()
+
+    def update_heure_max(self,time:QTime):
+        """Met à jour l'heure maximale du sélecteur en fonction de la date sélectionnée"""
+        self.time_input.setMaximumTime(time)
 
     def erreur_suppression_rdv_facture(self):
         """Afficher un message d'erreur lors de la suppression d'un RDV lié à une facture"""

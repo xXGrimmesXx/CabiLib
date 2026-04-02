@@ -186,3 +186,13 @@ class RendezVousRepository:
             except SQLAlchemyError as e:
                 db.rollback()
                 raise DatabaseException(f"Erreur lors de la suppression du RDV : {str(e)}")
+            
+    @staticmethod
+    def get_montant_mois(date: datetime):
+        with SessionLocal() as db:
+            try:
+                return db.query(func.sum(TypeRDV.prix)).join(RendezVous, RendezVous.type_id == TypeRDV.id).filter(
+                    func.strftime('%Y-%m', RendezVous.date) == date.strftime('%Y-%m')
+                ).scalar()
+            except SQLAlchemyError as e:
+                raise DatabaseException(f"Erreur lors du calcul du montant du mois : {str(e)}")

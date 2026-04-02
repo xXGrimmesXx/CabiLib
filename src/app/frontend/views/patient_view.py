@@ -157,6 +157,8 @@ class PatientView(QWidget):
         self.niveau_input = QComboBox(); self.niveau_input.setEditable(True); self.niveau_input.addItems(niveau_options)
         self.completer_niveau = QCompleter(niveau_options); self.completer_niveau.setCaseSensitivity(Qt.CaseInsensitive); self.completer_niveau.setFilterMode(Qt.MatchContains)
         self.niveau_input.setCompleter(self.completer_niveau)
+        self.niveau_input.setMaximumWidth(150)
+        self.niveau_input.setMinimumWidth(80)
         row6.addWidget(self.niveau_input)
         row6.addWidget(QLabel("École :"))
         self.ecole_input = QLineEdit()
@@ -333,7 +335,7 @@ class PatientView(QWidget):
         
         # Age - avec tri numérique
         age_item = QTableWidgetItem()
-        age_item.setData(Qt.DisplayRole, (datetime.now() - patient.date_naissance).days // 365)
+        age_item.setData(Qt.DisplayRole, (datetime.now().date() - patient.date_naissance).days // 365)
         self.patient_table.setItem(row, 3, age_item)
 
         self.patient_table.setItem(row, 4, QTableWidgetItem(patient.niveau))

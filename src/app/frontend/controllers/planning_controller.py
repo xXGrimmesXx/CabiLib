@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QTime
 import traceback
 from datetime import timedelta
 from app.backend.model.rendezVous import RendezVous
@@ -9,6 +9,7 @@ from app.backend.services.typeRDV_service import TypeRDVService
 from app.backend.services.ligneFacture_service import LigneFactureService
 from app.exceptions import CabiLibException
 from app.frontend.widgetPersonalise.error_boxes import ExceptionHandler
+from app.backend.services import constantes_manager as cm
 
 class PlanningController(QObject):
     """Contrôleur pour gérer le planning des rendez-vous"""
@@ -30,6 +31,8 @@ class PlanningController(QObject):
             self.view.next_week_clicked.connect(self.on_next_week)
             self.view.cell_clicked.connect(self.on_cell_clicked)
             self.view.refresh.connect(self.on_refresh)
+            self.view.type_rdv_changed.connect(self.on_type_rdv_changed)
+            
             # Charger les données initiales
             self.load_week_rdvs()
         except CabiLibException as e:
@@ -156,5 +159,20 @@ class PlanningController(QObject):
                     return
                 RendezVousService.delete_rendezvous(rdv.id)
                 self.load_week_rdvs()
+        except CabiLibException as e:
+            ExceptionHandler.handle(self.view, e)
+
+    def on_type_rdv_changed(self, type_id: int):
+        """Gérer le changement de type de rendez-vous dans le formulaire"""
+        try:
+            if type_id is not None and type_id != -1:
+                rdv_type = TypeRDVService.get_type_by_id(type_id)
+                if rdv_type is not None:
+                    heure_max_str = cm.get_constante("HEURE_FIN")
+                    heure_max = QTime.fromString(heure_max_str, "HH:mm")
+                    heure_max = heure_max.addSecs(-rdv_type.duree.seconds)  # Soustraire la durée du RDV
+                    print(f"Type de RDV sélectionné: {rdv_type.nom}, durée: {-rdv_type.duree.seconds/60} minutes, heure max pour le créneau: {heure_max.toString('HH:mm')}")
+                    self.view.time_input.setMaximumTime(heure_max)
+
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)

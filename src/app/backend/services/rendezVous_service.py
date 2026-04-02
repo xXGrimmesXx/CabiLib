@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil import relativedelta
 from app.backend.repository.rendezvous_repository import RendezVousRepository
 from app.backend.model.rendezVous import RendezVous
 from app.exceptions import RegleMetierException, ConflitHoraireException
@@ -57,3 +58,24 @@ class RendezVousService:
     @staticmethod
     def delete_rendezvous(rdv_id: int):
         return RendezVousRepository.delete_rendezvous(rdv_id)
+    
+    @staticmethod
+    def get_montant_mois(date: datetime):
+        return RendezVousRepository.get_montant_mois(date) or 0
+
+    @staticmethod
+    def get_montant_année_courante(date: datetime):
+        somme = 0
+        for i in range(1, 13):
+            somme += RendezVousService.get_montant_mois(datetime(date.year, i, 1))
+        return somme
+
+    @staticmethod
+    def get_historique_chiffre_affaire_plusmoins_6_mois(date: datetime):
+        mois, CA = [], []
+        for i in range(-5, 7):
+            montant = RendezVousService.get_montant_mois(date + relativedelta.relativedelta(months=i))
+            mois.append((date + relativedelta.relativedelta(months=i)).month)
+            CA.append(montant)
+        print(f"DEBUG: Mois = {mois}\n CA = {CA}")
+        return mois, CA
