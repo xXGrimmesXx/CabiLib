@@ -10,3 +10,4 @@ credentials.json
 *.pyd
 __pycache__/
 *$py.class
+*.exe
