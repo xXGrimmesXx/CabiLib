@@ -10,26 +10,18 @@ class FactureRepository:
         pass
     
     @staticmethod
-    def add_facture(patient_id: int, date_emission: date = None, description: str = "", statut: str = "IMPAYE", date_paiement: date = None) -> str:
+    def add_facture(facture: Facture) -> str:
         with SessionLocal() as db:
             try:
-                if date_emission is None:
-                    date_emission = datetime.today().date()
+                if facture.date_emission is None:
+                    facture.date_emission = datetime.today().date()
+                if facture.statut is None:
+                    facture.statut = "IMPAYE"
                 
-                facture_id = FactureRepository.generate_numero_facture(date_emission)
-                
-                new_facture = Facture(
-                    id=facture_id,
-                    patient_id=patient_id,
-                    date_emission=date_emission,
-                    description=description,
-                    statut=statut,
-                    date_paiement=date_paiement
-                )
-                db.add(new_facture)
+                db.add(facture)
                 db.commit()
-                db.refresh(new_facture)
-                return new_facture.id
+                db.refresh(facture)
+                return facture.id
             except SQLAlchemyError as e:
                 db.rollback()
                 raise DatabaseException(f"Erreur lors de l'ajout de la facture : {str(e)}")

@@ -44,18 +44,7 @@ class creerFactureView(QWidget):
         titre.setStyleSheet("font-size: 18pt; font-weight: bold;")
         self.main_layout.addWidget(titre)
 
-        self.main_layout.addWidget(Separator(Qt.Horizontal))
-
-        facture_option = QHBoxLayout()
-        facture_option.setSizeConstraint(QHBoxLayout.SetMinimumSize)
-        facture_option.addWidget(QLabel("Selectionner les patients à facturer : "))
-        self.patient_factures = CheckableComboBox()
-        facture_option.addWidget(self.patient_factures)
-        facture_option.addStretch()
-
-        facture_option.setContentsMargins(0, 20, 0, 20)
         
-        self.main_layout.addLayout(facture_option)
         self.main_layout.addWidget(Separator(Qt.Horizontal))
 
         # Sélecteur de date
@@ -75,6 +64,19 @@ class creerFactureView(QWidget):
         date_layout.setContentsMargins(0, 20, 0, 20)
 
         self.main_layout.addLayout(date_layout)
+
+        self.main_layout.addWidget(Separator(Qt.Horizontal))
+
+        facture_option = QHBoxLayout()
+        facture_option.setSizeConstraint(QHBoxLayout.SetMinimumSize)
+        facture_option.addWidget(QLabel("Selectionner les patients à facturer : "))
+        self.patient_factures = CheckableComboBox()
+        facture_option.addWidget(self.patient_factures)
+        facture_option.addStretch()
+
+        facture_option.setContentsMargins(0, 20, 0, 20)
+        
+        self.main_layout.addLayout(facture_option)
 
         self.main_layout.addWidget(Separator(Qt.Horizontal))
 

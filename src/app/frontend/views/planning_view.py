@@ -362,7 +362,6 @@ class PlanningView(QWidget):
         
         # Trouver la ligne correspondant à l'heure
         try:
-            print(f"DEBUG: Recherche du créneau {time_slot} dans {self.time_slots}")
             row = self.time_slots.index(time_slot)
         except ValueError:
             traceback.print_exc()

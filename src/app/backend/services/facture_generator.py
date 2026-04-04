@@ -76,10 +76,10 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     for ligne in lignes:
         total_amount += ligne.montant_facture
         # Note: Gestion d'erreur si getRendezVousById retourne une liste vide
-        rendez_vous = RendezVousService.get_rdv_by_id(ligne.rdv_id)
+        rendez_vous = RendezVousService.get_rendezvous_by_id(ligne.idRendezVous)
         
         if rendez_vous:
-            typeRDV = TypeRDVService.get_type_rdv_by_id(rendez_vous.type_id)
+            typeRDV = TypeRDVService.get_type_by_id(rendez_vous.type_id)
             description = f"{typeRDV.nom}" if typeRDV else "Séance"
             
             lignes_data.append({

@@ -1,7 +1,7 @@
 from datetime import datetime
 import webbrowser
 
-import app.frontend.controllers.redevance_generator as rg
+import app.backend.services.redevance_generator as rg
 from app.frontend.views.redevance_view import RedevanceView
 
 

@@ -12,6 +12,9 @@ import webbrowser
 
 from app.backend.services.patient_service import PatientService
 from app.backend.services.rendezVous_service import RendezVousService
+from app.backend.services.facture_service import FactureService
+from app.backend.services.ligneFacture_service import LigneFactureService
+from app.backend.services.typeRDV_service import TypeRDVService
 
 from app.frontend.views.creer_facture_view import creerFactureView
 from app.exceptions import CabiLibException, EntiteIntrouvableException, RegleMetierException
@@ -43,14 +46,17 @@ class CreerFactureController:
         returns:
             tuple[int,str]: L'ID de la facture créée et le chemin du PDF généré. Si aucun rendez-vous n'est facturé, retourne -1 et une chaîne vide.
         """
-        liste_rdvs = self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, start_date, end_date)
+        liste_rdvs = RendezVousService.get_rendezvous_by_patient_and_date_range(patient.id, start_date, end_date)
+
+        # Initialiser les listes pour catégoriser les rendez-vous
         rdvs_factures = []
         rdvs_patient_absent = []
         rdvs_a_renseigner = []
         annulation_factures = []
         lignes_facture = []
+
         #Calculer le bon numéro de facture
-        facture = Facture(Facture.generate_numero_facture(end_date),patient.id)
+        facture = Facture(id=FactureService.generate_numero_facture(end_date), patient_id=patient.id, date_emission=datetime.today().date(), statut="IMPAYE")
         msg = f"""Facturation du patient {patient.prenom} {patient.nom} entre le {start_date} et le {end_date}\n
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
@@ -73,24 +79,34 @@ class CreerFactureController:
             elif (rdv.presence == "Présent"):
                 
                 # ca marche car les ids des types de rdv commencent à 1 et sont continus
-                new_ligne = LigneFacture(facture.id,rdv.id,self.typeRDVModel.getTypeRDVById(rdv.type_id).prix)
+                new_ligne = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=TypeRDVService.get_type_by_id(rdv.type_id).prix)
                 rdv.facture_id = facture.id
                 if(preview==False):
-                    LigneFacture.addLigneFacture(new_ligne)
-                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    try :
+                        FactureService.add_facture(facture)
+                    except CabiLibException as e:
+                        print(e)
+                        pass
+                    print("l1")
+                    LigneFactureService.add_ligne(new_ligne)
+                    RendezVousService.update_rendezvous(rdv.id, rdv)
                 else :
                     lignes_facture.append(new_ligne)
 
                 #a enlever peut-etre
                 rdvs_factures.append(rdv)
             elif (rdv.presence == "A définir"):
-                
                 rdvs_a_renseigner.append(rdv)
+
             elif (rdv.presence == "Absent excusé" or rdv.presence == "Annulé"):
                 
-                rdv.facture_id = -1  # on marque que ce rdv ne sera pas facturé
+                rdv.facture_id = facture.id  # on marque que ce rdv ne sera pas facturé
                 if(preview==False):
-                    self.rdvModel.updateRendezVous(rdv.id, rdv)
+                    try : 
+                        FactureService.add_facture(facture)
+                    except CabiLibException as e:
+                        pass
+                    RendezVousService.update_rendezvous(rdv.id, rdv)
             else :
                 pass
             
@@ -106,44 +122,63 @@ class CreerFactureController:
         if (len(annulation_factures) > 0):
             for fac in annulation_factures :
                 # on ajoute les lignes de facture déjà existantes à la nouvelle facture
-                lignes = LigneFacture.getAllLignesByFactureId(fac)
+                lignes = LigneFactureService.get_lignes_by_facture_id(fac)
                 for l in lignes :                    
-                    rdv = self.rdvModel.getRendezVousById(l.rdv_id)
+                    rdv = RendezVousService.get_rendezvous_by_id(l.idRendezVous)
                     rdv.facture_id = facture.id
                     if(preview==False):
                         # si ce n'est pas une prévisualisation, on met à jour la base de données
-                        self.rdvModel.updateRendezVous(rdv.id, rdv)
+                        try : 
+                            FactureService.add_facture(facture)
+                        except CabiLibException as e:
+                            pass
+                        
+                        RendezVousService.update_rendezvous(rdv.id, rdv)
                     # on ajoute le rdv à la liste des rdvs facturés
                     rdvs_factures.append(rdv)
 
-                    lfac_test = LigneFacture.getLigneFacture(facture.id,rdv.id)
+                    lfac_test = LigneFactureService.get_ligne(facture.id,rdv.id)
                     #Si ce n'est pas une prévisualisation, on ajoute la ligne de facture à la base de données
                     if (preview==False) :
                         # on évite les doublons
                         if(lfac_test is None) :
-                            lfac = LigneFacture(facture.id,rdv.id,l.montant_facture)
-                            LigneFacture.addLigneFacture(lfac)              
+                            lfac = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=l.montant_facture)
+                            try :
+                                FactureService.add_facture(facture)
+                            except CabiLibException as e:
+                                pass
+                            print("l2")
+                            LigneFactureService.add_ligne(lfac)          
 
         # si le patient a des absences, on demande confirmation avant de facturer
         elif (len(rdvs_patient_absent) > 0):
             #date a partir de la quelle on voit si le patient à déjà été absent
             historique_date = start_date - cm.get_constante("HISTORIQUE_ABSENCE_JOURS")*timedelta(days=1)
-            absence_precedentes = [rdv if(rdv.presence=="Absent") else None for rdv in self.rdvModel.getRendezVousByPatientAndDateRange(patient.id, historique_date, start_date)]
+            absence_precedentes = [rdv if(rdv.presence=="Absent") else None for rdv in RendezVousService.get_rendezvous_by_patient_and_date_range(patient.id, historique_date, start_date)]
             facture_ensemble = self.view.erreur_patient_absent(patient, rdvs_patient_absent,absence_precedentes)
+
+            # peut importe le choix si on est pas en preview on crée la facture afin de sauvegarder le choix du practitien
+            if preview== False :
+                try :
+                    FactureService.add_facture(facture)
+                except CabiLibException as e:
+                    pass
+            # si la facture existe ça lève une exception et on pass
 
             # si on confirme la facturation malgré les absences, on ne facture que 33€ par rendez-vous
             if(facture_ensemble) :
+
                 for rdv in rdvs_patient_absent :
                     
                     rdv.facture_id = facture.id
                     if(preview==False):
-                        self.rdvModel.updateRendezVous(rdv.id, rdv)
+                        RendezVousService.update_rendezvous(rdv.id, rdv)
 
-                    #TODO peut etre à enlever
                     rdvs_factures.append(rdv)
-                    lfac = LigneFacture(facture.id,rdv.id,33)
+                    lfac = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=33)
                     if (preview==False):
-                        LigneFacture.addLigneFacture(lfac)
+                        print("l3")
+                        LigneFactureService.add_ligne(lfac)
                     else :
                         lignes_facture.append(lfac)
             else :
@@ -152,21 +187,27 @@ class CreerFactureController:
                     
                     rdv.facture_id = facture.id
                     if (preview==False):
-                        self.rdvModel.updateRendezVous(rdv.id, rdv)
+                        RendezVousService.update_rendezvous(rdv.id, rdv)
 
                     rdvs_factures.append(rdv)
-                    lfac = LigneFacture(facture.id,rdv.id,0)
+                    lfac = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=0)
                     if (preview==False):
-                        LigneFacture.addLigneFacture(lfac)
+                        print("l4")
+                        LigneFactureService.add_ligne(lfac)
                     else:
                         lignes_facture.append(lfac)
 
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
             if (preview==False):
-                Facture.addFacture(facture)
-                lfacs = LigneFacture.getAllLignesByFactureId(facture.id)
+                try :
+                    FactureService.add_facture(facture)
+                except CabiLibException as e:
+                    pass
+                
+                lfacs = LigneFactureService.get_lignes_by_facture_id(facture.id)
                 fp = fg.create_and_save_pdf(facture, patient, lfacs, annulation_factures,start_date,end_date)
+
             else :
                 fp = fg.create_and_save_html(facture, patient, lignes_facture, annulation_factures,start_date,end_date)
             return facture.id,fp
@@ -183,9 +224,9 @@ class CreerFactureController:
         factures_creees = []
         for pID in patients:
             try:
-                patient = self.patientModel.getPatientById(pID)
+                patient = PatientService.get_patient_by_id(pID)
                 facture_id,fp = self.facturer_patient(patient, start_date, end_date)
-                factures_creees.append(Facture(facture_id,patient.id))
+                factures_creees.append(FactureService.get_facture_by_id(facture_id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             except EntiteIntrouvableException:
                 ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {pID} non trouvé."))
@@ -206,9 +247,9 @@ class CreerFactureController:
         factures_creees = []
         for pID in patients:
             try :
-                patient = self.patientModel.getPatientById(pID) 
+                patient = PatientService.get_patient_by_id(pID)
                 facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
-                factures_creees.append(Facture(facture_id,patient.id))
+                factures_creees.append(Facture(id=facture_id,patient_id=patient.id))
                 webbrowser.open_new_tab(fp)
             except EntiteIntrouvableException:
                 ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {pID} non trouvé."))
@@ -228,11 +269,14 @@ class CreerFactureController:
         end_date = datetime(end_date.year, end_date.month, end_date.day, 23, 59, 59, 999999)
         rdvs = RendezVousService.get_rendezvous_by_plage(start_date, end_date)
         patients = []
+        seen_patient_ids = set()
         for rdv in rdvs:
+            if rdv.patient_id in seen_patient_ids:
+                continue
             try:
                 patient = PatientService.get_patient_by_id(rdv.patient_id)
-                if patient not in patients:
-                    patients.append(patient)
+                patients.append(patient)
+                seen_patient_ids.add(rdv.patient_id)
             except EntiteIntrouvableException:
                 ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {rdv.patient_id} non trouvé."))
                 continue

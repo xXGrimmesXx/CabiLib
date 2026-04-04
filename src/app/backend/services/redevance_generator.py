@@ -6,11 +6,13 @@ from base64 import b64encode
 import traceback
 import app.backend.services.constantes_manager as cm
 # Import des modèles existants
-from app.backend.model.facture import Facture
-from app.backend.model.patient import Patient
-from app.backend.model.ligneFacture import LigneFacture
 from app.backend.model.typeRDV import TypeRDV
-from app.backend.model.rendezVous import RendezVous
+
+from app.backend.services.patient_service import PatientService
+from app.backend.services.typeRDV_service import TypeRDVService
+from app.backend.services.rendezVous_service import RendezVousService
+from app.backend.services.ligneFacture_service import LigneFactureService
+
 sys_path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))) or '.')
 from app.backend.services import constantes_manager
 
@@ -116,23 +118,23 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
     # --- 4. Génération des lignes HTML du tableau ---
     
 
-    patients = Patient.getAllPatients()
-    types_rdv = TypeRDV.getAllTypesRDV()
+    patients = PatientService.get_all_patients()
+    types_rdv = TypeRDVService.get_all_types()
     final_data = []
 
     for patient in patients:
         patient_dict = {"patient": patient, "type_rdv": [], "montant_total": 0.0, "nb_seances_total": 0}
 
-        rdv_absent = TypeRDV(-1, "Facturation des séances non décommandées ","",33,0,"","",False)
+        rdv_absent = TypeRDV(id=-1, nom="Facturation des séances non décommandées ", description="", prix=33, duree=0, localisation="",couleur="#FFFFFF", estgroupe=False)
         absent_dict = {"type_rdv": rdv_absent, "ligne_facture": [], "dates_seances": [], "montant_total": 0.0, "nb_seances": 0}
 
         for type_rdv in types_rdv:
-            rdvs = RendezVous.get_by_patient_id_and_date_range_and_type_id(patient.id, date_debut, date_fin, type_rdv.id)
+            rdvs = RendezVousService.get_by_patient_id_and_date_range_and_type_id(patient.id, date_debut, date_fin, type_rdv.id)
             rdv_dict = {"type_rdv": type_rdv, "dates_seances": [], "montant_total": 0.0, "nb_seances": 0}
 
             for rdv in rdvs:
                 #Ligne facture la plus récente pour ce rendez-vous
-                l_fac = LigneFacture.getLigneFacture(rdv.facture_id,rdv.id)
+                l_fac = LigneFactureService.get_ligne(rdv.facture_id, rdv.id)
                 # si une ligne de facture existe pour ce rendez-vous, on l'ajoute au dictionnaire du patient
                 if (l_fac is not None):
 
@@ -191,9 +193,9 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
                         <td rowspan="{patient_dict["nb_seances_total"]}">{patient_dict["patient"].nom + " " + patient_dict["patient"].prenom}</td>
                         <td rowspan = "{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["type_rdv"].nom}</td>
                         <td>{patient_dict["type_rdv"][typeRDVi]["dates_seances"][date_seance_i].strftime("%d/%m/%Y")}</td>
-                        <td rowspan ="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["type_rdv"].prix} €</td>
-                        <td rowspan="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["montant_total"]} €</td>
-                        <td rowspan="{patient_dict["nb_seances_total"]}">{patient_dict["montant_total"]} €</td>
+                        <td rowspan ="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{'{:.2f}'.format(patient_dict["type_rdv"][typeRDVi]["type_rdv"].prix)} €</td>
+                        <td rowspan="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{'{:.2f}'.format(patient_dict["type_rdv"][typeRDVi]["montant_total"])} €</td>
+                        <td rowspan="{patient_dict["nb_seances_total"]}">{'{:.2f}'.format(patient_dict["montant_total"])} €</td>
                     </tr>"""
 
                 # Nouveau type de rdv pour le même patient
@@ -202,8 +204,8 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
                     <tr class="type-start{last_row_class}">
                         <td rowspan = "{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["type_rdv"].nom}</td>
                         <td>{patient_dict["type_rdv"][typeRDVi]["dates_seances"][date_seance_i].strftime("%d/%m/%Y")}</td>
-                        <td rowspan ="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["type_rdv"].prix} €</td>
-                        <td rowspan="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{patient_dict["type_rdv"][typeRDVi]["montant_total"]} €</td>
+                        <td rowspan ="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{'{:.2f}'.format(patient_dict["type_rdv"][typeRDVi]["type_rdv"].prix)} €</td>
+                        <td rowspan="{patient_dict["type_rdv"][typeRDVi]["nb_seances"]}">{'{:.2f}'.format(patient_dict["type_rdv"][typeRDVi]["montant_total"])} €</td>
                     </tr>"""
 
                 # Même type de rdv pour le même patient
@@ -217,13 +219,13 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
     <tr class="total-row total-row-first">
         <td colspan="3" class="td-no-border"></td>
         <td colspan="2" class="td-total-content td-total-first" style="text-align: right; font-weight: bold;">Total général :</td>
-        <td class="td-total-content" style="font-weight: bold;">{total_general} €</td>
+        <td class="td-total-content" style="font-weight: bold;">{'{:.2f}'.format(total_general)} €</td>
     </tr>
 
     <tr class="total-row">
         <td colspan="3" class="td-no-border"></td>
         <td colspan="2" class="td-total-content td-total-first" style="text-align: right; font-weight: bold;">Total redevance :</td>
-        <td class="td-total-content" style="font-weight: bold;">{total_general*REDEVANCE_FACTOR} €</td>
+        <td class="td-total-content" style="font-weight: bold;">{'{:.2f}'.format(total_general*REDEVANCE_FACTOR)} €</td>
     </tr>
     </tbody></table>"""
                     
@@ -304,12 +306,22 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
             table.redevance {{
                 border-collapse: collapse;
                 border: none;
-                width: auto;
+                width: 90%;
+                table-layout: fixed;
                 font-family: Arial, sans-serif;
                 font-size: 8pt;
                 text-align: center;
                 margin-top: 32px;
+                margin-left: auto;
+                margin-right: auto;
             }}
+
+            table.redevance th:nth-child(1) {{ width: 15%; }}
+            table.redevance th:nth-child(2) {{ width: 35%; }}
+            table.redevance th:nth-child(3) {{ width: 10%; }}
+            table.redevance th:nth-child(4) {{ width: 10%; }}
+            table.redevance th:nth-child(5) {{ width: 10%; }}
+            table.redevance th:nth-child(6) {{ width: 10%; }}
 
             table.redevance td {{
                 border-left: 3px solid #000;
@@ -319,8 +331,7 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
                 padding: 4px 6px;
                 vertical-align: middle;
                 text-align: center;
-                white-space: nowrap;
-                width: 1%;
+                word-wrap: break-word;
             }}
             /* Première colonne - bordure gauche */
             table.redevance td:first-child,

@@ -78,3 +78,7 @@ class RendezVousService:
             mois.append((date + relativedelta.relativedelta(months=i)).month)
             CA.append(montant)
         return mois, CA
+    
+    @staticmethod
+    def get_by_patient_id_and_date_range_and_type_id(patient_id: int, date_debut: datetime, date_fin: datetime, type_id: int):
+        return RendezVousRepository.get_by_patient_id_and_date_range_and_type_id(patient_id, date_debut, date_fin, type_id)

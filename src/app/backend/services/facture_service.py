@@ -9,17 +9,19 @@ class FactureService:
 
     def get_all_factures(self) -> list[Facture]:
         return FactureRepository.get_all_factures()
-
-    def get_facture_by_id(self, facture_id: str) -> Facture | None:
+    
+    @staticmethod
+    def get_facture_by_id(facture_id: str) -> Facture | None:
         return FactureRepository.get_facture_by_id(facture_id)
 
-    def add_facture(self, patient_id: int, date_emission: date = None, description: str = "", statut: str = "IMPAYE", date_paiement: date = None) -> str:
+    @staticmethod
+    def add_facture(facture: Facture) -> str:
         # REGLE METIER
-        if patient_id is None or patient_id <= 0:
+        if facture.patient_id is None or facture.patient_id <= 0:
             raise RegleMetierException("ID patient invalide.")
-        if statut not in ["IMPAYE", "PAYE", "ANNULE"]:
-            raise RegleMetierException(f"Statut inconnu: {statut}")
-        return FactureRepository.add_facture(patient_id, date_emission, description, statut, date_paiement)
+        if facture.statut not in ["IMPAYE", "PAYE", "ANNULE"]:
+            raise RegleMetierException(f"Statut inconnu: {facture.statut}")
+        return FactureRepository.add_facture(facture)
 
     def update_facture_status(self, facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
         # REGLE METIER
@@ -36,3 +38,7 @@ class FactureService:
 
     def get_factures_impaye_by_patient_id(self, patient_id: int) -> list[Facture]:
         return FactureRepository.get_factures_impaye_by_patient_id(patient_id)
+    
+    def generate_numero_facture(self, date_emission: date=None) -> str:
+        # Générer un numéro de facture unique basé sur la date et un compteur
+        return FactureRepository.generate_numero_facture(date_emission)

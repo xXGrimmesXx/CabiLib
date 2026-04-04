@@ -33,3 +33,7 @@ class LigneFactureService:
     @staticmethod
     def get_lignes_by_rdv_id(id_rdv: int):
         return LigneFactureRepository.get_lignes_by_rdv_id(id_rdv)
+    
+    @staticmethod
+    def get_ligne(id_facture: str, id_rdv: int):
+        return LigneFactureRepository.get_ligne(id_facture, id_rdv)

@@ -196,3 +196,16 @@ class RendezVousRepository:
                 ).scalar()
             except SQLAlchemyError as e:
                 raise DatabaseException(f"Erreur lors du calcul du montant du mois : {str(e)}")
+            
+    @staticmethod
+    def get_by_patient_id_and_date_range_and_type_id(patient_id: int, date_debut: datetime, date_fin: datetime, type_id: int):
+        with SessionLocal() as db:
+            try:
+                return db.query(RendezVous).filter(
+                    RendezVous.patient_id == int(patient_id),
+                    RendezVous.date >= date_debut,
+                    RendezVous.date <= date_fin,
+                    RendezVous.type_id == int(type_id)
+                ).all()
+            except SQLAlchemyError as e:
+                raise DatabaseException(f"Erreur DB : {str(e)}")

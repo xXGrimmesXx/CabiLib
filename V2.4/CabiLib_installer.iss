@@ -29,6 +29,9 @@ DisableProgramGroupPage=yes
 OutputBaseFilename=CabiLib_installer
 SolidCompression=yes
 WizardStyle=modern
+
+WizardSmallImageFile = "C:\Users\mloui\Desktop\CabiLib\src\cabilib_logo.png"
+SetupIconFile = "C:\Users\mloui\Desktop\CabiLib\src\cabilib_logo_t.ico"
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 [Tasks]

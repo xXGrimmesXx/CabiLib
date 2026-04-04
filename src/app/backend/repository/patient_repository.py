@@ -1,6 +1,6 @@
 from app.backend.database.database import SessionLocal
 from app.backend.model.patient import Patient
-from app.exceptions import DatabaseException
+from app.exceptions import DatabaseException,EntiteIntrouvableException
 from sqlalchemy.exc import SQLAlchemyError
 
 class PatientRepository:
@@ -18,7 +18,10 @@ class PatientRepository:
     def get_patient_by_id(patient_id: int):
         with SessionLocal() as db:
             try:
-                return db.get(Patient, int(patient_id))
+                patient = db.get(Patient, int(patient_id))
+                if not patient:
+                    raise EntiteIntrouvableException("Patient non trouvé")
+                return patient
             except SQLAlchemyError as e:
                 raise DatabaseException(f"Erreur lors de la récupération du patient: {str(e)}")
 
