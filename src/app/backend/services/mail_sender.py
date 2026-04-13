@@ -4,6 +4,7 @@ from mimetypes import guess_type
 from email.message import EmailMessage
 import traceback
 from app.backend.services.google_api_manager import get_gmailV1_service
+import uuid
 
 
 def save_draft(message_body):
@@ -49,7 +50,7 @@ def save_draft(message_body):
                     )
                 else:
                     # Sinon, l'ajouter comme pièce jointe normale
-                    message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
+                    message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename+str(uuid.uuid4()))
             except Exception as e:
                 print(f"Erreur lors de l'ajout de la pièce jointe {file_path}:")
                 traceback.print_exc()

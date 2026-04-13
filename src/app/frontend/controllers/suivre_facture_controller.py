@@ -34,12 +34,9 @@ class SuivreFactureController:
         try:
             facture_id = self.view.facture_table.item(row, 0).text()
             service = FactureService()
-            print(f"Selected facture ID: {facture_id}")  # Debug print
             facture = service.get_facture_by_id(facture_id)
-            print(f"Retrieved facture: {facture}")  # Debug print
         
             lignes_facture = LigneFactureService.get_lignes_by_facture_id(facture_id)
-            print(f"Retrieved lignes facture: {lignes_facture}")  # Debug print
         
             self.view.display_facture_details(facture, lignes_facture)
         except CabiLibException as e:

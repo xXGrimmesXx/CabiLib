@@ -137,7 +137,6 @@ class creerFactureView(QWidget):
         for rdv in rdvs_patient_absent:
             msg += f"- Rendez-vous du {rdv.date.strftime('%d/%m/%Y à %H:%M')}\n"
             
-        #print("Absence précédentes du patient :\n",absence_precedentes)
         if(len(absence_precedentes)>0) :
             msg += "\nHistorique des absences précédentes :\n"
             for rdv in absence_precedentes:

@@ -9,7 +9,7 @@ class FactureService:
 
     def get_all_factures(self) -> list[Facture]:
         return FactureRepository.get_all_factures()
-    
+
     @staticmethod
     def get_facture_by_id(facture_id: str) -> Facture | None:
         return FactureRepository.get_facture_by_id(facture_id)
@@ -23,22 +23,27 @@ class FactureService:
             raise RegleMetierException(f"Statut inconnu: {facture.statut}")
         return FactureRepository.add_facture(facture)
 
-    def update_facture_status(self, facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
+    @staticmethod
+    def update_facture_status(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
         # REGLE METIER
         if new_statut == "PAYE" and not date_paiement:
             date_paiement = datetime.today().date()
         return FactureRepository.update_facture_status(facture_id, new_statut, date_paiement)
 
-    def delete_facture(self, facture_id: str) -> None:
+    @staticmethod
+    def delete_facture(facture_id: str) -> None:
         # REGLE METIER : On interdit la suppression si la facture est déjà acquittée
         facture = FactureRepository.get_facture_by_id(facture_id)
         if facture and facture.statut == "PAYE":
             raise RegleMetierException("Impossible de supprimer une facture déjà payée.")
         return FactureRepository.delete_facture(facture_id)
 
-    def get_factures_impaye_by_patient_id(self, patient_id: int) -> list[Facture]:
+    @staticmethod
+    def get_factures_impaye_by_patient_id(patient_id: int) -> list[Facture]:
         return FactureRepository.get_factures_impaye_by_patient_id(patient_id)
-    
-    def generate_numero_facture(self, date_emission: date=None) -> str:
+
+    @staticmethod
+    def generate_numero_facture(date_emission: date=None) -> str:
         # Générer un numéro de facture unique basé sur la date et un compteur
-        return FactureRepository.generate_numero_facture(date_emission)
+        num =  FactureRepository.generate_numero_facture(date_emission)
+        return num

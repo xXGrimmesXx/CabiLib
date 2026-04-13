@@ -175,7 +175,6 @@ def create_event(rdv:RendezVous):
   else:
       localisation = typerdv.localisation if typerdv.localisation else ""
   description = f"{rdv.motif}\nid : {rdv.id}"
-  print(f"color : {get_color_for_type_rdv(typerdv)}")
   event = {
       'summary': summary,
       'location': localisation,

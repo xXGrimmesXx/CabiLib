@@ -40,6 +40,7 @@ class PatientRepository:
     def add_patient(patient: Patient) -> int:
         with SessionLocal() as db:
             try:
+                patient.id = None  # Force la base de données à générer un nouvel ID
                 db.add(patient)
                 db.commit()
                 db.refresh(patient)

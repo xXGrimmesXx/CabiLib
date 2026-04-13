@@ -12,6 +12,7 @@ from app.backend.model.ligneFacture import LigneFacture
 # Import des services existants
 from app.backend.services.rendezVous_service import RendezVousService
 from app.backend.services.typeRDV_service import TypeRDVService
+from app.exceptions import RegleMetierException
 
 sys_path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))) or '.')
 from app.backend.services import constantes_manager
@@ -375,24 +376,18 @@ def save_facture_pdf(pdf_bytes: bytes, save_path:str ,filename: str) -> None:
     with open(abs_file, 'wb') as f:
         f.write(pdf_bytes)
 
-def create_and_save_pdf (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
+
+def create_and_save(facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime, save_path: str, open_files :bool = False) -> str:
     html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
     pdf = generate_facture_pdf(html_content)
-    filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.pdf"
-    basepath = constantes_manager.get_constante("FACTURES_DIR")
-    fac_path = date_fin.strftime("%Y-%m")
-    save_facture_pdf(pdf, path.join(basepath, fac_path), filename)
-    return path.join(basepath, fac_path, filename)
-
-def create_and_save_html (facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime) -> str:
-    html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
-    filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.html"
-    basepath = path.join(environ.get("APPDATA"),"CabiLib", 'facturesPreview').replace('\\', '/')
-    fac_path = facture.date_emission.strftime("%Y-%m")
-    abs_dir = path.abspath(path.join(basepath, fac_path))
-    if not path.exists(abs_dir):
-        makedirs(abs_dir)
-    abs_file = path.join(abs_dir, filename)
-    with open(abs_file, 'w', encoding='utf-8') as f:
-        f.write(html_content)
-    return abs_file
+    try : 
+        with open(save_path, 'wb') as f:
+            f.write(pdf)
+        if open_files:
+            import webbrowser
+            webbrowser.open(save_path)
+        return save_path
+    
+    except Exception as e:
+        
+        raise RegleMetierException(f"Erreur lors de la sauvegarde de la facture : {str(e)}")

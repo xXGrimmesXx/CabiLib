@@ -1,7 +1,9 @@
 import json
-from os import path,environ
+from os import path,environ,makedirs
 from app.backend.model.facture import Facture
 from app.backend.model.patient import Patient
+
+import app.backend.services.constantes_manager as constantes_manager
 
 from app.backend.model.ligneFacture import LigneFacture
 from datetime import timedelta, datetime
@@ -87,7 +89,6 @@ class CreerFactureController:
                     except CabiLibException as e:
                         print(e)
                         pass
-                    print("l1")
                     LigneFactureService.add_ligne(new_ligne)
                     RendezVousService.update_rendezvous(rdv.id, rdv)
                 else :
@@ -147,7 +148,6 @@ class CreerFactureController:
                                 FactureService.add_facture(facture)
                             except CabiLibException as e:
                                 pass
-                            print("l2")
                             LigneFactureService.add_ligne(lfac)          
 
         # si le patient a des absences, on demande confirmation avant de facturer
@@ -177,7 +177,6 @@ class CreerFactureController:
                     rdvs_factures.append(rdv)
                     lfac = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=33)
                     if (preview==False):
-                        print("l3")
                         LigneFactureService.add_ligne(lfac)
                     else :
                         lignes_facture.append(lfac)
@@ -192,24 +191,40 @@ class CreerFactureController:
                     rdvs_factures.append(rdv)
                     lfac = LigneFacture(idFacture=facture.id, idRendezVous=rdv.id, montant_facture=0)
                     if (preview==False):
-                        print("l4")
                         LigneFactureService.add_ligne(lfac)
                     else:
                         lignes_facture.append(lfac)
 
         # créer la facture si on a des rendez-vous à facturer
         if (len(rdvs_factures) > 0):
+            filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.pdf"
             if (preview==False):
                 try :
                     FactureService.add_facture(facture)
                 except CabiLibException as e:
-                    pass
+                    self.view.afficher_message(str(e))
                 
                 lfacs = LigneFactureService.get_lignes_by_facture_id(facture.id)
-                fp = fg.create_and_save_pdf(facture, patient, lfacs, annulation_factures,start_date,end_date)
+                
+                
+                basepath = constantes_manager.get_constante("FACTURES_DIR")
+                fac_path = facture.date_emission.strftime("%Y-%m")
+                abs_dir = path.abspath(path.join(basepath, fac_path))
+                if not path.exists(abs_dir):
+                    makedirs(abs_dir)
+                abs_file = path.join(abs_dir, filename)
+
+                fp = fg.create_and_save(facture, patient, lfacs, annulation_factures,start_date,end_date,abs_file)
 
             else :
-                fp = fg.create_and_save_html(facture, patient, lignes_facture, annulation_factures,start_date,end_date)
+                basepath = path.join(environ.get("APPDATA"),"CabiLib", 'facturesPreview').replace('\\', '/')
+                fac_path = facture.date_emission.strftime("%Y-%m")
+                abs_dir = path.abspath(path.join(basepath, fac_path))
+                if not path.exists(abs_dir):
+                    makedirs(abs_dir)
+                abs_file = path.join(abs_dir, filename)
+
+                fp = fg.create_and_save(facture, patient, lignes_facture, annulation_factures,start_date,end_date,abs_file, open_files=True)
             return facture.id,fp
         else :
             raise RegleMetierException(f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}\n(Aucun rendez-vous à facturer)")
@@ -220,12 +235,11 @@ class CreerFactureController:
             start_date (datetime): La date de début de la période de facturation.
             end_date (datetime): La date de fin de la période de facturation.
         """
-
         factures_creees = []
         for pID in patients:
             try:
                 patient = PatientService.get_patient_by_id(pID)
-                facture_id,fp = self.facturer_patient(patient, start_date, end_date)
+                facture_id,fp = self.facturer_patient(patient, start_date, end_date,False)
                 factures_creees.append(FactureService.get_facture_by_id(facture_id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             except EntiteIntrouvableException:
