@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
-                               QRadioButton, QButtonGroup, QLabel, QComboBox,
-                               QCompleter, QPushButton, QMessageBox)
+from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout,
+                               QDateEdit, QLabel,QPushButton,
+                               QMessageBox)
+
 from PySide6.QtCore import Qt, Signal
 from app.model.facture import Facture
 from app.model.patient import Patient

@@ -322,8 +322,7 @@ class PlanningView(QWidget):
                 self.table.setColumnCount(len(headers))
             self.table.setHorizontalHeaderLabels(headers)
         except Exception as e:
-            print("Erreur dans set_week_label:", e)
-            traceback.print_exc()
+            raise e
     
     def clear_planning(self):
         """Effacer tous les rendez-vous du planning"""
@@ -337,7 +336,7 @@ class PlanningView(QWidget):
                         self.table.setSpan(row, col, 1, 1)  # Reset span
                 except Exception as e:
                     print(f"[PlanningView] ERREUR clear_planning: row={row}, col={col}, {e}")
-                    traceback.print_exc()
+                    raise e
     
     def add_rdv_to_planning(self,Rdv:RendezVous,patient:Patient,type_rendez_vous:TypeRDV) -> None:
         """
@@ -358,14 +357,12 @@ class PlanningView(QWidget):
         # Trouver la ligne correspondant à l'heure
         try:
             row = self.time_slots.index(time_slot)
-        except ValueError:
-            traceback.print_exc()
-            return  # Heure non trouvée
+        except Exception as e:
+            raise e
         
         col = jour_index + 1  # +1 car colonne 0 = heures
         if (col < 1 or col >= self.table.columnCount()):
-
-            return  # Jour hors plage
+            raise ValueError(f"[PlanningView] ERREUR: jour_index {jour_index} hors plage pour les colonnes du planning")
         
         # Créer le texte du RDV - compact
         rdv_text = f"{date.strftime('%H:%M')}-{(date +type_rendez_vous.duree).strftime('%H:%M')}\n{patient.nom} {patient.prenom}"
@@ -452,22 +449,14 @@ class PlanningView(QWidget):
         if(rdv.patient_id is not None):
             index = self.find_index_by_data(self.patient_input, rdv.patient_id)
             if index != -1:
-                try :
-                    self.patient_input.setCurrentIndex(index)
-                except Exception as e:
-                    print(f"Error setting patient index: {e}")
-                    traceback.print_exc()
+                self.patient_input.setCurrentIndex(index)
         else:
             self.patient_input.setCurrentIndex(0)  # Aucun
 
         # Définir la date et l'heure
         if (rdv.date is not None):
-            try : 
-                self.date_input.setDate(rdv.date.date())
-                self.time_input.setTime(rdv.date.time())
-            except Exception as e:
-                print(f"Error setting date/time: {e}")
-                traceback.print_exc()
+            self.date_input.setDate(rdv.date.date())
+            self.time_input.setTime(rdv.date.time())
         else :
             self.date_input.setDate(datetime(2000,1,1,0,1,1))
 
@@ -476,20 +465,12 @@ class PlanningView(QWidget):
             type_rdv_index = self.find_index_by_data(self.type_rdv_input, rdv.type_id)
 
             if type_rdv_index != -1:
-                try :
-                    self.type_rdv_input.setCurrentIndex(type_rdv_index)
-                except Exception as e:
-                    print(f"Error setting type RDV index: {e}")
-                    traceback.print_exc()
+                self.type_rdv_input.setCurrentIndex(type_rdv_index)
         else:
             self.type_rdv_input.setCurrentIndex(0)  # Aucun
 
         if (rdv.presence is not None):
-            try :
-                self.presence_input.setCurrentText(rdv.presence)
-            except Exception as e:
-                print(f"Error setting presence: {e}")
-                traceback.print_exc()
+            self.presence_input.setCurrentText(rdv.presence)
         else:
             self.presence_input.setCurrentIndex(0)  # Aucun
 

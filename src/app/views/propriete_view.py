@@ -99,7 +99,13 @@ class ProprieteView(QWidget):
             "FACTURES_DIR", 
             "Dossier de sauvegarde des factures"
         ))
-        
+
+        # Dossier des devis (avec bouton de sélection)
+        layout.addLayout(self._create_directory_field(
+            "DEVIS_DIR", 
+            "Dossier de sauvegarde des devis"
+        ))
+
         group.setLayout(layout)
         return group
         
