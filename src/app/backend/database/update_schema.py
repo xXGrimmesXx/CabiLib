@@ -1,10 +1,11 @@
 from os import path, environ, makedirs
 from sqlalchemy import inspect, text
+from app.backend.database.database import DB_PATH
 
 # Même logique de chemin que setup_db.py
-DB_PATH = path.join(environ.get('APPDATA', '.'), 'CabiLib', 'CabiLib.db').replace('\\', '/')
 
 def ensure_db():
+
     from app.backend.database.database import engine, Base
     import app.backend.model.patient
     import app.backend.model.rendezVous

@@ -35,7 +35,7 @@ class CreerFactureController:
         self.view.set_patient_list(PatientService.get_all_patients())
 
     def on_refresh(self):
-        self.view.set_patient_list(self.patientModel.getAllPatients())
+        self.view.set_patient_list(PatientService.get_all_patients())
 
     def facturer_patient(self, patient: Patient, start_date: datetime, end_date: datetime,preview=False) -> tuple[int,str]:
         """Facturer un patient pour les rendez-vous entre start_date et end_date.

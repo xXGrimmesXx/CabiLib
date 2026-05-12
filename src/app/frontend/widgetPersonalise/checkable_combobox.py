@@ -34,11 +34,12 @@ class CheckableComboBox(QWidget):
     # ------------------------------------------------------------------ #
     #  Construction                                                        #
     # ------------------------------------------------------------------ #
-    def __init__(self, placeholder: str = "Sélectionner…", parent=None):
+    def __init__(self, placeholder: str = "Sélectionner…", parent=None, unique: bool = False):
         super().__init__(parent)
         self._placeholder = placeholder
         self._items: list[dict] = []   # {"label": str, "data": any, "checked": bool}
         self._popup: QFrame | None = None
+        self._unique = unique
 
         self._build_ui()
 
@@ -122,12 +123,14 @@ class CheckableComboBox(QWidget):
         outer.setSpacing(2)
 
         # ── "Tout sélectionner" ─────────────────────────────────────────
-        select_all = QCheckBox("Tout sélectionner")
-        select_all.setStyleSheet(self._checkbox_style(bold=True))
-        all_checked = all(i["checked"] for i in self._items) if self._items else False
-        select_all.setChecked(all_checked)
-        select_all.stateChanged.connect(lambda state: self._on_select_all(state, popup))
-        outer.addWidget(select_all)
+        select_all = None
+        if not self._unique:
+            select_all = QCheckBox("Tout sélectionner")
+            select_all.setStyleSheet(self._checkbox_style(bold=True))
+            all_checked = all(i["checked"] for i in self._items) if self._items else False
+            select_all.setChecked(all_checked)
+            select_all.stateChanged.connect(lambda state: self._on_select_all(state, popup))
+            outer.addWidget(select_all)
 
         # ── Barre de recherche ──────────────────────────────────────────
         search = QLineEdit()
@@ -176,11 +179,12 @@ class CheckableComboBox(QWidget):
                 if visible:
                     any_visible = True
             # Mise à jour de "Tout sélectionner" selon les items visibles
-            visible_items = [it for cb, it in self._checkboxes if cb.isVisible()]
-            all_checked_visible = bool(visible_items) and all(it["checked"] for it in visible_items)
-            select_all.blockSignals(True)
-            select_all.setChecked(all_checked_visible)
-            select_all.blockSignals(False)
+            if select_all:
+                visible_items = [it for cb, it in self._checkboxes if cb.isVisible()]
+                all_checked_visible = bool(visible_items) and all(it["checked"] for it in visible_items)
+                select_all.blockSignals(True)
+                select_all.setChecked(all_checked_visible)
+                select_all.blockSignals(False)
 
         search.textChanged.connect(_filter)
 
@@ -241,12 +245,25 @@ class CheckableComboBox(QWidget):
         self._popup = popup
 
     def _on_item_toggled(self, state, item: dict, select_all_cb: QCheckBox):
-        item["checked"] = state == Qt.Checked.value if isinstance(state, int) else bool(state)
+        is_checked = state == Qt.Checked.value if isinstance(state, int) else bool(state)
+        
+        if self._unique and is_checked:
+            for cb, it in self._checkboxes:
+                if it is not item and it["checked"]:
+                    it["checked"] = False
+                    cb.blockSignals(True)
+                    cb.setChecked(False)
+                    cb.blockSignals(False)
+
+        item["checked"] = is_checked
+
         # Met à jour "Tout sélectionner" sans déclencher sa cascade
-        all_checked = all(i["checked"] for i in self._items)
-        select_all_cb.blockSignals(True)
-        select_all_cb.setChecked(all_checked)
-        select_all_cb.blockSignals(False)
+        if select_all_cb:
+            all_checked = all(i["checked"] for i in self._items)
+            select_all_cb.blockSignals(True)
+            select_all_cb.setChecked(all_checked)
+            select_all_cb.blockSignals(False)
+
         self._update_button_text()
         self.selectionChanged.emit(self.selectedData())
 

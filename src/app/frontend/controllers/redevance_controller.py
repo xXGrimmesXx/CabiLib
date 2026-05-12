@@ -4,6 +4,7 @@ import webbrowser
 import app.backend.services.redevance_generator as rg
 from app.frontend.views.redevance_view import RedevanceView
 
+from app.frontend.widgetPersonalise.error_boxes import ExceptionHandler
 
 class RedevanceController:
     def __init__(self, view: RedevanceView):
@@ -20,4 +21,4 @@ class RedevanceController:
             pdf_path = rg.create_and_save_pdf(start_date, end_date)
             webbrowser.open(pdf_path)
         except Exception as e:
-            self.view.show_error_message(str(e))
+            ExceptionHandler.handle(self.view, e)
