@@ -66,9 +66,17 @@ class MainController:
 
         if key in self.views and key in self.controllers:
             ctrl = self.controllers.get(key)
+            view = self.views.get(key)
             # Ne pas appeler on_refresh si le contrôleur est None (ex : comptabilité)
+            print(f"-------------------{key}-------------------")
+            print("ctrl has view:", hasattr(ctrl, 'view') if ctrl else "ctrl is None")
+            print("ctrl.view has on_refresh:", hasattr(ctrl.view, 'on_refresh') if ctrl and hasattr(ctrl, 'view') else "ctrl or ctrl.view is None")
             if ctrl is not None and hasattr(ctrl, 'view') and hasattr(ctrl.view, 'on_refresh'):
+                print(f"MainController: Refreshing existing view/controller for key '{key}'...")
                 ctrl.view.on_refresh()
+            elif view is not None and hasattr(view, 'on_refresh'):
+                print(f"MainController: Refreshing view directly for key '{key}'...")
+                view.on_refresh()
             # Utiliser l'index fixe au lieu de calculer depuis le dictionnaire
             tab_index = key_to_index.get(key, 0)
             self.main_window.replace_tab(tab_index, self.views[key])
@@ -132,6 +140,8 @@ class MainController:
 
     def on_menu_action(self, action_name: str):
         """Handle menu actions from the Comptabilité dropdown."""
+        compta_view = self.views.get("comptabilite")
+
         if action_name == 'creer_facture':
             self.load_tab("comptabilite")
             # Réutilise la vue/contrôleur si déjà créés
@@ -142,39 +152,48 @@ class MainController:
                 self.controllers["facture"] = controller
             else:
                 view = self.views["facture"]
-            compta_view = self.views.get("creer_facture")
+
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
                 self.main_window.replace_tab(4, view)
-                self.views["creer_facture"] = view
+
             self.main_window.tabs.setCurrentIndex(4)
+
         elif action_name == 'creer_devis':
             self.load_tab("comptabilite")
-            from app.frontend.views.creer_devis_view import CreerDevisView
-            view = CreerDevisView()
-            compta_view = self.views.get("creer_devis")
+            if "creer_devis" not in self.views:
+                from app.frontend.views.creer_devis_view import CreerDevisView
+                from app.frontend.controllers.creer_devis_controller import CreerDevisController
+                view = CreerDevisView()
+                controller = CreerDevisController(None, view)
+                self.views["creer_devis"] = view
+                self.controllers["creer_devis"] = controller
+            else:
+                view = self.views["creer_devis"]
+
             if hasattr(compta_view, 'set_current_widget'):
                 compta_view.set_current_widget(view)
             else:
                 self.main_window.replace_tab(4, view)
-                self.views["creer_devis"] = view
-                self.controllers["creer_devis"] = None
             self.main_window.tabs.setCurrentIndex(4)
+
         elif action_name == 'statistiques':
             self.load_tab("comptabilite")
             from app.frontend.views.statistiques_view import StatistiquesView
             from app.frontend.controllers.statistiques_controller import StatistiquesController
 
-            if "statistiques" in self.views and "statistiques" in self.controllers:
-                controller = self.controllers["statistiques"]
-                controller.refresh()
-                view = self.views["statistiques"]
-            else:
+            if "statistiques" not in self.views:
                 view = StatistiquesView()
                 controller = StatistiquesController(view)
+                self.views["statistiques"] = view
+                self.controllers["statistiques"] = controller
+            else:
+                view = self.views["statistiques"]
+                # controller.refresh() est géré par le on_refresh de la vue
             
-            self.main_window.replace_tab(4, view)
-            self.views["statistiques"] = view
-            self.controllers["statistiques"] = controller
+            if hasattr(compta_view, 'set_current_widget'):
+                compta_view.set_current_widget(view)
+            else:
+                self.main_window.replace_tab(4, view)
             self.main_window.tabs.setCurrentIndex(4)

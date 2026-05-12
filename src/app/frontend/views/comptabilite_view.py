@@ -41,6 +41,16 @@ class ComptabiliteView(QWidget):
         """
         idx = self.add_or_get_page(widget)
         self.stack.setCurrentIndex(idx)
+        if hasattr(widget, 'on_refresh'):
+            widget.on_refresh()
+
+    def on_refresh(self) -> None:
+        """
+        Rafraîchit le widget actuellement affiché s'il possède une méthode on_refresh.
+        """
+        current = self.stack.currentWidget()
+        if current and hasattr(current, 'on_refresh'):
+            current.on_refresh()
 
     def go_home(self) -> None:
         """
