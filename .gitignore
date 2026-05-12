@@ -2,3 +2,5 @@
 Factures/
 token.json
 credentials.json
+*.pyc
+*.db
