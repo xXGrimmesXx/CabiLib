@@ -5,9 +5,28 @@ from PySide6.QtGui import QPalette, QColor, QIcon
 from app.frontend.views.main_window_view import MainWindow
 from app.frontend.controllers.main_controller import MainController
 import app.backend.services.internet_API_thread_worker as api_worker
+import app.backend.services.constantes_manager as cm
+import app.backend.database.database as db
+
+import argparse
 
 def main():
     """Point d'entrée de l'application"""
+    # 1. Configuration de l'analyseur d'arguments
+    parser = argparse.ArgumentParser(description="Lancement de CabiLib")
+    parser.add_argument('--beta', action='store_true', help="Activer le mode beta")
+    parser.add_argument('--db-path', type=str, help="Spécifier un chemin de BD custom")
+    
+    # 2. Récupérations des arguments (ignorer les arguments spécifiques à Qt/PySide)
+    args, unknown = parser.parse_known_args()
+
+    # 3. Utilisation des arguments
+    if args.beta:
+        cm.CONST_PATH = "src/Constantes.json"
+        db.update_db_path("src/app/backend/database/CabiLib.db")
+    
+    if args.db_path:
+        db.update_db_path(args.db_path)
     
     api_worker.start_api_worker(0,60)
     ensure_db()
