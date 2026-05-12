@@ -15,19 +15,15 @@ def main():
     # 1. Configuration de l'analyseur d'arguments
     parser = argparse.ArgumentParser(description="Lancement de CabiLib")
     parser.add_argument('--beta', action='store_true', help="Activer le mode beta")
-    parser.add_argument('--db-path', type=str, help="Spécifier un chemin de BD custom")
     
     # 2. Récupérations des arguments (ignorer les arguments spécifiques à Qt/PySide)
     args, unknown = parser.parse_known_args()
 
     # 3. Utilisation des arguments
     if args.beta:
-        cm.CONST_PATH = "src/Constantes.json"
-        db.update_db_path("src/app/backend/database/CabiLib.db")
-    
-    if args.db_path:
-        db.update_db_path(args.db_path)
-    
+        cm.CONST_PATH = "C:/Users/maryn/Documents/GitHub/CabiLib/src/Constantes.json"
+        db.update_db_path("C:/Users/maryn/Documents/GitHub/CabiLib/src/app/backend/database/CabiLib.db")
+    print(db.DB_PATH)
     api_worker.start_api_worker(0,60)
     ensure_db()
     

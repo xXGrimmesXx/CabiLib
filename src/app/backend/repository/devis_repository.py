@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.devis import Devis
 from app.exceptions import DatabaseException
 from sqlalchemy import desc
@@ -11,7 +11,7 @@ class DevisRepository:
     
     @staticmethod
     def add_devis(devis: Devis) -> str:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 if devis.date_emission is None:
                     devis.date_emission = datetime.today().date()
@@ -26,7 +26,7 @@ class DevisRepository:
 
     @staticmethod
     def get_devis_by_id(devis_id: str) -> Devis | None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Devis).filter(Devis.id == devis_id).first()
             except SQLAlchemyError as e:
@@ -34,7 +34,7 @@ class DevisRepository:
 
     @staticmethod
     def get_all_devis() -> list[Devis]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Devis).all()
             except SQLAlchemyError as e:
@@ -42,7 +42,7 @@ class DevisRepository:
 
     @staticmethod
     def delete_devis(devis_id: str) -> None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 devis = db.query(Devis).filter(Devis.id == devis_id).first()
                 if devis:
@@ -59,7 +59,7 @@ class DevisRepository:
         annee_mois = date_emission.strftime('%Y-%m')
         prefix = f"DEV-{annee_mois}-"
         
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 last_devis = db.query(Devis).filter(Devis.id.like(f"{prefix}%")).order_by(desc(Devis.id)).first()
                 

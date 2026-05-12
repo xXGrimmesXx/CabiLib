@@ -1,4 +1,4 @@
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.acte_devis import ActeDevis
 from app.exceptions import DatabaseException
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,7 +9,7 @@ class ActeDevisRepository:
     
     @staticmethod
     def add_acte(acte: ActeDevis) -> tuple[str, int]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 db.add(acte)
                 db.commit()
@@ -21,7 +21,7 @@ class ActeDevisRepository:
 
     @staticmethod
     def get_acte_by_id(devis_id: str, type_rdv_id: int) -> ActeDevis | None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(ActeDevis).filter(ActeDevis.id_devis == devis_id, ActeDevis.id_type_rdv == type_rdv_id).first()
             except SQLAlchemyError as e:
@@ -29,7 +29,7 @@ class ActeDevisRepository:
 
     @staticmethod
     def get_all_actes() -> list[ActeDevis]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(ActeDevis).all()
             except SQLAlchemyError as e:
@@ -37,7 +37,7 @@ class ActeDevisRepository:
 
     @staticmethod
     def delete_acte(devis_id: str, type_rdv_id: int) -> None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 acte = db.query(ActeDevis).filter(ActeDevis.id_devis == devis_id, ActeDevis.id_type_rdv == type_rdv_id).first()
                 if acte:
@@ -49,7 +49,7 @@ class ActeDevisRepository:
             
     @staticmethod
     def get_actes_by_devis_id(devis_id: str) -> list[ActeDevis]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(ActeDevis).filter(ActeDevis.id_devis == devis_id).all()
             except SQLAlchemyError as e:

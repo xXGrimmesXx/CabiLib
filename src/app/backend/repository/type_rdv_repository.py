@@ -1,4 +1,4 @@
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.typeRDV import TypeRDV
 from app.backend.model.rendezVous import RendezVous
 from app.backend.services.internet_API_thread_worker import APIRequestQueue
@@ -11,7 +11,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def get_all_types():
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(TypeRDV).all()
             except SQLAlchemyError as e:
@@ -19,7 +19,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def get_type_by_id(type_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.get(TypeRDV, int(type_id))
             except SQLAlchemyError as e:
@@ -27,7 +27,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def add_type(type_rdv: TypeRDV):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 db.add(type_rdv)
                 db.commit()
@@ -39,7 +39,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def update_type(updated_data: TypeRDV):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 type_rdv = db.get(TypeRDV, int(updated_data.id))
                 if type_rdv:
@@ -73,7 +73,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def delete_type(type_rdv_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 type_rdv = db.get(TypeRDV, int(type_rdv_id))
                 if type_rdv:
@@ -85,7 +85,7 @@ class TypeRDVRepository:
 
     @staticmethod
     def has_linked_rendezvous(type_rdv_id: int) -> bool:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(RendezVous.type_id == int(type_rdv_id)).count() > 0
             except SQLAlchemyError as e:

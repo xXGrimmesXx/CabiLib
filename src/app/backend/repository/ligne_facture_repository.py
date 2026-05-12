@@ -1,4 +1,4 @@
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.ligneFacture import LigneFacture
 from app.backend.model.rendezVous import RendezVous
 from app.exceptions import DatabaseException
@@ -9,7 +9,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def get_all_lignes():
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(LigneFacture).all()
             except SQLAlchemyError as e:
@@ -17,7 +17,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def get_ligne(id_facture: str, id_rdv: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(LigneFacture).filter(
                     LigneFacture.idFacture == id_facture,
@@ -28,7 +28,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def add_ligne(ligne: LigneFacture):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 db.add(ligne)
                 db.commit()
@@ -38,7 +38,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def delete_ligne(id_facture: str, id_rdv: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 ligne = db.query(LigneFacture).filter(
                     LigneFacture.idFacture == id_facture,
@@ -53,7 +53,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def get_lignes_by_facture_id(id_facture: str):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(LigneFacture).filter(LigneFacture.idFacture == id_facture).all()
             except SQLAlchemyError as e:
@@ -61,7 +61,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def get_lignes_by_patient_id(patient_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 # Jointure avec rendez_vous
                 lignes = db.query(LigneFacture).join(RendezVous, LigneFacture.idRendezVous == RendezVous.id).filter(RendezVous.patient_id == int(patient_id)).all()
@@ -71,7 +71,7 @@ class LigneFactureRepository:
 
     @staticmethod
     def get_lignes_by_rdv_id(id_rdv: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(LigneFacture).filter(LigneFacture.idRendezVous == int(id_rdv)).all()
             except SQLAlchemyError as e:

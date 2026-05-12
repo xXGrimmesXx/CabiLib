@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.facture import Facture
 from app.exceptions import DatabaseException
 from sqlalchemy import desc
@@ -11,7 +11,7 @@ class FactureRepository:
     
     @staticmethod
     def add_facture(facture: Facture) -> str:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 if facture.date_emission is None:
                     facture.date_emission = datetime.today().date()
@@ -28,7 +28,7 @@ class FactureRepository:
 
     @staticmethod
     def get_facture_by_id(facture_id: str) -> Facture | None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Facture).filter(Facture.id == facture_id).first()
             except SQLAlchemyError as e:
@@ -36,7 +36,7 @@ class FactureRepository:
 
     @staticmethod
     def get_all_factures() -> list[Facture]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Facture).all()
             except SQLAlchemyError as e:
@@ -44,7 +44,7 @@ class FactureRepository:
 
     @staticmethod
     def update_facture_status(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 facture = db.query(Facture).filter(Facture.id == facture_id).first()
                 if facture:
@@ -57,7 +57,7 @@ class FactureRepository:
 
     @staticmethod
     def delete_facture(facture_id: str) -> None:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 facture = db.query(Facture).filter(Facture.id == facture_id).first()
                 if facture:
@@ -69,7 +69,7 @@ class FactureRepository:
 
     @staticmethod
     def get_factures_impaye_by_patient_id(patient_id: int) -> list[Facture]:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Facture).filter(Facture.statut == 'IMPAYE', Facture.patient_id == patient_id).all()
             except SQLAlchemyError as e:
@@ -82,7 +82,7 @@ class FactureRepository:
         annee_mois = date_emission.strftime('%Y-%m')
         prefix = f"FAC-{annee_mois}-"
         
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 last_facture = db.query(Facture).filter(Facture.id.like(f"{prefix}%")).order_by(desc(Facture.id)).first()
                 

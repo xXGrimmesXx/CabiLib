@@ -1,4 +1,4 @@
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.patient import Patient
 from app.exceptions import DatabaseException,EntiteIntrouvableException
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,7 +8,7 @@ class PatientRepository:
 
     @staticmethod
     def get_all_patients():
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(Patient).all()
             except SQLAlchemyError as e:
@@ -16,7 +16,7 @@ class PatientRepository:
 
     @staticmethod
     def get_patient_by_id(patient_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 patient = db.get(Patient, int(patient_id))
                 if not patient:
@@ -27,7 +27,7 @@ class PatientRepository:
 
     @staticmethod
     def get_patients_by_acronyme(acronyme: str, exclude_id: int = None):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 query = db.query(Patient).filter(Patient.acronyme == acronyme)
                 if exclude_id is not None:
@@ -38,7 +38,7 @@ class PatientRepository:
 
     @staticmethod
     def add_patient(patient: Patient) -> int:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 patient.id = None  # Force la base de données à générer un nouvel ID
                 db.add(patient)
@@ -51,7 +51,7 @@ class PatientRepository:
 
     @staticmethod
     def update_patient(patient_id: int, updated_data: Patient):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 patient = db.get(Patient, int(patient_id))
                 if patient:
@@ -82,7 +82,7 @@ class PatientRepository:
 
     @staticmethod
     def delete_patient(patient_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 patient = db.get(Patient, int(patient_id))
                 if patient:

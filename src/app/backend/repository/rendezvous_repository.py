@@ -1,5 +1,5 @@
 from sqlalchemy import or_, and_, func
-from app.backend.database.database import SessionLocal
+from app.backend.database import database
 from app.backend.model.rendezVous import RendezVous
 from app.backend.model.typeRDV import TypeRDV
 from app.backend.services.internet_API_thread_worker import APIRequestQueue
@@ -13,7 +13,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_all_rendezvous():
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).all()
             except SQLAlchemyError as e:
@@ -21,7 +21,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_id(rdv_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.get(RendezVous, int(rdv_id))
             except SQLAlchemyError as e:
@@ -29,7 +29,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_patient_id(patient_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(RendezVous.patient_id == int(patient_id)).all()
             except SQLAlchemyError as e:
@@ -37,7 +37,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_plage(date_debut: datetime, date_fin: datetime):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(
                     RendezVous.date >= date_debut,
@@ -48,7 +48,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_datetime(exact_date: datetime):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 # Créer une plage d'une seconde pour éviter les problèmes de comparaison stricte avec les dates sous SQLite
                 start = exact_date.replace(microsecond=0)-timedelta(seconds=1)
@@ -59,7 +59,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_patient_and_date_range(patient_id: int, start_date: datetime, end_date: datetime):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(
                     RendezVous.patient_id == int(patient_id),
@@ -71,7 +71,7 @@ class RendezVousRepository:
 
     @staticmethod
     def get_rendezvous_by_facture_id(facture_id: str):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(RendezVous.facture_id == facture_id).all()
             except SQLAlchemyError as e:
@@ -79,7 +79,7 @@ class RendezVousRepository:
 
     @staticmethod
     def creneau_libre(rendezvous: RendezVous) -> bool:
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             type_rdv = db.get(TypeRDV, int(rendezvous.type_id))
             if not type_rdv:
                 return False
