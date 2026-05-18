@@ -58,7 +58,7 @@ class CreerFactureController:
         lignes_facture = []
 
         #Calculer le bon numéro de facture
-        facture = Facture(id=FactureService.generate_numero_facture(end_date), patient_id=patient.id, date_emission=datetime.today().date(), statut="IMPAYE")
+        facture = Facture(id=FactureService.generate_numero_facture(end_date), patient_id=patient.id, date_emission=datetime.today().date(), statut="IMPAYE",start_date=start_date,end_date=end_date)
         msg = f"""Facturation du patient {patient.prenom} {patient.nom} entre le {start_date} et le {end_date}\n
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :
@@ -208,7 +208,7 @@ class CreerFactureController:
                 
                 
                 basepath = constantes_manager.get_constante("FACTURES_DIR")
-                fac_path = facture.date_emission.strftime("%Y-%m")
+                fac_path = facture.start_date.strftime("%Y-%m")
                 abs_dir = path.abspath(path.join(basepath, fac_path))
                 if not path.exists(abs_dir):
                     makedirs(abs_dir)
