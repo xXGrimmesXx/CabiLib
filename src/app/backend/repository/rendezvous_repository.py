@@ -124,7 +124,7 @@ class RendezVousRepository:
 
     @staticmethod
     def add_rendezvous(rdv: RendezVous):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 db.add(rdv)
                 db.commit()
@@ -143,7 +143,7 @@ class RendezVousRepository:
 
     @staticmethod
     def update_rendezvous(rdv_id: int, new_rdv: RendezVous):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 rdv = db.get(RendezVous, int(rdv_id))
                 if rdv:
@@ -177,7 +177,7 @@ class RendezVousRepository:
 
     @staticmethod
     def delete_rendezvous(rdv_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 rdv = db.get(RendezVous, int(rdv_id))
                 if rdv:
@@ -189,7 +189,7 @@ class RendezVousRepository:
             
     @staticmethod
     def get_montant_mois(date: datetime):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(func.sum(TypeRDV.prix)).join(RendezVous, RendezVous.type_id == TypeRDV.id).filter(
                     func.strftime('%Y-%m', RendezVous.date) == date.strftime('%Y-%m')
@@ -199,7 +199,7 @@ class RendezVousRepository:
             
     @staticmethod
     def get_by_patient_id_and_date_range_and_type_id(patient_id: int, date_debut: datetime, date_fin: datetime, type_id: int):
-        with SessionLocal() as db:
+        with database.SessionLocal() as db:
             try:
                 return db.query(RendezVous).filter(
                     RendezVous.patient_id == int(patient_id),
