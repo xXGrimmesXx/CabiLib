@@ -11,6 +11,9 @@ class Facture(Base):
     description = Column(String)
     statut = Column(String, default="IMPAYE")
     date_paiement = Column(Date, nullable=True)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+
 
     def __repr__(self) -> str:
         """
@@ -19,4 +22,4 @@ class Facture(Base):
         Returns:
             str: Représentation lisible de la facture.
         """
-        return f"Facture(ID: {self.id}, Patient ID: {self.patient_id}, Date d'émission: {self.date_emission}, Description: {self.description}, Statut: {self.statut}, Date de paiement: {self.date_paiement})"
+        return f"Facture(ID: {self.id}, Patient ID: {self.patient_id}, Date d'émission: {self.date_emission}, Description: {self.description}, Statut: {self.statut}, Date de paiement: {self.date_paiement}, Date de début: {self.start_date}, Date de fin: {self.end_date})"
