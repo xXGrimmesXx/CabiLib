@@ -377,15 +377,12 @@ def save_facture_pdf(pdf_bytes: bytes, save_path:str ,filename: str) -> None:
         f.write(pdf_bytes)
 
 
-def create_and_save(facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime, save_path: str, open_files :bool = False) -> str:
+def create_and_save(facture: Facture, patient: Patient, lignes: list[LigneFacture], annulation_factures: list[str], date_debut: datetime, date_fin: datetime, save_path: str) -> str:
     html_content = generate_facture_html(facture, patient, lignes, annulation_factures, date_debut, date_fin)
     pdf = generate_facture_pdf(html_content)
     try : 
         with open(save_path, 'wb') as f:
             f.write(pdf)
-        if open_files:
-            import webbrowser
-            webbrowser.open(save_path)
         return save_path
     
     except Exception as e:

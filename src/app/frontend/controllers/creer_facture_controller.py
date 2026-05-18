@@ -224,7 +224,7 @@ class CreerFactureController:
                     makedirs(abs_dir)
                 abs_file = path.join(abs_dir, filename)
 
-                fp = fg.create_and_save(facture, patient, lignes_facture, annulation_factures,start_date,end_date,abs_file, open_files=True)
+                fp = fg.create_and_save(facture, patient, lignes_facture, annulation_factures,start_date,end_date,abs_file)
             return facture.id,fp
         else :
             raise RegleMetierException(f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}\n(Aucun rendez-vous à facturer)")
@@ -264,7 +264,7 @@ class CreerFactureController:
                 patient = PatientService.get_patient_by_id(pID)
                 facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
                 factures_creees.append(Facture(id=facture_id,patient_id=patient.id))
-                webbrowser.open_new_tab(fp)
+                webbrowser.open(fp)
             except EntiteIntrouvableException:
                 ExceptionHandler.handle(self.view, EntiteIntrouvableException(f"Patient ID {pID} non trouvé."))
                 continue

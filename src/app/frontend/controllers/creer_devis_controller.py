@@ -1,7 +1,6 @@
 from os import path,environ,makedirs
-
-from datetime import timedelta, datetime
 import webbrowser
+from datetime import timedelta, datetime
 
 from app.backend.model.patient import Patient
 from app.backend.model.devis import Devis
@@ -94,4 +93,5 @@ class CreerDevisController:
             makedirs(save_path)
         save_path = path.join(save_path, f"{devis.id}.pdf")
         
-        pdf_path = create_and_save(devis, actes, patient, save_path, open_files=True)
+        pdf_path = create_and_save(devis, actes, patient, save_path)
+        webbrowser.open(pdf_path)
