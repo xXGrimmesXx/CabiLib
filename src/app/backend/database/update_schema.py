@@ -1,12 +1,12 @@
 from os import path, environ, makedirs
 from sqlalchemy import inspect, text
-from app.backend.database.database import DB_PATH
+
 
 # Même logique de chemin que setup_db.py
 
 def ensure_db():
 
-    from app.backend.database.database import engine, Base
+    from app.backend.database.database import engine, Base, DB_PATH
     import app.backend.model.patient
     import app.backend.model.rendezVous
     import app.backend.model.typeRDV
