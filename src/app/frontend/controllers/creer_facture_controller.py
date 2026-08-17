@@ -58,7 +58,7 @@ class CreerFactureController:
         lignes_facture = []
 
         #Calculer le bon numéro de facture
-        facture = Facture(id=FactureService.generate_numero_facture(end_date), patient_id=patient.id, date_emission=datetime.today().date(), statut="IMPAYE",start_date=start_date,end_date=end_date)
+        facture = Facture(id=FactureService.generate_numero_facture(datetime.today().date()), patient_id=patient.id, date_emission=datetime.today().date(), statut="IMPAYE",start_date=start_date,end_date=end_date)
         msg = f"""Facturation du patient {patient.prenom} {patient.nom} entre le {start_date} et le {end_date}\n
         numéro de facture : {facture.id}\n
         Liste des rendez-vous à facturer :

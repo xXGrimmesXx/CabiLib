@@ -7,6 +7,7 @@ from app.frontend.controllers.main_controller import MainController
 import app.backend.services.internet_API_thread_worker as api_worker
 import app.backend.services.constantes_manager as cm
 import app.backend.database.database as db
+from qt_material import apply_stylesheet
 
 import argparse
 
@@ -29,6 +30,7 @@ def main():
     ensure_db()
     
     app = QApplication(sys.argv)
+
     app.setApplicationName("CabiLib - Gestion Cabinet")
 
     app.setWindowIcon(QIcon('cabilib_logo.png'))      
