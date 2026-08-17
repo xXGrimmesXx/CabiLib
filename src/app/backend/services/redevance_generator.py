@@ -142,7 +142,7 @@ def generate_redevance_html(date_debut: datetime, date_fin: datetime) -> bytes:
                         absent_dict["montant_total"] += l_fac.montant_facture
                         absent_dict["dates_seances"].append(rdv.date)
                         absent_dict["nb_seances"] += 1
-                    else : 
+                    elif l_fac.montant_facture != 0:
                         rdv_dict["dates_seances"].append(rdv.date)
                         rdv_dict["montant_total"] += l_fac.montant_facture
                         rdv_dict["nb_seances"] += 1
