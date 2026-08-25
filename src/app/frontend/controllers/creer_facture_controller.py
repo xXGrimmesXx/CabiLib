@@ -121,6 +121,8 @@ class CreerFactureController:
             raise RegleMetierException(msg)
         
         if (len(annulation_factures) > 0):
+            if not self.view.erreur_facture_existe(patient, [FactureService.get_facture_by_id(fac) for fac in annulation_factures]):
+                return -1,""
             for fac in annulation_factures :
                 # on ajoute les lignes de facture déjà existantes à la nouvelle facture
                 lignes = LigneFactureService.get_lignes_by_facture_id(fac)
@@ -240,6 +242,8 @@ class CreerFactureController:
             try:
                 patient = PatientService.get_patient_by_id(pID)
                 facture_id,fp = self.facturer_patient(patient, start_date, end_date,False)
+                if facture_id == -1:
+                    continue
                 factures_creees.append(FactureService.get_facture_by_id(facture_id))
                 self.save_template_mail(patient, start_date, end_date, fp)
             except EntiteIntrouvableException:
@@ -248,8 +252,9 @@ class CreerFactureController:
             except CabiLibException as e:
                 ExceptionHandler.handle(self.view, e)
                 continue
-                
-        self.view.confirmation_facture_generee(factures_creees)
+
+        if len(factures_creees) > 0:
+            self.view.confirmation_facture_generee(factures_creees)
 
     def on_facture_preview(self, start_date: datetime, end_date: datetime, patients: list) -> None:
         """Prévisualiser des factures de masse pour tous les patients entre start_date et end_date.
@@ -263,6 +268,8 @@ class CreerFactureController:
             try :
                 patient = PatientService.get_patient_by_id(pID)
                 facture_id,fp = self.facturer_patient(patient, start_date, end_date,preview=True)
+                if facture_id == -1:
+                    continue
                 factures_creees.append(Facture(id=facture_id,patient_id=patient.id))
                 webbrowser.open(fp)
             except EntiteIntrouvableException:

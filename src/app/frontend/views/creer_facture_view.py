@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QDateEdit,
-                               QRadioButton, QButtonGroup, QLabel, QComboBox,
-                               QCompleter, QPushButton, QMessageBox)
+                               QLabel, QPushButton, QMessageBox)
 from PySide6.QtCore import Qt, Signal
 from app.backend.model.facture import Facture
 from app.backend.model.patient import Patient
 from app.backend.model.rendezVous import RendezVous
+
 from app.frontend.widgetPersonalise.separator import Separator
 from app.frontend.widgetPersonalise.checkable_combobox import CheckableComboBox
 from datetime import datetime
@@ -161,3 +161,14 @@ class creerFactureView(QWidget):
         """Afficher une erreur de génération de facture"""
         msg = f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}."
         QMessageBox.warning(self, "Erreur de génération de facture", msg)
+
+    def erreur_facture_existe(self,patient:Patient,annulation_factures:list[Facture]):
+        """Afficher une erreur si une facture existe déjà pour le patient"""
+        msg = f"Le patient {patient.prenom} {patient.nom} a déjà des factures existantes pour la période sélectionnée :\n"
+        for fac in annulation_factures:
+            msg += f"- Facture N° {fac.id} du {fac.date_emission.strftime('%d/%m/%Y')}\n"
+        msg += "Voulez-vous annuler ces factures et générer une nouvelle facture ?"
+        
+        reply = QMessageBox.question(self, "Factures existantes", msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        
+        return reply == QMessageBox.Yes
