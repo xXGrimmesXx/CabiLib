@@ -137,6 +137,11 @@ class ProprieteView(QWidget):
             "FACTURES_DIR", 
             "Dossier de sauvegarde des factures"
         ))
+
+        layout.addLayout(self._create_directory_field(
+            "DEVIS_DIR",
+            "Dossier de sauvegarde des devis"
+        ))
         
         group.setLayout(layout)
         return group
@@ -159,7 +164,12 @@ class ProprieteView(QWidget):
             "DELAI_PAIEMENT_FACTURE_DAYS", 
             "Délai de paiement (jours)",
             min_val=1,
-            max_val=180
+        ))
+
+        layout.addLayout(self._create_number_field(
+            "VALIDITE_DEVIS_DAYS",
+            "Durée de validité du devis (jours)",
+            min_val=1
         ))
         
         # SIRET
@@ -244,7 +254,7 @@ class ProprieteView(QWidget):
         
         return layout
         
-    def _create_number_field(self, key: str, label: str, min_val: int = 0, max_val: int = 999) -> QHBoxLayout:
+    def _create_number_field(self, key: str, label: str, min_val: int = 0, max_val: int = -1) -> QHBoxLayout:
         """
         Crée un champ numérique avec sauvegarde automatique.
         
@@ -262,7 +272,10 @@ class ProprieteView(QWidget):
         
         spin_box = QSpinBox()
         spin_box.setMinimum(min_val)
-        spin_box.setMaximum(max_val)
+        if max_val>min_val:
+            spin_box.setMaximum(max_val)
+        else :
+            spin_box.setMaximum(2147483647)
         
         value = constantes_manager.get_constante(key)
         if value is not None:

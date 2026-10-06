@@ -1,9 +1,9 @@
 from datetime import date
 
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel,
-                               QHBoxLayout, QVBoxLayout, QDateEdit,
+                               QHBoxLayout, QDateEdit,QHBoxLayout,
                                QTableWidget, QPushButton,
-                               QTableWidgetItem, QLineEdit)
+                               QTableWidgetItem, QLineEdit,QCheckBox)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIntValidator, QBrush
 from app.backend.model.typeRDV import TypeRDV
@@ -15,9 +15,9 @@ import app.exceptions
 class CreerDevisView(QWidget):
     """VIEW - Interface graphique pour la gestion des devis"""
 
-    devis_generer: Signal = Signal(int, object, object, object)
+    devis_generer: Signal = Signal(int, object, object, object,bool)
     """Signal émis pour générer le devis (id patient, date de début, date de fin, dictionnaire des actes avec quantités)."""
-    devis_preview: Signal = Signal(int, object, object, object)
+    devis_preview: Signal = Signal(int, object, object, object,bool)
     """Signal émis pour prévisualiser le devis (id patient, date de début, date de fin, dictionnaire des actes avec quantités)."""
     refresh_sig: Signal = Signal()
     """Signal émis pour rafraîchir la vue avec les dernières données."""
@@ -70,6 +70,14 @@ class CreerDevisView(QWidget):
 
         layout.addWidget(self.actes_table)
 
+        signature_bloc = QHBoxLayout()
+        self.signature_obligatoire = QCheckBox()
+        signature_bloc.addWidget(QLabel("Signature requise : "))
+        signature_bloc.addWidget(self.signature_obligatoire)
+        signature_bloc.addStretch()
+
+        layout.addLayout(signature_bloc)
+        layout.addStretch()
         buttonLayout = QHBoxLayout()
         buttonLayout.addStretch()
         layout.addLayout(buttonLayout)
@@ -194,7 +202,9 @@ class CreerDevisView(QWidget):
                 raise app.exceptions.RegleMetierException("La date de début doit être antérieure à la date de fin pour prévisualiser le devis.")
             actes_qtt = self.get_actes_qtt()
 
-            self.devis_preview.emit(id_patient, date_debut, date_fin, actes_qtt)
+            req_sign = self.signature_obligatoire.isChecked()
+
+            self.devis_preview.emit(id_patient, date_debut, date_fin, actes_qtt,req_sign)
         except Exception as e:
             ExceptionHandler.handle(self, e)
 
@@ -211,6 +221,8 @@ class CreerDevisView(QWidget):
                 raise app.exceptions.RegleMetierException("La date de début doit être antérieure à la date de fin pour générer le devis.")
             actes_qtt = self.get_actes_qtt()
 
-            self.devis_generer.emit(id_patient, date_debut, date_fin, actes_qtt)
+            req_sign = self.signature_obligatoire.isChecked()
+
+            self.devis_generer.emit(id_patient, date_debut, date_fin, actes_qtt,req_sign)
         except Exception as e:
             ExceptionHandler.handle(self, e)

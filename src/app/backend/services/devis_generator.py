@@ -35,6 +35,8 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
     SIRET = constantes_manager.get_constante("SIRET") 
     APE = constantes_manager.get_constante("APE") 
     ADELI = constantes_manager.get_constante("ADELI")
+    VALIDITE_DEVIS_DAYS = constantes_manager.get_constante("VALIDITE_DEVIS_DAYS")
+
 
     # --- 2. Gestion du Logo ---
     logo_file = path.join(environ.get("APPDATA"),"CabiLib", 'logo.png').replace('\\', '/')
@@ -61,7 +63,13 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
         signature_base64 = ''
     
     signature_img_tag = f'<img src="data:image/jpeg;base64,{signature_base64}" class="signature-img" alt="Signature" />' if signature_base64 else ''
-    
+    if devis.req_sign :
+        signature_patient_bloc = """<div class="signature-patient-block">
+                    <div>Signature et date suivi de la mention "lu et approuvé"<div>
+                    <hr>
+                </div>"""
+    else :
+        signature_patient_bloc = ""
     # --- 3. Préparation des données ---
     NOM_PAYEUR = f"{patient.nom_facturation if patient.nom_facturation else patient.nom}"
     ADRESSE_PAYEUR = patient.adresse if patient.adresse else ""
@@ -83,7 +91,7 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
         <tr>
             <td class="col-motif">{type_rdv.nom}</td>
             <td class="col-tarif-unitaire">{type_rdv.prix:.2f}</td>
-            <td class="col-nombre">{acte.quantite}</td>
+            <td class="col-nombre">{acte.quantite:.0f}</td>
             <td class="col-prix-total">{(type_rdv.prix * acte.quantite):.2f} €</td>
         </tr>
         """
@@ -240,6 +248,13 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
                 font-size: 9pt;
             }}
 
+            .signature-patient-block {{
+                margin-top: 40px;
+                float: left;
+                width: 40%;
+                text-align: left;
+            }}
+
             /* --- FOOTER (Fixe & Bas) --- */
             .footer-legal {{
                 position: fixed;
@@ -275,7 +290,7 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
 
             <div class="right-column">
                 <div class="facture-title">DEVIS {devis.id}</div>
-                <div style="font-style: italic; font-size: 9pt; margin-top:5px;">A régler avant le {DATE_ECHEANCE}</div>
+                <div style="font-style: italic; font-size: 9pt; margin-top:5px;">Devis valable pendant {VALIDITE_DEVIS_DAYS} jours</div>
                 
                 <div class="client-section">
                     <div class="client-label">A l'attention de :</div>
@@ -299,7 +314,7 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
             </table>
         </div>
 
-        <div class="objet-titre">Devis d'actes en ergothérapie concernant la periode :</div>
+        <div class="objet-titre" style="color : #AFCFBE">Devis d'actes en ergothérapie concernant la periode :</div>
         <div class="objet-periode">{"Du "+ format_date_fr(devis.date_debut)} au {format_date_fr(devis.date_fin)}</div>
 
         <table class="services">
@@ -326,6 +341,8 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
             <div style="margin-bottom: 5px;">{PRACTITIONER_NAME.upper()}</div>
             {signature_img_tag}
         </div>
+        {signature_patient_bloc}
+        
 
         <div class="footer-legal">
             <div>Profession inscrite au livre IV du code de la Santé Publique Loi n° 95-116 du 4 février 1995</div>

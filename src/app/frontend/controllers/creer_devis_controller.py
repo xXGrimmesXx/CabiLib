@@ -34,7 +34,7 @@ class CreerDevisController:
         self.view.set_patient_list(PatientService.get_all_patients())
         self.view.refresh_actes(TypeRDVService.get_all_types())
 
-    def on_devis_generer(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]]):
+    def on_devis_generer(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]],signature_obligatoire):
         """Générer un devis pour un patient spécifique entre deux dates.
         args:
             id_patient (int): L'identifiant du patient.
@@ -43,7 +43,7 @@ class CreerDevisController:
             actes_qtt (list[tuple[int, float]]): La liste des actes eturs quantités.
         """
         try:
-            self.editer_devis(id_patient, date_debut, date_fin, actes_qtt, preview=False)
+            self.editer_devis(id_patient, date_debut, date_fin, actes_qtt,signature_obligatoire, preview=False)
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
         except Exception as e:
@@ -51,7 +51,7 @@ class CreerDevisController:
 
     
 
-    def on_devis_preview(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]]):
+    def on_devis_preview(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]],signature_obligatoire):
         """Prévisualiser un devis pour un patient spécifique entre deux dates.
         args:
             id_patient (int): L'identifiant du patient.
@@ -60,14 +60,14 @@ class CreerDevisController:
             actes_qtt (list[tuple[int, float]]): La liste des actes et leurs quantités.
         """
         try:
-            self.editer_devis(id_patient, date_debut, date_fin, actes_qtt, preview=True)
+            self.editer_devis(id_patient, date_debut, date_fin, actes_qtt,signature_obligatoire, preview=True)
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
         except Exception as e:
             ExceptionHandler.handle(self.view, e)
 
 
-    def editer_devis(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]], preview=False) -> tuple[int, str]:
+    def editer_devis(self, id_patient: int, date_debut: datetime, date_fin: datetime, actes_qtt: list[tuple[int, float]], signature_obligatoire : bool, preview=False) -> tuple[int, str]:
         """Générer un devis pour un patient spécifique entre deux dates.
         args:
             id_patient (int): L'identifiant du patient.
@@ -78,7 +78,7 @@ class CreerDevisController:
             tuple[int, str]: Un tuple contenant l'identifiant de la facture créée et le chemin du fichier PDF généré.
         """
         patient = PatientService.get_patient_by_id(id_patient)
-        devis = Devis(patient_id=patient.id, date_debut=date_debut, date_fin=date_fin, id=DevisService.generate_numero_devis(datetime.now()))
+        devis = Devis(patient_id=patient.id, date_debut=date_debut, date_fin=date_fin, id=DevisService.generate_numero_devis(datetime.now()),req_sign=signature_obligatoire)
         actes = []
         for id_type_rdv, qtt in actes_qtt.items():
             actes.append(ActeDevis(id_devis =devis.id, id_type_rdv=id_type_rdv, quantite= qtt))

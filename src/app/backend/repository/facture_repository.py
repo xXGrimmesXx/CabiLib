@@ -47,9 +47,10 @@ class FactureRepository:
         with database.SessionLocal() as db:
             try:
                 facture = db.query(Facture).filter(Facture.id == facture_id).first()
-                if facture:
+                if new_statut != "IMPAYE" and facture:
                     facture.statut = new_statut
                     facture.date_paiement = date_paiement
+                    facture.regle = True  # Marquer la facture comme réglée
                     db.commit()
             except SQLAlchemyError as e:
                 db.rollback()

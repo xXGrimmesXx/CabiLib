@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Date, ForeignKey
+from sqlalchemy import Column, String, Integer, Date, ForeignKey,Boolean
 from app.backend.database.database import Base
 from datetime import datetime
 
@@ -10,6 +10,7 @@ class Devis(Base):
     date_emission = Column(Date, default=datetime.today().date)
     date_debut = Column(Date, nullable=True)
     date_fin = Column(Date, nullable=True)
+    req_sign = Column(Boolean,nullable=False, default=True)
 
     def __repr__(self) -> str:
         """

@@ -13,6 +13,8 @@ def ensure_db():
     import app.backend.model.facture
     import app.backend.model.ligneFacture
     import app.backend.model.contact
+    import app.backend.model.devis
+    import app.backend.model.acte_devis
     
     if not path.exists(DB_PATH):
         makedirs(path.dirname(DB_PATH), exist_ok=True)

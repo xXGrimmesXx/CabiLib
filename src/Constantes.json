@@ -1,17 +1,20 @@
 {
   "HEURE_DEBUT": "7:00",
   "HEURE_FIN": "21:00",
-  "PRACTITIONER_NAME": "louis",
-  "PRACTITIONER_PHONE": "",
-  "PRACTITIONER_EMAIL": "",
-  "CABINET_ADDRESS": "",
-  "FACTURES_DIR": "",
+  "PRACTITIONER_NAME": "ARNOULD Louiw",
+  "PRACTITIONER_PHONE": "06PUI",
+  "PRACTITIONER_EMAIL": "m.louis",
+  "CABINET_ADDRESS": "710 av des dskmjdb 78490 Plaisir",
+  "FACTURES_DIR": "C:/Users/mloui/Downloads",
   "HISTORIQUE_ABSENCE_JOURS": 10,
   "DELAI_PAIEMENT_FACTURE_DAYS": 10,
-  "SIRET": "",
-  "APE": "",
-  "ADELI": "",
-  "AMENAGEMENTS_OPTIONS": [],
+  "SIRET": "siret PRAT",
+  "APE": "ape PRAT",
+  "ADELI": "RPPS prat",
+  "AMENAGEMENTS_OPTIONS": [
+    "truc",
+    "machin"
+  ],
   "NIVEAU_SCOLAIRE_OPTIONS": [],
   "TYPE_TELEPHONE_OPTIONS": [
     "Père",
@@ -38,5 +41,13 @@
     "Absent",
     "Absent excusé",
     "Annulé"
-  ]
+  ],
+  "CABINET_NAME": "NALAM",
+  "CABINET_RESPONSABLE_NAME": "MAryne",
+  "CABINET_RESPONSABLE_PHONE": "06respons",
+  "CABINET_RESPONSABLE_APE": "APE respons",
+  "CABINET_RESPONSABLE_SIRET": "SIRET respons",
+  "REDEVANCE_FACTOR": 20,
+  "DEVIS_DIR": "C:/Users/mloui/Downloads",
+  "VALIDITE_DEVIS_DAYS": 180
 }

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Date, ForeignKey
+from sqlalchemy import Boolean, Column, String, Integer, Date, ForeignKey
 from app.backend.database.database import Base
 from datetime import datetime
 
@@ -13,6 +13,8 @@ class Facture(Base):
     date_paiement = Column(Date, nullable=True)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
+    regle = Column(Boolean, default=False)  # Nouveau champ pour indiquer si la facture est réglée
+    methode_paiement = Column(String, nullable=True)  # Nouveau champ pour la méthode de paiement
 
 
     def __repr__(self) -> str:
@@ -22,4 +24,4 @@ class Facture(Base):
         Returns:
             str: Représentation lisible de la facture.
         """
-        return f"Facture(ID: {self.id}, Patient ID: {self.patient_id}, Date d'émission: {self.date_emission}, Description: {self.description}, Statut: {self.statut}, Date de paiement: {self.date_paiement}, Date de début: {self.start_date}, Date de fin: {self.end_date})"
+        return f"Facture(ID: {self.id}, Patient ID: {self.patient_id}, Date d'émission: {self.date_emission}, Description: {self.description}, Statut: {self.statut}, Date de paiement: {self.date_paiement}, Date de début: {self.start_date}, Date de fin: {self.end_date}, Réglée: {self.regle}, Méthode de paiement: {self.methode_paiement})"
