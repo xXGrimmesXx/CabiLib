@@ -1,5 +1,8 @@
+from typing import List
+
 from sqlalchemy import or_, and_, func
 from app.backend.database import database
+from app.backend.model.note import Note
 from app.backend.model.rendezVous import RendezVous
 from app.backend.model.typeRDV import TypeRDV
 from app.backend.services.internet_API_thread_worker import APIRequestQueue
@@ -79,10 +82,13 @@ class RendezVousRepository:
 
     @staticmethod
     def creneau_libre(rendezvous: RendezVous) -> bool:
+        from app.backend.repository.note_repository import NoteRepository
         with database.SessionLocal() as db:
             type_rdv = db.get(TypeRDV, int(rendezvous.type_id))
             if not type_rdv:
+                print(f"[ERREUR] TypeRDV introuvable pour le rendez-vous ID {rendezvous.id} avec type_id {rendezvous.type_id}")
                 return False
+            
 
             duree_minutes = type_rdv.duree_minutes
             dureetime = timedelta(minutes=duree_minutes)
@@ -90,14 +96,16 @@ class RendezVousRepository:
             date_fin = rendezvous.date + dureetime
 
             # Requête pour trouver des créneaux qui se chevauchent
-            all_rdvs = db.query(RendezVous).all()
-            overlapping_rdvs = []
+            jour_debut = date_debut.replace(hour=0, minute=0, second=0, microsecond=0)
+            jour_fin = date_fin.replace(hour=23, minute=59, second=59, microsecond=999999)
+            all_rdvs = RendezVousRepository.get_rendezvous_by_plage(jour_debut, jour_fin)
+            all_notes = NoteRepository.get_notes_by_plage(date_debut, date_fin)
+            overlapping_rdvs :List[tuple[RendezVous, TypeRDV]] = []
+            overlapping_notes :List[Note] = []
 
             for r in all_rdvs:
-                # Exclure le rdv courant
-                if rendezvous.id and r.id == rendezvous.id:
+                if not r:
                     continue
-                
                 r_type = db.get(TypeRDV, int(r.type_id))
                 if not r_type:
                     continue
@@ -111,15 +119,36 @@ class RendezVousRepository:
                    (r_debut <= date_debut and r_fin >= date_fin):
                     overlapping_rdvs.append((r, r_type))
 
-            if not overlapping_rdvs:
+            for n in all_notes:
+                n_debut = n.date
+                n_fin = n.date + timedelta(minutes=n.duree_minutes)
+
+                if (n_debut <= date_debut and n_fin > date_debut) or \
+                    (n_debut >= date_debut and n_fin <= date_fin) or \
+                    (n_debut < date_fin and n_fin > date_fin) or \
+                    (n_debut <= date_debut and n_fin >= date_fin):
+                    overlapping_notes.append(n)
+
+            if len(overlapping_notes) == 0 and (len(overlapping_rdvs) == 0 or ((len(overlapping_rdvs) == 1 and overlapping_rdvs[0][0].id == rendezvous.id))):
+                print("Overlapping notes")
+                print(overlapping_notes)
+                print("Overlapping rdvs")
+                print(overlapping_rdvs)
                 return True
 
             if type_rdv.estgroupe:
                 for r, r_type in overlapping_rdvs:
                     if r.type_id != rendezvous.type_id:
+                        print("Overlapping notes")
+                        print(overlapping_notes)
+                        print("Overlapping rdvs")
+                        print(overlapping_rdvs)
                         return False
                 return True
-
+            print("Overlapping notes")
+            print(overlapping_notes)
+            print("Overlapping rdvs")
+            print(overlapping_rdvs)
             return False
 
     @staticmethod

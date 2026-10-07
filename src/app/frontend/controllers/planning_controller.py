@@ -1,7 +1,9 @@
 from PySide6.QtCore import QObject, QTime
 import traceback
 from datetime import timedelta
+from app.backend.model.note import Note
 from app.backend.model.rendezVous import RendezVous
+from app.backend.services.note_service import NoteService
 from app.frontend.views.planning_view import PlanningView
 from app.backend.services.rendezVous_service import RendezVousService
 from app.backend.services.patient_service import PatientService
@@ -76,17 +78,30 @@ class PlanningController(QObject):
             
             date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
             rendez_vous = RendezVousService.get_rendezvous_by_datetime(date)
-            if (rendez_vous is not None and rendez_vous!=[]):
+            notes = NoteService.get_notes_by_datetime(date)
+            print(f"Cell clicked: {date}, RDVs: {rendez_vous}, Notes: {notes}")
+            if ( rendez_vous!=[]):
+                if (not self.view.rendezvousedition) :
+                    self.view.change_type_edition()
                 self.view.rdvs_selectionne = rendez_vous
-                self.view.afficher_details_rdv()
-                self.view.show_rdv_onglet()
+                self.view.notes_selectionnee = [Note(id=None, date=date, titre=None, description=None, couleur=None, duree_minutes=None, google_calendar_id=None)]
+                self.view.afficher_details_event()
                 
-                
-            else:
+            if (notes!=[]):
+                if (self.view.rendezvousedition) :
+                    self.view.change_type_edition()
+                self.view.notes_selectionnee = notes
+                self.view.rdvs_selectionne = [RendezVous(id=None, date=date, patient_id=None, type_id=None, motif=None, presence=None, google_calendar_id=None)]
+                self.view.afficher_details_event()
+
+            if (rendez_vous==[] and notes==[] ):
+                print(f"Cell clicked: {date}, no RDVs or Notes found.")
                 self.view.on_clear_clicked()
                 self.view.rdvs_selectionne = [RendezVous(id=None, date=date, patient_id=None, type_id=None, motif=None, presence=None, google_calendar_id=None)]
-                self.view.afficher_details_rdv()
-                self.view.show_rdv_onglet()
+                self.view.notes_selectionnee = [Note(id=None, date=date, titre=None, description=None, couleur=None, duree_minutes=None, google_calendar_id=None)]
+                self.view.afficher_details_event()
+            
+            self.view.show_rdv_onglet()
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
     
@@ -103,6 +118,7 @@ class PlanningController(QObject):
             self.view.clear_planning()
             # Récupérer les RDV de la semaine depuis la base de données
             rdvs = RendezVousService.get_rendezvous_by_plage(week_start, week_end)
+            notes = NoteService.get_notes_by_plage(week_start, week_end)
             if (rdvs is not None and rdvs!=[]):
                 # Ajouter les RDV au planning
                 for rdv in rdvs:
@@ -115,35 +131,62 @@ class PlanningController(QObject):
                     if rdv_type is None:
                         continue
                     self.view.add_rdv_to_planning(rdv, patient, rdv_type)
+            if (notes is not None and notes!=[]):
+                # Ajouter les notes au planning
+                for note in notes:
+                    if (note is None):
+                        continue
+                    self.view.add_note_to_planning(note)
+            
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
 
-    def on_creer_clicked(self, rdvs: list[RendezVous]):
-        """Gérer la création ou la modification d'un rendez-vous"""
+    def on_creer_clicked(self, rdvs: list):
+        """Gérer la création ou la modification d'un event"""
         try:
             if rdvs is None or len(rdvs) == 0:
                 self.view.afficher_champs_obligatoires()
                 return
             for rdv in rdvs:
-                if (rdv is None):
-                    self.view.afficher_champs_obligatoires()
-                    return
-                elif( rdv.patient_id is None or rdv.date is None or rdv.type_id is None or rdv.presence is None):
-                    self.view.afficher_champs_obligatoires()
-                    return
-                
-                # Laissons le service s'occuper de la vérification de créneau (laissera passer une exception si conflit)
-                if(rdv.id is None):
-                    if (rdv.date and rdv.patient_id and rdv.type_id):
-                        RendezVousService.add_rendezvous(rdv)
-                    else :
+                if type(rdv) is RendezVous:
+                    if (rdv is None):
                         self.view.afficher_champs_obligatoires()
                         return
-                else :
-                    # Pas encore implémenté en service l'update global, mais imaginons
-                    RendezVousService.update_rendezvous(rdv.id, rdv)
-                
-            # Recharger la semaine actuelle
+                    elif( rdv.patient_id is None or rdv.date is None or rdv.type_id is None or rdv.presence is None):
+                        self.view.afficher_champs_obligatoires()
+                        return
+                    
+                    # Laissons le service s'occuper de la vérification de créneau (laissera passer une exception si conflit)
+                    if(rdv.id is None):
+                        if (rdv.date and rdv.patient_id and rdv.type_id):
+                            RendezVousService.add_rendezvous(rdv)
+                        else :
+                            self.view.afficher_champs_obligatoires()
+                            return
+                    else :
+                        # Pas encore implémenté en service l'update global, mais imaginons
+                        RendezVousService.update_rendezvous(rdv.id, rdv)
+                elif type(rdv) is Note:
+                    
+                    if (rdv is None):
+                        self.view.afficher_champs_obligatoires()
+                        return
+                    elif( rdv.date is None or rdv.titre is None or rdv.duree_minutes is None or rdv.description is None or rdv.couleur is None):
+                        self.view.afficher_champs_obligatoires()
+                        return
+                    
+                    # Laissons le service s'occuper de la vérification de créneau (laissera passer une exception si conflit)
+                    if(rdv.id is None):
+                        if (rdv.date and rdv.titre and rdv.duree_minutes):
+                            NoteService.add_note(rdv)
+                        else :
+                            self.view.afficher_champs_obligatoires()
+                            return
+                    else :
+                        # Pas encore implémenté en service l'update global, mais imaginons
+                        NoteService.update_note(rdv.id, rdv)
+                    
+                # Recharger la semaine actuelle
             self.load_week_rdvs()
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
@@ -151,13 +194,20 @@ class PlanningController(QObject):
     def on_supprimer_clicked(self, rdv):
         """Gérer la suppression d'un rendez-vous"""
         try:
-            if rdv.id is not None:
-                factures = LigneFactureService.get_lignes_by_rdv_id(rdv.id)
-                if factures is not None and len(factures) > 0:
-                    self.view.erreur_suppression_rdv_facture()
-                    return
-                RendezVousService.delete_rendezvous(rdv.id)
-                self.load_week_rdvs()
+            if type(rdv) is RendezVous:
+                print(f"Deleting RDV with ID: {rdv.id}")
+                if rdv.id is not None:
+                    factures = LigneFactureService.get_lignes_by_rdv_id(rdv.id)
+                    if factures is not None and len(factures) > 0:
+                        self.view.erreur_suppression_rdv_facture()
+                        return
+                    RendezVousService.delete_rendezvous(rdv.id)
+            elif type(rdv) is Note:
+                print(f"Deleting note with ID: {rdv.id}")
+                if rdv.id is not None:
+                    NoteService.delete_note(rdv.id)
+
+            self.load_week_rdvs()
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
 

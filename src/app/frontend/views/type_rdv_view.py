@@ -77,6 +77,7 @@ class TypeRDVView(QWidget):
         self.localisation_input.addItems(locs)
         self.localisation_input.setEditable(True)
         row2.addWidget(self.localisation_input)
+        
         row2.addWidget(QLabel("Couleur :"))
         self.couleur_input = QPushButton("Choisir couleur")
         self.couleur_input.clicked.connect(self.choose_color)
