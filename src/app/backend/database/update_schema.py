@@ -15,6 +15,7 @@ def ensure_db():
     import app.backend.model.contact
     import app.backend.model.devis
     import app.backend.model.acte_devis
+    import app.backend.model.note
     
     if not path.exists(DB_PATH):
         makedirs(path.dirname(DB_PATH), exist_ok=True)
