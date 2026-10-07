@@ -716,7 +716,7 @@ class PlanningView(QWidget):
             self.creer_clicked.emit(rdvs_a_creer)
         else :
             self.notes_selectionnee[0].titre = self.titre_input.text()
-            self.notes_selectionnee[0].duree_minutes = minutes=self.duree_input.value()
+            self.notes_selectionnee[0].duree_minutes =self.duree_input.value()
             self.notes_selectionnee[0].description = self.description_input.toPlainText()
             self.notes_selectionnee[0].couleur = self.selected_color
             date = self.date_input.date()
