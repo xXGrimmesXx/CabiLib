@@ -1,7 +1,6 @@
 #ignorer le dossier Factures
 Factures/
-token.json
-credentials.json
+*.json
 *.db
 
 # Fichiers compilés Python
