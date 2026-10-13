@@ -1,33 +1,10 @@
 import traceback
 from app.frontend.views.patient_view import PatientView
 from app.frontend.controllers.patient_controller import PatientController
-from app.backend.model.patient import Patient
+from typing import TYPE_CHECKING
 
-from app.backend.model.rendezVous import RendezVous
-
-from app.frontend.views.creer_facture_view import creerFactureView
-from app.frontend.controllers.creer_facture_controller import CreerFactureController
-from app.backend.model.facture import Facture
-
-from app.frontend.views.suivre_facture_view import SuivreFactureView
-from app.frontend.controllers.suivre_facture_controller import SuivreFactureController
-
-from app.frontend.views.planning_view import PlanningView
-from app.frontend.controllers.planning_controller import PlanningController
-
-from app.frontend.views.type_rdv_view import TypeRDVView
-from app.frontend.controllers.type_rdv_controller import TypeRDVController
-from app.backend.model.typeRDV import TypeRDV
-
-from app.frontend.views.comptabilite_view import ComptabiliteView
-
-from app.frontend.views.redevance_view import RedevanceView
-from app.frontend.controllers.redevance_controller import RedevanceController
-
-from app.frontend.views.statistiques_view import StatistiquesView
-from app.frontend.controllers.statistiques_controller import StatistiquesController
-
-from app.frontend.views.main_window_view import MainWindow
+if TYPE_CHECKING:
+    from app.frontend.views.main_window_view import MainWindow
 
 
 
@@ -68,14 +45,10 @@ class MainController:
             ctrl = self.controllers.get(key)
             view = self.views.get(key)
             # Ne pas appeler on_refresh si le contrôleur est None (ex : comptabilité)
-            print(f"-------------------{key}-------------------")
-            print("ctrl has view:", hasattr(ctrl, 'view') if ctrl else "ctrl is None")
-            print("ctrl.view has on_refresh:", hasattr(ctrl.view, 'on_refresh') if ctrl and hasattr(ctrl, 'view') else "ctrl or ctrl.view is None")
+            
             if ctrl is not None and hasattr(ctrl, 'view') and hasattr(ctrl.view, 'on_refresh'):
-                print(f"MainController: Refreshing existing view/controller for key '{key}'...")
                 ctrl.view.on_refresh()
             elif view is not None and hasattr(view, 'on_refresh'):
-                print(f"MainController: Refreshing view directly for key '{key}'...")
                 view.on_refresh()
             # Utiliser l'index fixe au lieu de calculer depuis le dictionnaire
             tab_index = key_to_index.get(key, 0)
@@ -91,6 +64,9 @@ class MainController:
             self.controllers["patients"] = self.current_controller
 
         elif key == "planning":
+            from app.frontend.views.planning_view import PlanningView
+            from app.frontend.controllers.planning_controller import PlanningController
+
             self.current_view = PlanningView()
             self.current_controller = PlanningController(self.current_view)
             self.main_window.replace_tab(1, self.current_view)
@@ -98,6 +74,10 @@ class MainController:
             self.controllers["planning"] = self.current_controller
 
         elif key == "suivi_factures":
+            from app.frontend.views.suivre_facture_view import SuivreFactureView
+            from app.frontend.controllers.suivre_facture_controller import SuivreFactureController
+            from app.backend.model.facture import Facture
+
             self.current_view = SuivreFactureView()
             self.current_controller = SuivreFactureController(Facture, self.current_view)
             self.main_window.replace_tab(2, self.current_view)
@@ -105,6 +85,9 @@ class MainController:
             self.controllers["suivi_factures"] = self.current_controller
 
         elif key == "types_rdv":
+            from app.frontend.views.type_rdv_view import TypeRDVView
+            from app.frontend.controllers.type_rdv_controller import TypeRDVController
+
             self.current_view = TypeRDVView()
             self.current_controller = TypeRDVController(self.current_view)
             self.main_window.replace_tab(3, self.current_view)
@@ -112,6 +95,8 @@ class MainController:
             self.controllers["types_rdv"] = self.current_controller
 
         elif key == "comptabilite":
+            from app.frontend.views.comptabilite_view import ComptabiliteView
+
             self.current_view = ComptabiliteView()
             self.current_controller = None
             self.main_window.replace_tab(4, self.current_view)
@@ -119,6 +104,9 @@ class MainController:
             self.controllers["comptabilite"] = self.current_controller
 
         elif key == "redevance":
+            from app.frontend.views.redevance_view import RedevanceView
+            from app.frontend.controllers.redevance_controller import RedevanceController
+
             self.current_view = RedevanceView()
             self.current_controller = RedevanceController(self.current_view)
             self.main_window.replace_tab(5, self.current_view)
@@ -143,6 +131,10 @@ class MainController:
         compta_view = self.views.get("comptabilite")
 
         if action_name == 'creer_facture':
+            from app.frontend.views.creer_facture_view import creerFactureView
+            from app.frontend.controllers.creer_facture_controller import CreerFactureController
+            from app.backend.model.facture import Facture
+
             self.load_tab("comptabilite")
             # Réutilise la vue/contrôleur si déjà créés
             if "facture" not in self.views:
