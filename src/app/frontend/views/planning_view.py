@@ -358,13 +358,14 @@ class PlanningView(QWidget):
 
         couleur_layout = QHBoxLayout()
         note_panel_layout.addLayout(couleur_layout)
-        note_panel_layout.addWidget(QLabel("Couleur :"))
+        couleur_layout.addWidget(QLabel("Couleur :"))
         self.couleur_input = QPushButton("Choisir couleur")
         self.couleur_input.clicked.connect(self.choose_color)
         self.couleur_preview = QLabel("     ")
+        self.couleur_preview.setFixedSize(30, 20)
         self.couleur_preview.setStyleSheet("border: 1px solid black;")
-        note_panel_layout.addWidget(self.couleur_preview)
-        note_panel_layout.addWidget(self.couleur_input)
+        couleur_layout.addWidget(self.couleur_preview)
+        couleur_layout.addWidget(self.couleur_input)
 
     
     def on_refresh(self):
@@ -593,10 +594,10 @@ class PlanningView(QWidget):
             print(f"DEBUG: rdvs_selectionne={self.rdvs_selectionne}, notes_selectionnee={self.notes_selectionnee}")
             return
         
-        rdv = self.rdvs_selectionne[0] if self.rdvs_selectionne else None
-        note = self.notes_selectionnee[0] if self.notes_selectionnee else None
+        rdv = self.rdvs_selectionne[0] if len(self.rdvs_selectionne) > 0 else None
+        note = self.notes_selectionnee[0] if len(self.notes_selectionnee) > 0 else None
         print(f"DEBUG: Affichage des détails de l'événement: rdv={rdv}, note={note}")
-        if rdv is not None:
+        if rdv is not None and rdv.id is not None:
             # Sélectionner le patient
             if(rdv.patient_id is not None):
                 index = self.find_index_by_data(self.patient_input, rdv.patient_id)
@@ -645,11 +646,11 @@ class PlanningView(QWidget):
                     traceback.print_exc()
             else:
                 self.presence_input.setCurrentIndex(0)  # Aucun
-        elif note is not None:
+        if note is not None and note.id is not None:
             # Définir le titre, la durée et la description de la note
             try :
                 self.titre_input.setText(note.titre)
-                self.duree_input.setValue(note.duree_minutes.total_seconds() // 60)  # Convertir en minutes
+                self.duree_input.setValue(note.duree_minutes)  # Convertir en minutes
                 self.description_input.setText(note.description)
                 self.selected_color = note.couleur
                 self.couleur_preview.setStyleSheet(f"background-color: {self.selected_color};")
@@ -657,6 +658,8 @@ class PlanningView(QWidget):
                 print(f"Error setting note details: {e}")
                 ExceptionHandler.handle(self,e)
                 traceback.print_exc()
+        self.date_input.setDate(note.date.date() if note.date else  rdv.date.date() if rdv.date else datetime(2000,1,1,0,1,1))
+        self.time_input.setTime(note.date.time() if note.date else  rdv.date.time() if rdv.date else QTime(0, 0))
 
     def find_index_by_data(self, combo, value):
         for i in range(combo.count()):
