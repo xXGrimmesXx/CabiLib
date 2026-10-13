@@ -183,7 +183,6 @@ class PlanningController(QObject):
                             self.view.afficher_champs_obligatoires()
                             return
                     else :
-                        # Pas encore implémenté en service l'update global, mais imaginons
                         NoteService.update_note(rdv.id, rdv)
                     
                 # Recharger la semaine actuelle
