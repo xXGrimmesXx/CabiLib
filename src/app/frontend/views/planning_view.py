@@ -2,8 +2,8 @@ from PySide6.QtWidgets import (QColorDialog, QLineEdit, QTextEdit, QWidget, QVBo
                                QTableWidgetItem, QPushButton, QLabel, QHeaderView,
                                QToolTip, QComboBox, QCompleter,QDateEdit,QTimeEdit,
                                QMessageBox, QCheckBox, QSpinBox)
-from PySide6.QtCore import Qt, Signal, QStringListModel, QTime, QSize
-from PySide6.QtGui import QColor, QFont, QCursor, QIcon
+from PySide6.QtCore import Qt, Signal, QStringListModel, QTime
+from PySide6.QtGui import QColor, QFont, QCursor
 from app.backend.model.note import Note
 from app.frontend.widgetPersonalise.icon_top_right_delegate import IconTopRightDelegate
 import traceback

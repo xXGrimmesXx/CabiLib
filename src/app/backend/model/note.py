@@ -1,10 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime
 from app.backend.database.database import Base
-import traceback
 from datetime import datetime, timedelta
-from app.backend.model.typeRDV import TypeRDV
 from json import dumps, loads
-from app.backend.services.internet_API_thread_worker import APIRequestQueue
 
 
 class Note(Base):
@@ -24,7 +21,7 @@ class Note(Base):
         return timedelta(minutes=self.duree_minutes) if self.duree_minutes is not None else timedelta()
 
     @duree.setter
-    def duree(self, value):
+    def duree(self, value : timedelta | int):
         if isinstance(value, timedelta):
             self.duree_minutes = int(value.total_seconds() // 60)
         else:

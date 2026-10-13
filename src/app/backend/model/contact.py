@@ -1,6 +1,5 @@
-from sqlalchemy import Column, String, Integer, Date, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey
 from app.backend.database.database import Base
-from datetime import datetime
 
 class Contact(Base):
     __tablename__ = "contact"

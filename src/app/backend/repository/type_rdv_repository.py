@@ -2,7 +2,7 @@ from app.backend.database import database
 from app.backend.model.typeRDV import TypeRDV
 from app.backend.model.rendezVous import RendezVous
 from app.backend.services.internet_API_thread_worker import APIRequestQueue
-from app.exceptions import DatabaseException, GoogleCalendarException
+from app.exceptions import DatabaseException
 from sqlalchemy.exc import SQLAlchemyError
 import traceback
 
