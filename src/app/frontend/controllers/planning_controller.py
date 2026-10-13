@@ -79,7 +79,7 @@ class PlanningController(QObject):
             date = self.current_week_start + timedelta(days=days, hours=hours, minutes=minutes)
             rendez_vous = RendezVousService.get_rendezvous_by_datetime(date)
             notes = NoteService.get_notes_by_datetime(date)
-            print(f"Cell clicked: {date}, RDVs: {rendez_vous}, Notes: {notes}")
+            #print(f"Cell clicked: {date}, RDVs: {rendez_vous}, Notes: {notes}")
             if ( rendez_vous!=[]):
                 if (not self.view.rendezvousedition) :
                     self.view.change_type_edition()
@@ -95,7 +95,7 @@ class PlanningController(QObject):
                 self.view.afficher_details_event()
 
             if (rendez_vous==[] and notes==[] ):
-                print(f"Cell clicked: {date}, no RDVs or Notes found.")
+                #print(f"Cell clicked: {date}, no RDVs or Notes found.")
                 self.view.on_clear_clicked()
                 self.view.rdvs_selectionne = [RendezVous(id=None, date=date, patient_id=None, type_id=None, motif=None, presence=None, google_calendar_id=None)]
                 self.view.notes_selectionnee = [Note(id=None, date=date, titre=None, description=None, couleur=None, duree_minutes=None, google_calendar_id=None)]

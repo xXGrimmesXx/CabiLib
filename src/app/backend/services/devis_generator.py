@@ -86,7 +86,7 @@ def generate_devis_html(devis : Devis, patient: Patient, actes: list[ActeDevis])
     trs_html = ""
     for acte in actes:
         type_rdv = TypeRDVService.get_type_by_id(acte.id_type_rdv)
-        print(type_rdv)
+        #print(type_rdv)
         trs_html += f"""
         <tr>
             <td class="col-motif">{type_rdv.nom}</td>

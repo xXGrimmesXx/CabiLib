@@ -130,25 +130,13 @@ class RendezVousRepository:
                     overlapping_notes.append(n)
 
             if len(overlapping_notes) == 0 and (len(overlapping_rdvs) == 0 or ((len(overlapping_rdvs) == 1 and overlapping_rdvs[0][0].id == rendezvous.id))):
-                print("Overlapping notes")
-                print(overlapping_notes)
-                print("Overlapping rdvs")
-                print(overlapping_rdvs)
                 return True
 
             if type_rdv.estgroupe:
                 for r, r_type in overlapping_rdvs:
                     if r.type_id != rendezvous.type_id:
-                        print("Overlapping notes")
-                        print(overlapping_notes)
-                        print("Overlapping rdvs")
-                        print(overlapping_rdvs)
                         return False
                 return True
-            print("Overlapping notes")
-            print(overlapping_notes)
-            print("Overlapping rdvs")
-            print(overlapping_rdvs)
             return False
 
     @staticmethod

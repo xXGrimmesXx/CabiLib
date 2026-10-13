@@ -455,7 +455,7 @@ class PlanningView(QWidget):
         # Arrondir au créneau de 15 min le plus proche
         rounded_minute = (minute // 15) * 15
         time_slot = f"{hour:02d}:{rounded_minute:02d}"
-        print(f"DEBUG: Ajout du RDV pour {patient.nom} {patient.prenom} à {time_slot} le jour index {jour_index} date {date}")
+        #print(f"DEBUG: Ajout du RDV pour {patient.nom} {patient.prenom} à {time_slot} le jour index {jour_index} date {date}")
         
         # Trouver la ligne correspondant à l'heure
         try:
@@ -498,7 +498,7 @@ class PlanningView(QWidget):
         # Arrondir au créneau de 15 min le plus proche
         rounded_minute = (minute // 15) * 15
         time_slot = f"{hour:02d}:{rounded_minute:02d}"
-        print(f"DEBUG: Ajout de la note {note.titre} à {time_slot} le jour index {jour_index} date {date}")
+        #print(f"DEBUG: Ajout de la note {note.titre} à {time_slot} le jour index {jour_index} date {date}")
         
         # Trouver la ligne correspondant à l'heure
         try:
@@ -590,13 +590,13 @@ class PlanningView(QWidget):
     def afficher_details_event(self):
         """Afficher les détails du rendez-vous dans le panneau"""
         if (not (self.rdvs_selectionne and self.notes_selectionnee)) or (len(self.rdvs_selectionne) == 0 and len(self.notes_selectionnee) == 0):
-            print("DEBUG: Aucun rendez-vous ou note sélectionné pour afficher les détails.")
-            print(f"DEBUG: rdvs_selectionne={self.rdvs_selectionne}, notes_selectionnee={self.notes_selectionnee}")
+            #print("DEBUG: Aucun rendez-vous ou note sélectionné pour afficher les détails.")
+            #print(f"DEBUG: rdvs_selectionne={self.rdvs_selectionne}, notes_selectionnee={self.notes_selectionnee}")
             return
         
         rdv = self.rdvs_selectionne[0] if len(self.rdvs_selectionne) > 0 else None
         note = self.notes_selectionnee[0] if len(self.notes_selectionnee) > 0 else None
-        print(f"DEBUG: Affichage des détails de l'événement: rdv={rdv}, note={note}")
+        #print(f"DEBUG: Affichage des détails de l'événement: rdv={rdv}, note={note}")
         if rdv is not None and rdv.id is not None:
             # Sélectionner le patient
             if(rdv.patient_id is not None):
@@ -749,8 +749,8 @@ class PlanningView(QWidget):
     def on_supprimer_clicked(self):
         """Gérer le clic sur le bouton Supprimer"""
         event = self.rdvs_selectionne[0] if self.rdvs_selectionne[0].id is not None else (self.notes_selectionnee[0] if self.notes_selectionnee[0].id is not None else None)
-        print(f"DEBUG: Suppression de l'événement: {event}")
-        print(f"DEBUG: rdvs_selectionne={self.rdvs_selectionne}, notes_selectionnee={self.notes_selectionnee}")
+        #print(f"DEBUG: Suppression de l'événement: {event}")
+        #print(f"DEBUG: rdvs_selectionne={self.rdvs_selectionne}, notes_selectionnee={self.notes_selectionnee}")
         self.supprimer_clicked.emit(event)
         self.on_clear_clicked()
 
