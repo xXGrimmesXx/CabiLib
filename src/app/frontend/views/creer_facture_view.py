@@ -131,7 +131,7 @@ class creerFactureView(QWidget):
         
         QMessageBox.warning(self, "Erreur de facturation", msg)
 
-    def erreur_patient_absent(self, patient: Patient, rdvs_patient_absent: list[RendezVous], absence_precedentes: list[RendezVous]):
+    def confirmation_facturation_patient_absent(self, patient: Patient, rdvs_patient_absent: list[RendezVous], absence_precedentes: list[RendezVous]):
         """Afficher une alerte si le patient a des absences"""
         msg = f"Le patient {patient.prenom} {patient.nom} a des absences aux rendez-vous suivants :\n"
         for rdv in rdvs_patient_absent:
@@ -162,7 +162,7 @@ class creerFactureView(QWidget):
         msg = f"Aucune facture n'a pu être générée pour {patient.prenom} {patient.nom}."
         QMessageBox.warning(self, "Erreur de génération de facture", msg)
 
-    def erreur_facture_existe(self,patient:Patient,annulation_factures:list[Facture]):
+    def confirmation_reedition_facture(self,patient:Patient,annulation_factures:list[Facture]):
         """Afficher une erreur si une facture existe déjà pour le patient"""
         msg = f"Le patient {patient.prenom} {patient.nom} a déjà des factures existantes pour la période sélectionnée :\n"
         for fac in annulation_factures:

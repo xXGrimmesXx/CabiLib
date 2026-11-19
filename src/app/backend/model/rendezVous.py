@@ -24,7 +24,7 @@ class RendezVous(Base):
         Returns:
             str: Représentation lisible du rendez-vous.
         """
-        return f"RendezVous(ID: {self.id}, Patient ID: {self.patient_id}, Date: {self.date.strftime('%Y-%m-%d %H:%M:%S') if self.date else None}, Motif: {self.motif}, Type ID: {self.type_id})"
+        return f"RendezVous(ID: {self.id}, Patient ID: {self.patient_id}, Date: {self.date.strftime('%Y-%m-%d %H:%M:%S') if self.date else None}, Présence: {self.presence}, Motif: {self.motif}, Type ID: {self.type_id})"
     def serialize(self) -> dict:
         """
         Sérialise l'objet RendezVous en dictionnaire.
