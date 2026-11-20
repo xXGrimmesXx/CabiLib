@@ -1,17 +1,23 @@
 from app.backend.services.ligneFacture_service import LigneFactureService
 from app.backend.services.facture_service import FactureService
+from app.backend.services.patient_service import PatientService
 from app.frontend.widgetPersonalise.error_boxes import ExceptionHandler
 from app.exceptions import CabiLibException
-
+from app.backend.model.facture import Facture
+from app.backend.services.constantes_manager import get_constante
+from os import path, makedirs
+import app.backend.services.facture_generator  as fg
+import webbrowser
 class SuivreFactureController:
     def __init__(self, model, view):
         self.view = view
 
         # Connecter les signaux de la vue aux méthodes du controller
         self.view.facture_selected.connect(self.on_facture_selected)
-        #self.view.facture_updated.connect(self.on_facture_updated)
+        self.view.facture_updated.connect(self.on_facture_updated)
         self.view.search_changed.connect(self.on_search_changed)
         self.view.refresh.connect(self.on_refresh)
+        self.view.reediter.connect(self.on_reediter)
         self.load_factures()
 
     def on_refresh(self):
@@ -41,3 +47,37 @@ class SuivreFactureController:
             self.view.display_facture_details(facture, lignes_facture)
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)
+
+    def on_facture_updated(self, facture: Facture):
+        try:
+            fac = FactureService().get_facture_by_id(facture.id)
+            fac.date_paiement = facture.date_paiement
+            fac.methode_paiement = facture.methode_paiement
+            fac.description = facture.description
+            fac.regle = facture.regle
+            fac.statut = facture.statut
+            FactureService().update_facture(facture.id, fac.statut, fac.date_paiement, fac.description)
+            self.load_factures()  # Recharger les factures après la mise à jour
+        except CabiLibException as e:
+            ExceptionHandler.handle(self.view, e)
+
+    def on_reediter(self, facture_id: str):
+        
+        facture = FactureService().get_facture_by_id(facture_id)
+        patient = PatientService().get_patient_by_id(facture.patient_id)
+        lfacs = LigneFactureService.get_lignes_by_facture_id(facture_id)
+        basepath = get_constante("FACTURES_DIR")
+        print(facture)
+        fac_path = facture.start_date.strftime("%Y-%m")
+        abs_dir = path.abspath(path.join(basepath, fac_path))
+        if not path.exists(abs_dir):
+            makedirs(abs_dir)
+        filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.pdf"
+        abs_file = path.join(abs_dir, filename)
+        annulation_factures = FactureService.get_factures_annule_by(facture_id)
+
+        fp = fg.create_and_save(facture, patient, lfacs, annulation_factures,facture.start_date,facture.end_date,abs_file)
+        if (fp is not None and path.exists(fp)):
+            webbrowser.open_new(fp)
+        
+        

@@ -1,8 +1,10 @@
-from PySide6.QtWidgets import (QWidget, QGridLayout, QTableWidget, 
+from PySide6.QtWidgets import (QDateEdit, QPushButton, QTextEdit, QWidget, QGridLayout, QTableWidget, 
                                QTableWidgetItem, QLabel, QLineEdit,
                                QHBoxLayout, QVBoxLayout)
 from PySide6.QtCore import Qt, Signal
 from app.backend.model.facture import Facture
+from app.backend.services.rendezVous_service import RendezVousService
+from app.backend.services.patient_service import PatientService
 
 
 class SuivreFactureView(QWidget):
@@ -19,7 +21,9 @@ class SuivreFactureView(QWidget):
     """Signal émis lors d'une recherche dans la barre de recherche."""
     refresh: Signal = Signal()
     """Signal pour rafraîchir la vue des factures."""
-    
+    reediter: Signal = Signal(str)
+    """Signal pour rééditer une facture (ID de la facture)."""
+
     def __init__(self) -> None:
         """
         Initialise la vue de suivi des factures.
@@ -46,7 +50,7 @@ class SuivreFactureView(QWidget):
         # Table des patients
         self.facture_table = QTableWidget()
         self.facture_table.setColumnCount(6)
-        self.facture_table.setHorizontalHeaderLabels(["Numéro de facture", "Numéro du patient", "Date d'émission", "Méthode de paiement","Date de paiement","Description"])
+        self.facture_table.setHorizontalHeaderLabels(["Numéro de facture", "Patient", "Date d'émission", "Méthode de paiement","Date de paiement","Description"])
         self.facture_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.facture_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.facture_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -62,7 +66,7 @@ class SuivreFactureView(QWidget):
 
         self.lignesFacture = QTableWidget()
         self.lignesFacture.setColumnCount(3)
-        self.lignesFacture.setHorizontalHeaderLabels(["Numéro de facture", "Numéro de rendez-vous", "Montant"])
+        self.lignesFacture.setHorizontalHeaderLabels(["Numéro de facture", "Date du rendez-vous", "Montant"])
         self.lignesFacture.setEditTriggers(QTableWidget.NoEditTriggers)
         self.lignesFacture.setSelectionBehavior(QTableWidget.SelectRows)
         self.lignesFacture.setSelectionMode(QTableWidget.SingleSelection)
@@ -80,8 +84,36 @@ class SuivreFactureView(QWidget):
         titre.setAlignment(Qt.AlignCenter)
         titre.setStyleSheet("font-size: 15pt; font-weight: bold;")
         facture_detail.addWidget(titre)
-        facture_detail.addWidget(QLabel(" (À implémenter)"))
-        # (Ajouter ici des widgets pour afficher les détails de la facture si nécessaire)
+
+        # Dates et moyens de paiment de la facture
+        details_paiement = QHBoxLayout()
+        facture_detail.addLayout(details_paiement)
+        details_paiement.addWidget(QLabel("Méthode de paiement:"))
+        self.methode_paiement_input = QLineEdit()
+        details_paiement.addWidget(self.methode_paiement_input)
+        details_paiement.addWidget(QLabel("Date de paiement:"))
+        self.date_paiement_input = QDateEdit()
+        self.date_paiement_input.setCalendarPopup(True)
+        details_paiement.addWidget(self.date_paiement_input)
+
+
+        #description de la facture
+        description_layout = QHBoxLayout()
+        facture_detail.addLayout(description_layout)
+        description_layout.addWidget(QLabel("Description:"))
+        self.description_input = QTextEdit()
+        description_layout.addWidget(self.description_input)
+
+        #boutons d'enregistrement et de réedition de la facture
+        buttons_layout = QHBoxLayout()
+        facture_detail.addLayout(buttons_layout)
+        self.enregistrer_button = QPushButton("Enregistrer")
+        self.enregistrer_button.clicked.connect(self.on_enregistrer_clicked)
+        buttons_layout.addWidget(self.enregistrer_button)
+        self.reediter_button = QPushButton("Rééditer")
+        self.reediter_button.clicked.connect(self.on_reediter_clicked)
+        buttons_layout.addWidget(self.reediter_button)
+
         
         
 
@@ -134,7 +166,7 @@ class SuivreFactureView(QWidget):
             self.facture_table.setItem(row_position, 0, QTableWidgetItem(facture.id))
 
             patient_id_item = QTableWidgetItem()
-            patient_id_item.setData(Qt.DisplayRole, str(facture.patient_id))
+            patient_id_item.setData(Qt.DisplayRole, PatientService.get_patient_by_id(facture.patient_id).nom_complet())
             self.facture_table.setItem(row_position, 1, patient_id_item)
             
             self.facture_table.setItem(row_position, 2, QTableWidgetItem(facture.date_emission.strftime("%Y-%m-%d")))
@@ -162,5 +194,30 @@ class SuivreFactureView(QWidget):
             self.lignesFacture.insertRow(row_position)
 
             self.lignesFacture.setItem(row_position, 0, QTableWidgetItem(ligne.idFacture))
-            self.lignesFacture.setItem(row_position, 1, QTableWidgetItem(str(ligne.idRendezVous)))
+            self.lignesFacture.setItem(row_position, 1, QTableWidgetItem(RendezVousService.get_rendezvous_by_id(ligne.idRendezVous).date.strftime("%Y-%m-%d")))
             self.lignesFacture.setItem(row_position, 2, QTableWidgetItem(str(ligne.montant_facture)))
+
+    def on_enregistrer_clicked(self) -> None:
+        """
+        Émet le signal de mise à jour de la facture avec les nouvelles informations.
+        """
+        """Émettre le signal de mise à jour de la facture avec les nouvelles informations"""
+        # Récupérer les informations mises à jour
+        updated_facture = Facture(
+            id=self.facture_table.item(self.facture_table.currentRow(), 0).text(),
+            patient_id=None,
+            date_emission=None,
+            statut=self.methode_paiement_input.text(),
+            date_paiement=self.date_paiement_input.date().toPython(),
+            description=self.description_input.toPlainText()
+        )
+        self.facture_updated.emit(updated_facture)
+
+    def on_reediter_clicked(self) -> None:
+        """
+        Émet le signal pour rééditer la facture sélectionnée.
+        """
+        """Émettre le signal pour rééditer la facture sélectionnée"""
+        print(f"Réédition en vue")
+        self.reediter.emit(self.facture_table.item(self.facture_table.currentRow(), 0).text())
+        print("fin de l'émission du signal")
