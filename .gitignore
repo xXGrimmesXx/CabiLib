@@ -1,5 +1,5 @@
 #ignorer le dossier Factures
-Factures/
+Facture_test/
 token.json
 credentials.json
 *.db
@@ -8,6 +8,12 @@ credentials.json
 *.pyc
 *.pyo
 *.pyd
+*.toc
+*.pyz
+*.txt
+*.html
+*.zip
+*.spec
 __pycache__/
 *$py.class
 *.exe
