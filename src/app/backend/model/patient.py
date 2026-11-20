@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, Text
 from app.backend.database.database import Base
-from datetime import datetime
 
 class Patient(Base):
     __tablename__ = "patient"
@@ -51,3 +50,12 @@ class Patient(Base):
         elif self.ville is None :
             return self.adresse
         return f"{self.adresse}, {self.ville}"
+
+    def nom_complet(self) -> str:
+        """
+        Retourne le nom complet du patient.
+
+        Returns:
+            str: Nom complet.
+        """
+        return f"{self.nom} {self.prenom}"

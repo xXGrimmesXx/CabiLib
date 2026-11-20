@@ -1,5 +1,5 @@
 #ignorer le dossier Factures
-Factures/
+Facture_test/
 *.json
 *.db
 
@@ -7,6 +7,12 @@ Factures/
 *.pyc
 *.pyo
 *.pyd
+*.toc
+*.pyz
+*.txt
+*.html
+*.zip
+*.spec
 __pycache__/
 *$py.class
 *.exe

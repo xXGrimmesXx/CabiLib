@@ -81,9 +81,9 @@ class StatistiquesView(QWidget):
         layout.addStretch()  # Pousse les éléments vers le haut
     def show_tooltip(self, scatter, points):
         """Gère l'affichage de la bulle d'info lors du survol."""
-        print("Hover event triggered")
+        #print("Hover event triggered")
         if points is not None and len(points) > 0:
-            print("Points hover:", points)
+            #print("Points hover:", points)
             # On récupère le premier point sous le curseur
             point = points[0]
             if point == self.last_hovered_point:

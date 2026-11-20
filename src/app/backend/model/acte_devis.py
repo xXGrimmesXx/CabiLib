@@ -1,6 +1,5 @@
-from sqlalchemy import Column, String, Integer, Date, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey
 from app.backend.database.database import Base
-from datetime import datetime
 
 class ActeDevis(Base):
     __tablename__ = "acte_devis"

@@ -32,6 +32,8 @@ class LigneFactureRepository:
             try:
                 db.add(ligne)
                 db.commit()
+                db.refresh(ligne)
+                return ligne
             except SQLAlchemyError as e:
                 db.rollback()
                 raise DatabaseException(f"Erreur lors de l'ajout de ligne de facture : {str(e)}")

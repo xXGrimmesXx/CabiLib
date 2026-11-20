@@ -6,7 +6,7 @@ from app.backend.model.note import Note
 from app.backend.model.rendezVous import RendezVous
 from app.backend.model.typeRDV import TypeRDV
 from app.backend.services.internet_API_thread_worker import APIRequestQueue
-from app.exceptions import DatabaseException, GoogleCalendarException
+from app.exceptions import DatabaseException
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timedelta
 import traceback
@@ -130,25 +130,13 @@ class RendezVousRepository:
                     overlapping_notes.append(n)
 
             if len(overlapping_notes) == 0 and (len(overlapping_rdvs) == 0 or ((len(overlapping_rdvs) == 1 and overlapping_rdvs[0][0].id == rendezvous.id))):
-                print("Overlapping notes")
-                print(overlapping_notes)
-                print("Overlapping rdvs")
-                print(overlapping_rdvs)
                 return True
 
             if type_rdv.estgroupe:
                 for r, r_type in overlapping_rdvs:
                     if r.type_id != rendezvous.type_id:
-                        print("Overlapping notes")
-                        print(overlapping_notes)
-                        print("Overlapping rdvs")
-                        print(overlapping_rdvs)
                         return False
                 return True
-            print("Overlapping notes")
-            print(overlapping_notes)
-            print("Overlapping rdvs")
-            print(overlapping_rdvs)
             return False
 
     @staticmethod

@@ -3,14 +3,12 @@ import traceback
 from app.backend.services.google_api_manager import get_calendarV3_service
 import app.backend.services.constantes_manager as cm
 from app.backend.model.rendezVous import RendezVous
-from app.backend.model.patient import Patient
 from app.backend.model.typeRDV import TypeRDV
 
 from app.backend.services.patient_service import PatientService
 from app.backend.services.typeRDV_service import TypeRDVService
 from app.backend.services.rendezVous_service import RendezVousService
 
-from typing import Dict, Any as JSON
 
 try:
   from googleapiclient.errors import HttpError
@@ -45,7 +43,8 @@ def get_color_for_type_rdv(type: TypeRDV) -> str:
   return str(min_dist_index+1)
 
 
-def distance_to_color(col1, col2) -> int:
+
+def distance_to_color(col1 :str, col2 :str) -> int:
   """Retourne la distance entre deux couleurs hexadécimales.
 
   Args:

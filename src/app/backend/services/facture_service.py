@@ -2,6 +2,7 @@ from datetime import datetime, date
 from app.backend.repository.facture_repository import FactureRepository
 from app.backend.model.facture import Facture
 from app.exceptions import RegleMetierException
+from app.backend.services.ligneFacture_service import LigneFactureService
 
 class FactureService:
     def __init__(self):
@@ -24,7 +25,7 @@ class FactureService:
         return FactureRepository.add_facture(facture)
 
     @staticmethod
-    def update_facture_status(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
+    def update_facture(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None, description: str = None) -> None:
         # REGLE METIER
         if new_statut == "PAYE" and not date_paiement:
             date_paiement = datetime.today().date()
@@ -47,3 +48,37 @@ class FactureService:
         # Générer un numéro de facture unique basé sur la date et un compteur
         num =  FactureRepository.generate_numero_facture(date_emission)
         return num
+
+    @staticmethod
+    def get_factures_annule_by(facture_id: str) -> list[Facture]:
+
+        lignes = LigneFactureService.get_lignes_by_facture_id(facture_id)
+        annulation_factures = {}
+        rdvs = {}
+        for ligne in lignes:
+            rdvs[ligne.idRendezVous] = LigneFactureService.get_lignes_by_rdv_id(ligne.idRendezVous)
+        keys = rdvs.keys()
+        for key in keys:
+            for ligne in rdvs[key]:
+                if inf(ligne.idFacture, facture_id) and ligne.idFacture not in annulation_factures:
+                    if not key in annulation_factures.keys() or inf(annulation_factures[key], ligne.idFacture):
+                        annulation_factures[key] = ligne.idFacture
+        return [annulation_factures[key] for key in annulation_factures.keys()]
+
+def inf(facture_id1: str, facture_id2: str) -> bool:
+    # Compare les numéros de facture en fonction de la date et du compteur
+    # Format attendu : "YYYYMMDD-XXXX"
+    fac,year1,month1, compteur1 = facture_id1.split('-')
+    fac,year2,month2, compteur2= facture_id2.split('-')
+    year1, month1 = int(year1), int(month1)
+    year2, month2 = int(year2), int(month2)
+
+    if year1 < year2:
+        return True
+    elif year1 == year2 and month1 < month2:
+        return True
+    elif year1 == year2 and month1 == month2:
+        return int(compteur1) < int(compteur2)
+    else:
+        return False
+

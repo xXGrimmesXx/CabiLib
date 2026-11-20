@@ -7,13 +7,15 @@ from app.frontend.controllers.main_controller import MainController
 import app.backend.services.internet_API_thread_worker as api_worker
 import app.backend.services.constantes_manager as cm
 import app.backend.database.database as db
-from qt_material import apply_stylesheet
+import time
+
 
 import argparse
 
 def main():
     """Point d'entrée de l'application"""
     # 1. Configuration de l'analyseur d'arguments
+    entrypoint = time.time()
     parser = argparse.ArgumentParser(description="Lancement de CabiLib")
     parser.add_argument('--beta', type=str, metavar='CHEMIN_CODE', help="Activer le mode beta et spécifier le chemin du code de l'application")
     
@@ -26,13 +28,17 @@ def main():
         cm.CONST_PATH = os.path.join(args.beta, "Constantes.json")
         db.update_db_path(os.path.join(args.beta, "app", "backend", "database", "CabiLib.db"))
     print(db.DB_PATH)
-    api_worker.start_api_worker(0,60)
+    init_db = time.time()
     ensure_db()
+    db_ready = time.time()
     
     app = QApplication(sys.argv)
 
-    app.setApplicationName("CabiLib - Gestion Cabinet")
+    app_created = time.time()
 
+    
+    app.setApplicationName("CabiLib - Gestion Cabinet")
+    
     app.setWindowIcon(QIcon('cabilib_logo.png'))      
     # Forcer le mode clair avec palette personnalisée
     app.setStyle("Fusion")
@@ -53,12 +59,32 @@ def main():
     palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))  # Texte sélectionné blanc
     
     app.setPalette(palette)
+
+    colors_ready = time.time()
+
+    
     
     # Créer la fenêtre principale
     main_window = MainWindow()
     controller = MainController(main_window)
 
+    window_ready = time.time()
+
     main_window.show()
+    window_ready = time.time()
+
+    
+    api_worker.start_api_worker(60,60)
+    api_ready = time.time()
+
+    print(f"""Temps d'initialisation :
+        Entrypoint -> Init DB: {init_db - entrypoint:.2f}s,
+        Init DB -> DB Ready: {db_ready - init_db:.2f}s,
+        DB Ready -> App Created: {app_created - db_ready:.2f}s,
+        App Created -> Window Ready: {window_ready - app_created:.2f}s,
+        Window Ready -> Colors Ready: {colors_ready - window_ready:.2f}s,
+        Colors Ready -> API Ready: {api_ready - colors_ready:.2f}s
+          """)
 
     # Lancer l'application
     sys.exit(app.exec())
