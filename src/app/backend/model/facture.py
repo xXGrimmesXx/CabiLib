@@ -15,6 +15,7 @@ class Facture(Base):
     end_date = Column(Date, nullable=True)
     regle = Column(Boolean, default=False)  # Nouveau champ pour indiquer si la facture est réglée
     methode_paiement = Column(String, nullable=True)  # Nouveau champ pour la méthode de paiement
+    preuve_paiement = Column(String, nullable=True)  # Nouveau champ pour le chemin de la preuve de paiement
 
 
     def __repr__(self) -> str:

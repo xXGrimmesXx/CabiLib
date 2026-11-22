@@ -1,16 +1,20 @@
+import os
+
 from app.backend.services.ligneFacture_service import LigneFactureService
 from app.backend.services.facture_service import FactureService
 from app.backend.services.patient_service import PatientService
+from app.frontend.views.suivre_facture_view import SuivreFactureView
 from app.frontend.widgetPersonalise.error_boxes import ExceptionHandler
 from app.exceptions import CabiLibException
 from app.backend.model.facture import Facture
 from app.backend.services.constantes_manager import get_constante
-from os import path, makedirs
+from os import environ, path, makedirs
 import app.backend.services.facture_generator  as fg
 import webbrowser
+from shutil import copy
 class SuivreFactureController:
     def __init__(self, model, view):
-        self.view = view
+        self.view : SuivreFactureView= view
 
         # Connecter les signaux de la vue aux méthodes du controller
         self.view.facture_selected.connect(self.on_facture_selected)
@@ -54,9 +58,20 @@ class SuivreFactureController:
             fac.date_paiement = facture.date_paiement
             fac.methode_paiement = facture.methode_paiement
             fac.description = facture.description
+            fac.preuve_paiement = facture.preuve_paiement
             fac.regle = facture.regle
             fac.statut = facture.statut
-            FactureService().update_facture(facture.id, fac.statut, fac.date_paiement, fac.description)
+            if self.view.preuve_paiement_file_path !="" :
+                new_path = path.join(environ.get("APPDATA"),"CabiLib","PREUVES_PAIEMENT", facture.id + path.splitext(self.view.preuve_paiement_file_path)[1])
+                if not path.exists(path.dirname(new_path)):
+                    makedirs(path.dirname(new_path))
+                if self.view.preuve_paiement_file_path != new_path:
+                    copy(self.view.preuve_paiement_file_path, new_path)
+                fac.preuve_paiement = new_path
+            try:
+                FactureService().update_facture(facture.id, fac.statut, fac.date_paiement, fac.description, fac.preuve_paiement)
+            except CabiLibException as e:
+                ExceptionHandler.handle(self.view, e)
             self.load_factures()  # Recharger les factures après la mise à jour
         except CabiLibException as e:
             ExceptionHandler.handle(self.view, e)

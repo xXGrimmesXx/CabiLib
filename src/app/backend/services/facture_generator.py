@@ -61,7 +61,35 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
         signature_base64 = ''
     
     signature_img_tag = f'<img src="data:image/jpeg;base64,{signature_base64}" class="signature-img" alt="Signature" />' if signature_base64 else ''
-    
+
+    #---- 2c. Gestion de la preuve de paiement (si disponible) ---
+    preuve_paiement_img_tag = ''
+    if facture.preuve_paiement:
+        try:
+            with open(facture.preuve_paiement, 'rb') as img_f:
+                preuve_paiement_bytes = img_f.read()
+                preuve_paiement_base64 = b64encode(preuve_paiement_bytes).decode('utf-8')
+        except Exception:
+            traceback.print_exc()
+            preuve_paiement_base64 = ''
+        preuve_paiement_img_tag = f'<img src="data:image/png;base64,{preuve_paiement_base64}" class="preuve-paiement-img" alt="Preuve de Paiement" width="100" height="100" />'
+    else:
+        preuve_paiement_img_tag = ''
+
+    # --- 2d. Logo aquité (si facture réglée) ---
+    logo_aquite_file = path.join(environ.get("APPDATA"),"CabiLib", 'logo_acquittee.png').replace('\\', '/')
+    logo_aquite_base64 = ''
+    try:
+        with open(logo_aquite_file, 'rb') as img_f:
+            logo_aquite_bytes = img_f.read()
+            logo_aquite_base64 = b64encode(logo_aquite_bytes).decode('utf-8')
+    except Exception:
+        traceback.print_exc()
+        logo_aquite_base64 = ''
+    logo_aquite_img_tag = f'<img src="data:image/png;base64,{logo_aquite_base64}" class="logo-aquite" alt="Logo Aquité" />' if logo_aquite_base64 else ''
+
+
+
     # --- 3. Préparation des données ---
     NOM_PAYEUR = f"{patient.nom_facturation if patient.nom_facturation else patient.nom}"
     ADRESSE_PAYEUR = patient.adresse if patient.adresse else ""
@@ -91,6 +119,15 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
 
     # Texte Période
     texte_periode = f"Du {format_date_fr(date_debut)} au {format_date_fr(date_fin)}"
+
+    # html Preuve de Paiement et méthode de paiement et date de paiement et logo aquité
+    preuve_paiement_html = f"""
+        <div class="preuve-paiement">
+            {preuve_paiement_img_tag}
+            <p>Réglé le : {format_date_fr(facture.date_paiement)}</p>
+            {logo_aquite_img_tag}
+        </div>
+    """ if facture.preuve_paiement and facture.regle else '<div class="preuve-paiement"></div>'
 
     # Annulation
     annulation_block = ""
@@ -251,9 +288,16 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
             }}
 
             /* --- SIGNATURE --- */
-            .signature-block {{
+            .signature-proof-container {{
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: space-between;
                 margin-top: 40px;
-                float: right;
+                width: 100%;
+            }}
+            .signature-block {{
+                margin-top: 0;
                 width: 40%;
                 text-align: right;
             }}
@@ -270,6 +314,24 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
                 text-align: center;
                 padding-top: 5px;
                 font-size: 9pt;
+            }}
+
+            .preuve-paiement {{
+                margin-top: 0;
+                width: 55%;
+                text-align: left;
+                }}
+
+            .preuve-paiement-img {{
+                max-width: 450px;
+                height: auto;
+                margin-top: 5px;
+            }}
+
+            .logo-aquite {{
+                max-width: 150px;
+                height: auto;
+                margin-top: 10px;
             }}
 
             /* --- FOOTER (Fixe & Bas) --- */
@@ -345,9 +407,12 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
             </tbody>
         </table>
 
-        <div class="signature-block">
-            <div style="margin-bottom: 5px;">{PRACTITIONER_NAME.upper()}</div>
-            {signature_img_tag}
+        <div class="signature-proof-container">
+            {preuve_paiement_html}
+            <div class="signature-block">
+                <div style="margin-bottom: 5px;">{PRACTITIONER_NAME.upper()}</div>
+                {signature_img_tag}
+            </div>
         </div>
 
         <div class="footer-legal">

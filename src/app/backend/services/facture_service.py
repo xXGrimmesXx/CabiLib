@@ -25,11 +25,14 @@ class FactureService:
         return FactureRepository.add_facture(facture)
 
     @staticmethod
-    def update_facture(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None, description: str = None) -> None:
+    def update_facture(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None, description: str = None, preuve_paiement: str = None) -> None:
         # REGLE METIER
-        if new_statut == "PAYE" and not date_paiement:
-            date_paiement = datetime.today().date()
-        return FactureRepository.update_facture_status(facture_id, new_statut, date_paiement)
+        facture = FactureRepository.get_facture_by_id(facture_id)
+        if date_paiement and date_paiement > date.today():
+            raise RegleMetierException("La date de paiement ne peut pas être dans le futur.")
+        elif date_paiement and date_paiement < facture.date_emission:
+            raise RegleMetierException("La Facture ne peut pas être payée avant sa date d'émission.")
+        return FactureRepository.update_facture_status(facture_id, new_statut, date_paiement, description,preuve_paiement)
 
     @staticmethod
     def delete_facture(facture_id: str) -> None:
@@ -67,7 +70,7 @@ class FactureService:
 
 def inf(facture_id1: str, facture_id2: str) -> bool:
     # Compare les numéros de facture en fonction de la date et du compteur
-    # Format attendu : "YYYYMMDD-XXXX"
+    # Format attendu : "FAC-YYYY-MM-XXX"
     fac,year1,month1, compteur1 = facture_id1.split('-')
     fac,year2,month2, compteur2= facture_id2.split('-')
     year1, month1 = int(year1), int(month1)
