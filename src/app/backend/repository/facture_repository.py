@@ -43,15 +43,26 @@ class FactureRepository:
                 raise DatabaseException(f"Erreur lors de la récupération des factures : {str(e)}")
 
     @staticmethod
-    def update_facture_status(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None) -> None:
+    def update_facture_status(facture_id: str, new_statut: str = "IMPAYE", date_paiement: date = None, description: str = None, preuve_paiement: str = None) -> None:
         with database.SessionLocal() as db:
             try:
                 facture = db.query(Facture).filter(Facture.id == facture_id).first()
-                if new_statut != "IMPAYE" and facture:
+                if not facture:
+                    raise DatabaseException(f"Facture avec l'ID {facture_id} non trouvée.")
+                if new_statut == "IMPAYE":
+                    facture.regle = False
+                    facture.date_paiement = None
+                    facture.statut = new_statut
+                    facture.preuve_paiement = None
+
+                elif new_statut != facture.statut :
                     facture.statut = new_statut
                     facture.date_paiement = date_paiement
                     facture.regle = True  # Marquer la facture comme réglée
-                    db.commit()
+                    facture.preuve_paiement = preuve_paiement
+
+                facture.description = description
+                db.commit()
             except SQLAlchemyError as e:
                 db.rollback()
                 raise DatabaseException(f"Erreur lors de la mise à jour de la facture : {str(e)}")

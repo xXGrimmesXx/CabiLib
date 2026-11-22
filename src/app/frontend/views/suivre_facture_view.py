@@ -1,10 +1,13 @@
-from PySide6.QtWidgets import (QDateEdit, QPushButton, QTextEdit, QWidget, QGridLayout, QTableWidget, 
+from datetime import date
+
+from PySide6.QtWidgets import (QDateEdit, QFileDialog, QPushButton, QTextEdit, QWidget, QGridLayout, QTableWidget, 
                                QTableWidgetItem, QLabel, QLineEdit,
                                QHBoxLayout, QVBoxLayout)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSettings, Qt, Signal
 from app.backend.model.facture import Facture
 from app.backend.services.rendezVous_service import RendezVousService
 from app.backend.services.patient_service import PatientService
+import os
 
 
 class SuivreFactureView(QWidget):
@@ -39,6 +42,9 @@ class SuivreFactureView(QWidget):
 
         main_grid = QGridLayout(self)
         self.setLayout(main_grid)
+        main_grid.setColumnMinimumWidth(0, 410)
+        main_grid.setColumnStretch(0, 0)
+        main_grid.setColumnStretch(1, 1)
 
         #Barre de recherche
         self.search_label = QLabel("Rechercher une facture:")
@@ -73,12 +79,14 @@ class SuivreFactureView(QWidget):
         self.lignesFacture.horizontalHeader().setStretchLastSection(False)
         self.lignesFacture.setColumnWidth(0, 150)
         self.lignesFacture.setColumnWidth(1, 150)
+        self.lignesFacture.setColumnWidth(2, 100)
+        self.lignesFacture.setFixedWidth(410)
         main_grid.addWidget(self.lignesFacture, 2, 0, 1, 1)
         main_grid.setRowStretch(2, 1)  # La table prend 1x plus de place que les autres lignes
 
         facture_detail = QVBoxLayout()
         
-        main_grid.addLayout(facture_detail, 2, 1, 1, 2)
+        main_grid.addLayout(facture_detail, 2, 1, 1, 1)
 
         titre = QLabel("Détails de la facture")
         titre.setAlignment(Qt.AlignCenter)
@@ -93,8 +101,18 @@ class SuivreFactureView(QWidget):
         details_paiement.addWidget(self.methode_paiement_input)
         details_paiement.addWidget(QLabel("Date de paiement:"))
         self.date_paiement_input = QDateEdit()
+        self.date_paiement_input.setDisplayFormat("dd-mm-yyyy")
+        self.date_paiement_input.setDate(date.today())
         self.date_paiement_input.setCalendarPopup(True)
         details_paiement.addWidget(self.date_paiement_input)
+
+        
+        btn_browse = QPushButton("Choisir une preuve de paiement")
+        details_paiement.addWidget(btn_browse)
+        btn_browse.clicked.connect(
+            lambda: self._choose_directory()
+        )
+                
 
 
         #description de la facture
@@ -116,7 +134,28 @@ class SuivreFactureView(QWidget):
 
         
         
+    def _choose_directory(self):
+        """
+        Ouvre un dialogue de sélection de dossier.
+        
+        Args:
+            key: Clé de la constante
+            line_edit: Champ à mettre à jour
+        """
+        settings = QSettings("Louis Arnould", "CabiLib")
+        dernier_dossier = settings.value("dernier_dossier", "")
 
+
+        file,_ = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Choisir le fichier de preuve de paiement   ",
+            dir=dernier_dossier,
+            filter="Image Files (*.jpg *.jpeg *.png)",
+        )
+        
+        if file:
+            self.preuve_paiement_file_path = file
+            settings.setValue("dernier_dossier", os.path.dirname(file))
 
     def on_refresh(self) -> None:
         """
@@ -150,7 +189,7 @@ class SuivreFactureView(QWidget):
                     break
             self.facture_table.setRowHidden(row, not match)
 
-    def load_factures(self, factures: list) -> None:
+    def load_factures(self, factures: list[Facture]) -> None:
         """
         Charge les factures dans la table.
         Args:
@@ -165,8 +204,7 @@ class SuivreFactureView(QWidget):
 
             self.facture_table.setItem(row_position, 0, QTableWidgetItem(facture.id))
 
-            patient_id_item = QTableWidgetItem()
-            patient_id_item.setData(Qt.DisplayRole, PatientService.get_patient_by_id(facture.patient_id).nom_complet())
+            patient_id_item = QTableWidgetItem(PatientService.get_patient_by_id(facture.patient_id).nom_complet())
             self.facture_table.setItem(row_position, 1, patient_id_item)
             
             self.facture_table.setItem(row_position, 2, QTableWidgetItem(facture.date_emission.strftime("%Y-%m-%d")))
@@ -183,8 +221,6 @@ class SuivreFactureView(QWidget):
             lignes_facture: Lignes associées à la facture.
         """
         """Afficher les détails d'une facture sélectionnée"""
-        # Mettre à jour les champs de la facture
-        # (À implémenter si nécessaire)
 
         # Charger les lignes de facture associées
         self.lignesFacture.setRowCount(0)  # Vider la table avant de charger
@@ -196,6 +232,11 @@ class SuivreFactureView(QWidget):
             self.lignesFacture.setItem(row_position, 0, QTableWidgetItem(ligne.idFacture))
             self.lignesFacture.setItem(row_position, 1, QTableWidgetItem(RendezVousService.get_rendezvous_by_id(ligne.idRendezVous).date.strftime("%Y-%m-%d")))
             self.lignesFacture.setItem(row_position, 2, QTableWidgetItem(str(ligne.montant_facture)))
+
+        self.methode_paiement_input.setText(facture.statut)
+        self.date_paiement_input.setDate(facture.date_paiement if facture.date_paiement else date.today())
+        self.description_input.setText(facture.description if facture.description else "")
+        self.preuve_paiement_file_path = facture.preuve_paiement if facture.preuve_paiement else ""
 
     def on_enregistrer_clicked(self) -> None:
         """
