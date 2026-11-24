@@ -66,7 +66,11 @@ class FactureService:
                 if inf(ligne.idFacture, facture_id) and ligne.idFacture not in annulation_factures:
                     if not key in annulation_factures.keys() or inf(annulation_factures[key], ligne.idFacture):
                         annulation_factures[key] = ligne.idFacture
-        return [annulation_factures[key] for key in annulation_factures.keys()]
+        final_ann = []
+        for key in annulation_factures.keys():
+            if annulation_factures[key] not in final_ann:
+                final_ann.append(annulation_factures[key])
+        return final_ann
 
 def inf(facture_id1: str, facture_id2: str) -> bool:
     # Compare les numéros de facture en fonction de la date et du compteur

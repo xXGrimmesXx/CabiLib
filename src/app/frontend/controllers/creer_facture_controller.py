@@ -164,7 +164,8 @@ class CreerFactureController:
                     if ajouter :
                         rdvs_patient_absent.append(rdv)
                 rdvs_a_renseigner += rdvs_a_renseigner_ann
-                annulation_factures += annulation_factures_ann
+                if annulation_factures_ann not in annulation_factures:
+                    annulation_factures += annulation_factures_ann
                 lignes_facture += lignes_ann
 
                 if (len(annulation_factures_ann) > 0 ):

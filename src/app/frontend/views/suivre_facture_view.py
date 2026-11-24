@@ -209,7 +209,7 @@ class SuivreFactureView(QWidget):
             
             self.facture_table.setItem(row_position, 2, QTableWidgetItem(facture.date_emission.strftime("%Y-%m-%d")))
             self.facture_table.setItem(row_position, 3, QTableWidgetItem(facture.statut))
-            date_paiement_str = facture.date_paiement.strftime("%Y-%m-%d") if facture.date_paiement else "N/A"
+            date_paiement_str = facture.date_paiement.strftime("%Y-%m-%d %H:%M") if facture.date_paiement else "N/A"
             self.facture_table.setItem(row_position, 4, QTableWidgetItem(date_paiement_str))
             self.facture_table.setItem(row_position, 5, QTableWidgetItem(facture.description))
 
