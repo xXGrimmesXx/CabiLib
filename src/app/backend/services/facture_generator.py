@@ -62,20 +62,6 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     
     signature_img_tag = f'<img src="data:image/jpeg;base64,{signature_base64}" class="signature-img" alt="Signature" />' if signature_base64 else ''
 
-    #---- 2c. Gestion de la preuve de paiement (si disponible) ---
-    preuve_paiement_img_tag = ''
-    if facture.preuve_paiement:
-        try:
-            with open(facture.preuve_paiement, 'rb') as img_f:
-                preuve_paiement_bytes = img_f.read()
-                preuve_paiement_base64 = b64encode(preuve_paiement_bytes).decode('utf-8')
-        except Exception:
-            traceback.print_exc()
-            preuve_paiement_base64 = ''
-        preuve_paiement_img_tag = f'<img src="data:image/png;base64,{preuve_paiement_base64}" class="preuve-paiement-img" alt="Preuve de Paiement" width="100" height="100" />'
-    else:
-        preuve_paiement_img_tag = ''
-
     # --- 2d. Logo aquité (si facture réglée) ---
     logo_aquite_file = path.join(environ.get("APPDATA"),"CabiLib", 'logo_acquittee.png').replace('\\', '/')
     logo_aquite_base64 = ''
@@ -123,11 +109,10 @@ def generate_facture_html(facture: Facture, patient: Patient, lignes: list[Ligne
     # html Preuve de Paiement et méthode de paiement et date de paiement et logo aquité
     preuve_paiement_html = f"""
         <div class="preuve-paiement">
-            {preuve_paiement_img_tag}
             <p>Réglé le : {format_date_fr(facture.date_paiement)}</p>
             {logo_aquite_img_tag}
         </div>
-    """ if facture.preuve_paiement and facture.regle else '<div class="preuve-paiement"></div>'
+    """ if facture.regle else '<div class="preuve-paiement"></div>'
 
     # Annulation
     annulation_block = ""

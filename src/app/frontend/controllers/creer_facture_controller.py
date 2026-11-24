@@ -234,11 +234,17 @@ class CreerFactureController:
                     LigneFactureService.add_ligne(lfac)
                 
                 
-                basepath = constantes_manager.get_constante("FACTURES_DIR")
+                basepath = cm.get_constante("FACTURES_DIR")
+                #print(facture)
                 fac_path = facture.start_date.strftime("%Y-%m")
                 abs_dir = path.abspath(path.join(basepath, fac_path))
+                if facture.regle :
+                    abs_dir = path.abspath(path.join(abs_dir, "Reglees"))
+                else :
+                    abs_dir = path.abspath(path.join(abs_dir, "Non_Reglees"))
                 if not path.exists(abs_dir):
                     makedirs(abs_dir)
+                filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.pdf"
                 abs_file = path.join(abs_dir, filename)
 
                 fp = fg.create_and_save(facture, patient, lfacs, annulation_factures,start_date,end_date,abs_file)

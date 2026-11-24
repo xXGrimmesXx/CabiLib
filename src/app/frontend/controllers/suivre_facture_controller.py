@@ -82,9 +82,13 @@ class SuivreFactureController:
         patient = PatientService().get_patient_by_id(facture.patient_id)
         lfacs = LigneFactureService.get_lignes_by_facture_id(facture_id)
         basepath = get_constante("FACTURES_DIR")
-        print(facture)
+        #print(facture)
         fac_path = facture.start_date.strftime("%Y-%m")
         abs_dir = path.abspath(path.join(basepath, fac_path))
+        if facture.regle :
+            abs_dir = path.abspath(path.join(abs_dir, "Reglees"))
+        else :
+            abs_dir = path.abspath(path.join(abs_dir, "Non_Reglees"))
         if not path.exists(abs_dir):
             makedirs(abs_dir)
         filename = f"{facture.id+" "+(patient.acronyme if patient.acronyme is not None else '')}.pdf"
